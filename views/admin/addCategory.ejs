@@ -1,0 +1,75 @@
+<%- include('./partials/adminHeader.ejs') %>
+
+<div class="flex h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-violet-900">
+    <%- include('./partials/adminSidebar.ejs') %>
+
+    <!-- Main Content -->
+    <div class="flex-1 overflow-x-hidden overflow-y-auto">
+        <div class="container mx-auto px-6 py-8">
+            <div class="flex justify-between items-center mb-8">
+                <h3 class="text-3xl font-medium text-white">Add New Category</h3>
+                <a href="/admin/categories" class="btn-secondary">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 17l-5-5m0 0l5-5m-5 5h12"></path>
+                    </svg>
+                    Back to Categories
+                </a>
+            </div>
+
+            <div class="glass-effect rounded-xl p-8 max-w-2xl mx-auto">
+                <% if (typeof message !== 'undefined') { %>
+                    <div class="mb-6 p-4 rounded-lg <%= message.type === 'error' ? 'bg-red-500/20 text-red-100' : 'bg-green-500/20 text-green-100' %>">
+                        <%= message.content %>
+                    </div>
+                <% } %>
+
+                <form action="/admin/addCategory" method="POST" class="space-y-6">
+                    <div>
+                        <label for="name" class="text-gray-200 text-sm font-medium mb-2 block">Category Name</label>
+                        <input type="text" id="name" name="name" required
+                            class="form-input text-gray-200"
+                            placeholder="Enter category name">
+                        <p class="mt-1 text-sm text-gray-400">Choose a unique and descriptive name for the category</p>
+                    </div>
+
+                    <div>
+                        <label for="description" class="text-gray-200 text-sm font-medium mb-2 block">Description</label>
+                        <textarea id="description" name="description" rows="4"
+                            class="form-input text-gray-200"
+                            placeholder="Enter category description"></textarea>
+                        <p class="mt-1 text-sm text-gray-400">Provide a clear description of what this category represents</p>
+                    </div>
+
+                    <div class="flex items-center">
+                        <input type="checkbox" id="isActive" name="isActive" checked
+                            class="w-4 h-4 text-cyan-600 border-gray-600 rounded focus:ring-cyan-500 bg-gray-700">
+                        <label for="isActive" class="ml-2 text-sm text-gray-300">
+                            Make this category active immediately
+                        </label>
+                    </div>
+
+                    <div class="flex justify-end space-x-4 pt-4">
+                        <button type="reset" class="btn-secondary">
+                            Reset Form
+                        </button>
+                        <button type="submit" class="btn-primary">
+                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                            </svg>
+                            Create Category
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Decorative Elements -->
+<div class="fixed top-0 left-0 w-full h-full pointer-events-none overflow-hidden -z-10">
+    <div class="absolute top-1/4 left-1/4 w-72 h-72 bg-cyan-500 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob"></div>
+    <div class="absolute top-1/3 right-1/3 w-72 h-72 bg-pink-500 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-2000"></div>
+    <div class="absolute bottom-1/4 right-1/4 w-72 h-72 bg-blue-500 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-4000"></div>
+</div>
+
+<%- include('./partials/adminFooter.ejs') %>

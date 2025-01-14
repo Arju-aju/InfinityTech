@@ -1,0 +1,36 @@
+    <script>
+        // Mobile menu toggle
+        const sidebarToggle = document.getElementById('sidebarToggle');
+        const sidebar = document.querySelector('.bg-gray-900');
+        
+        if (sidebarToggle) {
+            sidebarToggle.addEventListener('click', () => {
+                sidebar.classList.toggle('-translate-x-full');
+            });
+        }
+
+        // Close sidebar when clicking outside on mobile
+        document.addEventListener('click', (e) => {
+            if (window.innerWidth < 768) { // Only on mobile
+                const isClickInsideSidebar = sidebar.contains(e.target);
+                const isClickOnToggle = sidebarToggle.contains(e.target);
+                
+                if (!isClickInsideSidebar && !isClickOnToggle && !sidebar.classList.contains('-translate-x-full')) {
+                    sidebar.classList.add('-translate-x-full');
+                }
+            }
+        });
+
+        // Handle success messages
+        const successAlert = document.querySelector('.success-alert');
+        if (successAlert) {
+            setTimeout(() => {
+                successAlert.style.opacity = '0';
+                setTimeout(() => {
+                    successAlert.style.display = 'none';
+                }, 300);
+            }, 3000);
+        }
+    </script>
+</body>
+</html>

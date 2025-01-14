@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>InfinityTech Admin - <%= typeof title !== 'undefined' ? title : 'Dashboard' %></title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <!-- Include Admin Styles -->
+    <%- include('./adminStyles.ejs') %>
+</head>
+<body class="gradient-bg animate-gradient min-h-screen">
+    <!-- Top Navigation -->
+    <header class="glass-effect-dark shadow-lg fixed top-0 w-full z-50">
+        <div class="flex justify-between items-center py-4 px-6">
+            <div class="flex items-center">
+                <button class="text-gray-300 hover:text-white md:hidden" id="sidebarToggle">
+                    <i class="fas fa-bars text-xl"></i>
+                </button>
+                <nav class="hidden md:flex ml-4" aria-label="Breadcrumb">
+                    <ol class="inline-flex items-center space-x-1 md:space-x-3">
+                        <li class="inline-flex items-center">
+                            <a href="/admin/dashboard" class="text-gray-300 hover:text-white">
+                                <i class="fas fa-home mr-2"></i>
+                                Dashboard
+                            </a>
+                        </li>
+                        <% if (typeof title !== 'undefined') { %>
+                            <li>
+                                <div class="flex items-center">
+                                    <svg class="w-6 h-6 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
+                                    </svg>
+                                    <span class="ml-1 text-gray-300 md:ml-2"><%= title %></span>
+                                </div>
+                            </li>
+                        <% } %>
+                    </ol>
+                </nav>
+            </div>
+
+            <div class="flex items-center space-x-4">
+                <!-- Notifications -->
+                <button class="text-gray-300 hover:text-white relative">
+                    <i class="fas fa-bell text-xl"></i>
+                    <span class="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">
+                        3
+                    </span>
+                </button>
+
+                <!-- Profile Dropdown -->
+                <div class="relative">
+                    <button class="flex items-center text-gray-300 hover:text-white focus:outline-none" id="profileDropdown">
+                        <img class="h-8 w-8 rounded-full object-cover" src="https://ui-avatars.com/api/?name=Admin&background=6366f1&color=fff" alt="Admin">
+                        <span class="ml-2 hidden md:block">Admin</span>
+                        <i class="fas fa-chevron-down ml-2"></i>
+                    </button>
+
+                    <!-- Dropdown Menu -->
+                    <div class="glass-effect absolute right-0 mt-2 w-48 rounded-lg py-2 hidden" id="profileMenu">
+                        <a href="/admin/profile" class="block px-4 py-2 text-gray-300 hover:text-white hover:bg-white/10">
+                            <i class="fas fa-user mr-2"></i> Profile
+                        </a>
+                        <a href="/admin/settings" class="block px-4 py-2 text-gray-300 hover:text-white hover:bg-white/10">
+                            <i class="fas fa-cog mr-2"></i> Settings
+                        </a>
+                        <div class="border-t border-gray-700 my-2"></div>
+                        <a href="/admin/logout" class="block px-4 py-2 text-red-400 hover:text-red-300 hover:bg-white/10">
+                            <i class="fas fa-sign-out-alt mr-2"></i> Logout
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Spacer for fixed header -->
+    <div class="h-16"></div>
+
+    <script>
+        // Profile Dropdown Toggle
+        const profileDropdown = document.getElementById('profileDropdown');
+        const profileMenu = document.getElementById('profileMenu');
+
+        if (profileDropdown && profileMenu) {
+            profileDropdown.addEventListener('click', () => {
+                profileMenu.classList.toggle('hidden');
+            });
+
+            // Close dropdown when clicking outside
+            document.addEventListener('click', (e) => {
+                if (!profileDropdown.contains(e.target) && !profileMenu.contains(e.target)) {
+                    profileMenu.classList.add('hidden');
+                }
+            });
+        }
+    </script>
+</body>
+</html>
