@@ -5,6 +5,8 @@ const nodemailer = require('nodemailer')
 const env = require('dotenv').config()
 const Category = require('../../models/categorySchema')
 const Product = require('../../models/productSchema')
+const { userValidationRules, validate } = require('../../utils/validation')
+const { validationResult } = require('express-validator')
 
 
 const pageNotFound = async(req,res)=>{
@@ -143,6 +145,15 @@ const sendVerificationEmail = async (email, otp) => {
 
 const signup = async (req, res) => {
     try {
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.render('signup', {
+                message: 'Validation failed',
+                formData: req.body,
+                errors: errors.array()
+            });
+        }
+
         const { name, email, phone, password, confirmPassword } = req.body;
 
         if (!name || !email || !phone || !password || !confirmPassword) {
@@ -199,41 +210,53 @@ const signup = async (req, res) => {
 
 const login = async (req, res) => {
     try {
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(400).json({
+                success: false,
+                errors: errors.array()
+            });
+        }
+
         const { email, password } = req.body;
-        const user = await User.findOne({ email: email });
+        const user = await User.findOne({ email });
 
         if (!user) {
-            return res.render('user/login', { 
-                message: 'Invalid email or password' 
+            return res.status(401).json({
+                success: false,
+                errors: [{ msg: 'Invalid email or password' }]
+            });
+        }
+
+        // Check if user is blocked
+        if (user.isBlocked) {
+            return res.status(403).json({
+                success: false,
+                blocked: true,
+                errors: [{ msg: 'Your account has been blocked. Please contact support.' }]
             });
         }
 
         const isMatch = await bcrypt.compare(password, user.password);
-        
         if (!isMatch) {
-            return res.render('user/login', { 
-                message: 'Invalid email or password' 
+            return res.status(401).json({
+                success: false,
+                errors: [{ msg: 'Invalid email or password' }]
             });
         }
 
-        if (user.isBlocked) {
-            return res.render('user/login', { 
-                message: 'Your account has been blocked. Please contact support.' 
-            });
-        }
+        req.session.user = {
+            id: user._id,
+            name: user.name,
+            email: user.email
+        };
 
-        req.session.user = user;
-
-        // Check if there's a returnTo URL in the session
-        const returnTo = req.session.returnTo || '/';
-        delete req.session.returnTo; // Clear the returnTo value
-
-        res.redirect(returnTo);
-
+        res.json({ success: true, redirect: '/' });
     } catch (error) {
         console.error('Login error:', error);
-        res.render('user/login', { 
-            message: 'An error occurred during login' 
+        res.status(500).json({
+            success: false,
+            errors: [{ msg: 'Server error occurred' }]
         });
     }
 };
@@ -382,31 +405,104 @@ const logout = async (req,res)=>{
     }
 };
 
+const getSingleProduct = async (req, res) => {
+    try {
+        const productId = req.params.id;
+        const product = await Product.findById(productId).populate('category');
+
+        if (!product) {
+            req.flash('error', 'Product not found');
+            return res.redirect('/shop');
+        }
+
+        // Calculate discounted price
+        const discountedPrice = product.price - (product.price * (product.discountPercentage / 100));
+
+        // Get recommended products from same category
+        const recommendedProducts = await Product.find({
+            category: product.category._id,
+            _id: { $ne: product._id }  // Exclude current product
+        })
+        .populate('category')
+        .limit(4)
+        .sort('-createdAt')
+        .lean();
+
+        // Calculate discounted prices for recommended products
+        recommendedProducts.forEach(prod => {
+            prod.discountedPrice = prod.price - (prod.price * (prod.discountPercentage / 100));
+        });
+
+        res.render('user/product', {
+            product: {
+                ...product.toObject(),
+                discountedPrice
+            },
+            recommendedProducts,
+            message: {
+                type: req.flash('error').length ? 'error' : 'success',
+                content: req.flash('error')[0] || req.flash('success')[0]
+            }
+        });
+    } catch (error) {
+        console.error('Error in getSingleProduct:', error);
+        req.flash('error', 'Error loading product details');
+        res.redirect('/shop');
+    }
+};
+
+const getAllCategories = async (req, res) => {
+    try {
+        const categories = await Category.find()
+            .sort('name')
+            .lean();
+
+        // Get product count for each category
+        const categoriesWithCount = await Promise.all(categories.map(async category => {
+            const count = await Product.countDocuments({ category: category._id });
+            return { ...category, productCount: count };
+        }));
+
+        res.render('user/categories', {
+            categories: categoriesWithCount,
+            message: {
+                type: req.flash('error').length ? 'error' : 'success',
+                content: req.flash('error')[0] || req.flash('success')[0]
+            }
+        });
+    } catch (error) {
+        console.error('Error in getAllCategories:', error);
+        req.flash('error', 'Error loading categories');
+        res.redirect('/');
+    }
+};
+
 const getCategoryProducts = async (req, res) => {
     try {
         const categoryId = req.params.id;
         const page = parseInt(req.query.page) || 1;
-        const limit = 12; // Products per page
-        
-        // Get category details
+        const limit = parseInt(req.query.limit) || 12;
+        const skip = (page - 1) * limit;
+
         const category = await Category.findById(categoryId);
-        if (!category || !category.isAvailable) {
-            return res.redirect('/');
+        if (!category) {
+            req.flash('error', 'Category not found');
+            return res.redirect('/categories');
         }
 
-        // Get products for this category with pagination
-        const products = await Product.find({ 
-            category: categoryId,
-            isAvailable: true 
-        })
-        .skip((page - 1) * limit)
-        .limit(limit)
-        .sort({ createdAt: -1 });
+        const [products, totalProducts] = await Promise.all([
+            Product.find({ category: categoryId })
+                .populate('category')
+                .skip(skip)
+                .limit(limit)
+                .sort('-createdAt')
+                .lean(),
+            Product.countDocuments({ category: categoryId })
+        ]);
 
-        // Get total products count for pagination
-        const totalProducts = await Product.countDocuments({ 
-            category: categoryId,
-            isAvailable: true 
+        // Calculate discounted prices
+        products.forEach(product => {
+            product.discountedPrice = product.price - (product.price * (product.discountPercentage / 100));
         });
 
         const totalPages = Math.ceil(totalProducts / limit);
@@ -414,52 +510,18 @@ const getCategoryProducts = async (req, res) => {
         res.render('user/categoryProducts', {
             category,
             products,
-            pagination: {
-                currentPage: page,
-                totalPages,
-                hasNextPage: page < totalPages,
-                hasPrevPage: page > 1
-            },
-            isLoggedIn: !!req.session.user
+            currentPage: page,
+            totalPages,
+            totalProducts,
+            message: {
+                type: req.flash('error').length ? 'error' : 'success',
+                content: req.flash('error')[0] || req.flash('success')[0]
+            }
         });
-
     } catch (error) {
-        console.error('Error fetching category products:', error);
-        res.redirect('/');
-    }
-};
-
-const getAllCategories = async (req, res) => {
-    try {
-        const page = parseInt(req.query.page) || 1;
-        const limit = 12; // Categories per page
-        const skip = (page - 1) * limit;
-
-        // Get total count
-        const totalCategories = await Category.countDocuments();
-        const totalPages = Math.ceil(totalCategories / limit);
-
-        // Get paginated categories
-        const categories = await Category.find()
-            .select('name description thumbnail isAvailable')
-            .sort({ name: 1 })
-            .skip(skip)
-            .limit(limit);
-
-        res.render('user/allCategories', {
-            categories,
-            pagination: {
-                currentPage: page,
-                totalPages,
-                hasNextPage: page < totalPages,
-                hasPrevPage: page > 1
-            },
-            isLoggedIn: !!req.session.user
-        });
-
-    } catch (error) {
-        console.error('Error fetching categories:', error);
-        res.redirect('/');
+        console.error('Error in getCategoryProducts:', error);
+        req.flash('error', 'Error loading category products');
+        res.redirect('/categories');
     }
 };
 
@@ -510,61 +572,6 @@ const loadShop = async (req, res) => {
     }
 };
 
-const getSingleProduct = async (req, res) => {
-    try {
-        // Check if user is logged in
-        if (!req.session.user) {
-            // Store the intended URL in session
-            req.session.returnTo = `/product/${req.params.id}`;
-            // Redirect to login with a message
-            return res.redirect('/login?message=' + encodeURIComponent('Please login to view product details'));
-        }
-
-        const productId = req.params.id;
-        const product = await Product.findById(productId).populate('category').lean();
-
-        if (!product) {
-            console.log('Product not found');
-            return res.redirect('/shop');
-        }
-
-        // Debug log
-        console.log('Product specifications:', product.specifications);
-
-        // Find related products
-        const relatedProductsQuery = {
-            _id: { $ne: productId },
-            $or: [
-                { category: product.category._id },
-                { brand: product.brand }
-            ]
-        };
-
-        if (product.specifications && product.specifications.processor) {
-            const processorBrand = product.specifications.processor.split(' ')[0];
-            relatedProductsQuery.$or.push({
-                'specifications.processor': { $regex: processorBrand, $options: 'i' }
-            });
-        }
-
-        const relatedProducts = await Product.find(relatedProductsQuery)
-            .populate('category')
-            .limit(4)
-            .lean();
-
-        res.render('user/singleProduct', {
-            product,
-            relatedProducts,
-            isLoggedIn: true, 
-            username: req.session.user.name
-        });
-
-    } catch (error) {
-        console.error('Error fetching product:', error);
-        res.redirect('/shop');
-    }
-};
-
 module.exports = {
     loadHomePage,
     pageNotFound,
@@ -576,8 +583,8 @@ module.exports = {
     resendOtp,
     loadverifyOtp,
     logout,
-    getCategoryProducts,
-    getAllCategories,
-    loadShop,
     getSingleProduct,
+    getAllCategories,
+    getCategoryProducts,
+    loadShop,
 };

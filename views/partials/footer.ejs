@@ -1,0 +1,100 @@
+    </main>
+
+    <!-- Footer -->
+    <footer class="mt-16 bg-gray-900/80 backdrop-blur-lg border-t border-gray-800">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+                <!-- Company Info -->
+                <div>
+                    <h3 class="text-xl font-bold text-white mb-4">
+                        Tech<span class="text-cyan-500">Cart</span>
+                    </h3>
+                    <p class="text-gray-400">
+                        Your one-stop shop for all your tech needs. Quality products, competitive prices, and excellent customer service.
+                    </p>
+                </div>
+
+                <!-- Quick Links -->
+                <div>
+                    <h4 class="text-lg font-semibold text-white mb-4">Quick Links</h4>
+                    <ul class="space-y-2">
+                        <li><a href="/" class="text-gray-400 hover:text-white transition-colors">Home</a></li>
+                        <li><a href="/categories" class="text-gray-400 hover:text-white transition-colors">Categories</a></li>
+                        <li><a href="/about" class="text-gray-400 hover:text-white transition-colors">About Us</a></li>
+                        <li><a href="/contact" class="text-gray-400 hover:text-white transition-colors">Contact</a></li>
+                    </ul>
+                </div>
+
+                <!-- Customer Service -->
+                <div>
+                    <h4 class="text-lg font-semibold text-white mb-4">Customer Service</h4>
+                    <ul class="space-y-2">
+                        <li><a href="/shipping" class="text-gray-400 hover:text-white transition-colors">Shipping Policy</a></li>
+                        <li><a href="/returns" class="text-gray-400 hover:text-white transition-colors">Returns & Refunds</a></li>
+                        <li><a href="/faq" class="text-gray-400 hover:text-white transition-colors">FAQ</a></li>
+                        <li><a href="/privacy" class="text-gray-400 hover:text-white transition-colors">Privacy Policy</a></li>
+                    </ul>
+                </div>
+
+                <!-- Contact Info -->
+                <div>
+                    <h4 class="text-lg font-semibold text-white mb-4">Contact Us</h4>
+                    <ul class="space-y-2">
+                        <li class="text-gray-400">
+                            <i class="fas fa-map-marker-alt w-5 text-cyan-500"></i>
+                            123 Tech Street, Digital City
+                        </li>
+                        <li>
+                            <a href="tel:+1234567890" class="text-gray-400 hover:text-white transition-colors">
+                                <i class="fas fa-phone w-5 text-cyan-500"></i>
+                                +1 (234) 567-890
+                            </a>
+                        </li>
+                        <li>
+                            <a href="mailto:support@.com" class="text-gray-400 hover:text-white transition-colors">
+                                <i class="fas fa-envelope w-5 text-cyan-500"></i>
+                                support@infinityTech.com
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Bottom Bar -->
+            <div class="mt-8 pt-8 border-t border-gray-800">
+                <div class="flex flex-col md:flex-row justify-between items-center">
+                    <p class="text-gray-400 text-sm">
+                        © <%= new Date().getFullYear() %> infinityTech. All rights reserved.
+                    </p>
+                    <div class="flex space-x-4 mt-4 md:mt-0">
+                        <a href="#" class="text-gray-400 hover:text-white transition-colors">
+                            <i class="fab fa-facebook-f"></i>
+                        </a>
+                        <a href="#" class="text-gray-400 hover:text-white transition-colors">
+                            <i class="fab fa-twitter"></i>
+                        </a>
+                        <a href="#" class="text-gray-400 hover:text-white transition-colors">
+                            <i class="fab fa-instagram"></i>
+                        </a>
+                        <a href="#" class="text-gray-400 hover:text-white transition-colors">
+                            <i class="fab fa-linkedin-in"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Mobile Menu Toggle Script -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const mobileMenuButton = document.querySelector('button');
+            const mobileMenu = document.querySelector('.hidden.md\\:hidden');
+            
+            mobileMenuButton.addEventListener('click', function() {
+                mobileMenu.classList.toggle('hidden');
+            });
+        });
+    </script>
+</body>
+</html>

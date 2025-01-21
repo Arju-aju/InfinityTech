@@ -1,0 +1,62 @@
+<%- include('../partials/header.ejs') %>
+
+<!-- Categories Section -->
+<div class="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-violet-900 py-12">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <!-- Breadcrumbs -->
+        <nav class="flex mb-8" aria-label="Breadcrumb">
+            <ol class="inline-flex items-center space-x-1 md:space-x-3">
+                <li class="inline-flex items-center">
+                    <a href="/" class="text-gray-400 hover:text-white">Home</a>
+                </li>
+                <svg class="w-6 h-6 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
+                </svg>
+                <li>
+                    <span class="text-gray-500">Categories</span>
+                </li>
+            </ol>
+        </nav>
+
+        <h1 class="text-3xl font-bold text-white mb-8">Browse Categories</h1>
+
+        <!-- Categories Grid -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            <% categories.forEach(category => { %>
+                <a href="/category/<%= category._id %>" 
+                   class="glass-effect rounded-xl overflow-hidden hover:scale-105 transition-transform duration-300">
+                    <div class="relative pb-[60%]">
+                        <img src="<%= category.image || '/images/category-placeholder.jpg' %>" 
+                             alt="<%= category.name %>"
+                             class="absolute inset-0 w-full h-full object-cover">
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent"></div>
+                        <div class="absolute bottom-0 left-0 right-0 p-6">
+                            <h2 class="text-2xl font-bold text-white mb-2"><%= category.name %></h2>
+                            <p class="text-gray-300 mb-4"><%= category.description %></p>
+                            <div class="flex items-center justify-between">
+                                <span class="text-cyan-400 font-semibold">
+                                    <%= category.productCount %> Products
+                                </span>
+                                <span class="text-white bg-cyan-600/80 backdrop-blur-sm px-4 py-2 rounded-lg">
+                                    View All
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </a>
+            <% }); %>
+        </div>
+
+        <% if (categories.length === 0) { %>
+            <div class="glass-effect rounded-xl p-8 text-center">
+                <svg class="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M12 12h.01M12 12h.01M12 12h.01M12 12h.01M12 12h.01M12 12h.01"></path>
+                </svg>
+                <h3 class="text-xl font-semibold text-white mb-2">No Categories Found</h3>
+                <p class="text-gray-400">Check back later for new categories!</p>
+            </div>
+        <% } %>
+    </div>
+</div>
+
+<%- include('../partials/footer.ejs') %>

@@ -1,4 +1,5 @@
 <%- include('./partials/adminHeader.ejs') %>
+<script src="/js/addProduct.js" defer></script>
 
 <div class="flex h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-violet-900">
     <%- include('./partials/adminSidebar.ejs') %>
@@ -7,120 +8,179 @@
     <div class="flex-1 overflow-x-hidden overflow-y-auto">
         <div class="container mx-auto px-6 py-8">
             <div class="flex justify-between items-center mb-8">
-                <h3 class="text-3xl font-medium text-white">Add New Product</h3>
-                <a href="/admin/products" class="btn-secondary">
+                <h3 class="text-3xl font-semibold text-white tracking-tight">Add New Product</h3>
+                <a href="/admin/products" class="inline-flex items-center px-4 py-2 rounded-lg bg-gray-800 hover:bg-gray-700 text-white transition-all duration-200 transform hover:scale-105">
                     <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 17l-5-5m0 0l5-5m-5 5h12"></path>
                     </svg>
                     Back to Products
                 </a>
             </div>
-
-            <div class="glass-effect rounded-xl p-8 max-w-4xl mx-auto">
+    
+            <div class="backdrop-blur-lg bg-gray-900/50 rounded-2xl p-8 max-w-4xl mx-auto shadow-2xl border border-gray-800">
                 <% if (typeof message !== 'undefined') { %>
-                    <div class="mb-6 p-4 rounded-lg <%= message.type === 'error' ? 'bg-red-500/20 text-red-100' : 'bg-green-500/20 text-green-100' %>">
+                    <div class="mb-6 p-4 rounded-lg backdrop-blur-sm <%= message.type === 'error' ? 'bg-red-500/20 text-red-100' : 'bg-green-500/20 text-green-100' %>">
                         <%= message.content %>
                     </div>
                 <% } %>
-
-                <form action="/admin/products/add" method="POST" enctype="multipart/form-data" class="space-y-6">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    
+                <form id="addProductForm" action="/admin/addProduct" method="POST" enctype="multipart/form-data" class="space-y-8">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
                         <!-- Left Column -->
                         <div class="space-y-6">
                             <div>
-                                <label for="name" class="form-label">Product Name</label>
-                                <input type="text" id="name" name="name" required
-                                    class="form-input"
+                                <label for="name" class="block text-sm font-medium text-gray-300 mb-2">Product Name*</label>
+                                <input type="text" id="name" name="name" required minlength="3"
+                                    class="w-full px-4 py-3 rounded-lg bg-gray-800 border border-gray-700 text-white placeholder-gray-400 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/50 transition-all duration-200"
                                     placeholder="Enter product name">
+                                <div class="error-message text-red-500 text-sm mt-1"></div>
                             </div>
 
                             <div>
-                                <label for="category" class="form-label">Category</label>
-                                <select id="category" name="category" required class="form-input">
+                                <label for="brand" class="block text-sm font-medium text-gray-300 mb-2">Brand*</label>
+                                <input type="text" id="brand" name="brand" required
+                                    class="w-full px-4 py-3 rounded-lg bg-gray-800 border border-gray-700 text-white placeholder-gray-400 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/50 transition-all duration-200"
+                                    placeholder="Enter brand name">
+                                <div class="error-message text-red-500 text-sm mt-1"></div>
+                            </div>
+
+                            <div>
+                                <label for="description" class="block text-sm font-medium text-gray-300 mb-2">Description*</label>
+                                <textarea id="description" name="description" required minlength="10" rows="4"
+                                    class="w-full px-4 py-3 rounded-lg bg-gray-800 border border-gray-700 text-white placeholder-gray-400 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/50 transition-all duration-200"
+                                    placeholder="Enter product description"></textarea>
+                                <div class="error-message text-red-500 text-sm mt-1"></div>
+                            </div>
+
+                            <div>
+                                <label for="category" class="block text-sm font-medium text-gray-300 mb-2">Category*</label>
+                                <select id="category" name="category" required 
+                                    class="w-full px-4 py-3 rounded-lg bg-gray-800 border border-gray-700 text-white focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/50 transition-all duration-200">
                                     <option value="">Select a category</option>
                                     <% categories.forEach(category => { %>
                                         <option value="<%= category._id %>"><%= category.name %></option>
                                     <% }); %>
                                 </select>
+                                <div class="error-message text-red-500 text-sm mt-1"></div>
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label for="price" class="block text-sm font-medium text-gray-300 mb-2">Price (₹)*</label>
+                                    <input type="number" id="price" name="price" required
+                                        class="w-full px-4 py-3 rounded-lg bg-gray-800 border border-gray-700 text-white placeholder-gray-400 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/50 transition-all duration-200"
+                                        min="0" step="0.01" placeholder="Enter price">
+                                    <div class="error-message text-red-500 text-sm mt-1"></div>
+                                </div>
+
+                                <div>
+                                    <label for="discountPercentage" class="block text-sm font-medium text-gray-300 mb-2">Discount (%)</label>
+                                    <input type="number" id="discountPercentage" name="discountPercentage"
+                                        class="w-full px-4 py-3 rounded-lg bg-gray-800 border border-gray-700 text-white placeholder-gray-400 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/50 transition-all duration-200"
+                                        min="0" max="100" step="0.1" placeholder="Enter discount">
+                                    <div class="error-message text-red-500 text-sm mt-1"></div>
+                                </div>
                             </div>
 
                             <div>
-                                <label for="price" class="form-label">Price (₹)</label>
-                                <input type="number" id="price" name="price" required
-                                    class="form-input"
-                                    min="0" step="0.01"
-                                    placeholder="Enter price">
-                            </div>
-
-                            <div>
-                                <label for="stock" class="form-label">Stock Quantity</label>
+                                <label for="stock" class="block text-sm font-medium text-gray-300 mb-2">Stock Quantity*</label>
                                 <input type="number" id="stock" name="stock" required
-                                    class="form-input"
-                                    min="0" step="1"
-                                    placeholder="Enter stock quantity">
+                                    class="w-full px-4 py-3 rounded-lg bg-gray-800 border border-gray-700 text-white placeholder-gray-400 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/50 transition-all duration-200"
+                                    min="0" step="1" placeholder="Enter stock quantity">
+                                <div class="error-message text-red-500 text-sm mt-1"></div>
                             </div>
                         </div>
 
                         <!-- Right Column -->
                         <div class="space-y-6">
-                            <div>
-                                <label for="description" class="form-label">Description</label>
-                                <textarea id="description" name="description" rows="4"
-                                    class="form-input"
-                                    placeholder="Enter product description"></textarea>
+                            <div class="bg-gray-800/50 p-6 rounded-lg space-y-4">
+                                <h3 class="text-lg font-medium text-gray-300 mb-4">Specifications</h3>
+                                
+                                <div>
+                                    <label for="processor" class="block text-sm font-medium text-gray-300 mb-2">Processor</label>
+                                    <input type="text" id="processor" 
+                                        name="specifications[processor]" 
+                                        class="w-full px-4 py-3 rounded-lg..."
+                                        placeholder="e.g., Intel Core i7-12700H">
+                                </div>
+
+                                <div>
+                                    <label for="ram" class="block text-sm font-medium text-gray-300 mb-2">RAM</label>
+                                    <input type="text" id="ram" 
+                                        name="specifications[ram]" 
+                                        class="w-full px-4 py-3 rounded-lg..."
+                                        placeholder="e.g., 16GB DDR4">
+                                </div>
+
+                                <div>
+                                    <label for="storage" class="block text-sm font-medium text-gray-300 mb-2">Storage</label>
+                                    <input type="text" id="storage" 
+                                         name="specifications[storage]" 
+                                         class="w-full px-4 py-3 rounded-lg..."
+                                        placeholder="e.g., 512GB NVMe SSD">
+                                </div>
+
+                                <div>
+                                    <label for="graphics" class="block text-sm font-medium text-gray-300 mb-2">Graphics</label>
+                                    <input type="text" id="graphics" 
+                                        name="specifications[graphics]" 
+                                        class="w-full px-4 py-3 rounded-lg..."
+                                        placeholder="e.g., NVIDIA RTX 3060 6GB">
+                                </div>
                             </div>
 
                             <div>
-                                <label class="form-label">Product Images</label>
-                                <div class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-600 border-dashed rounded-lg hover:border-cyan-500 transition-colors">
+                                <label class="block text-sm font-medium text-gray-300 mb-2">Product Images*</label>
+                                <div class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-700 border-dashed rounded-lg hover:border-cyan-500 transition-colors duration-200">
                                     <div class="space-y-1 text-center">
                                         <svg class="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48">
                                             <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
                                         </svg>
                                         <div class="flex text-sm text-gray-400">
-                                            <label for="images" class="relative cursor-pointer rounded-md font-medium text-cyan-500 hover:text-cyan-400">
+                                            <label for="images" class="relative cursor-pointer rounded-md font-medium text-cyan-500 hover:text-cyan-400 focus-within:outline-none">
                                                 <span>Upload images</span>
-                                                <input id="images" name="images" type="file" class="sr-only" multiple accept="image/*">
+                                                <input id="images" name="images" type="file" class="sr-only" accept="image/*" multiple required>
                                             </label>
                                             <p class="pl-1">or drag and drop</p>
                                         </div>
-                                        <p class="text-xs text-gray-400">PNG, JPG, GIF up to 10MB</p>
+                                        <p class="text-xs text-gray-400">PNG, JPG up to 5MB</p>
                                     </div>
                                 </div>
+                                <div id="imagePreviewContainer" class="mt-4 grid grid-cols-4 gap-4"></div>
+                                <div class="error-message text-red-500 text-sm mt-1"></div>
                             </div>
 
-                            <div class="flex items-center">
-                                <input type="checkbox" id="isActive" name="isActive" checked
-                                    class="w-4 h-4 text-cyan-600 border-gray-600 rounded focus:ring-cyan-500 bg-gray-700">
-                                <label for="isActive" class="ml-2 text-sm text-gray-300">
-                                    Make this product active immediately
-                                </label>
+                            <div class="bg-gray-800/50 p-4 rounded-lg">
+                                <p class="text-gray-300 text-sm mb-2">Price Summary:</p>
+                                <div class="flex justify-between text-white">
+                                    <span>Original Price:</span>
+                                    <span id="originalPrice">₹0.00</span>
+                                </div>
+                                <div class="flex justify-between text-white mt-1">
+                                    <span>Discount:</span>
+                                    <span id="discountAmount">₹0.00</span>
+                                </div>
+                                <div class="flex justify-between text-white mt-1 font-medium">
+                                    <span>Final Price:</span>
+                                    <span id="finalPrice">₹0.00</span>
+                                </div>
                             </div>
                         </div>
                     </div>
-
-                    <div class="flex justify-end space-x-4 pt-6">
-                        <button type="reset" class="btn-secondary">
-                            Reset Form
-                        </button>
-                        <button type="submit" class="btn-primary">
+    
+                    <div class="flex justify-end mt-8">
+                        <button type="submit" 
+                            class="inline-flex items-center px-6 py-3 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white font-medium transition-all duration-200 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-cyan-500">
                             <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
                             </svg>
-                            Create Product
+                            Add Product
                         </button>
                     </div>
                 </form>
             </div>
         </div>
     </div>
-</div>
-
-<!-- Decorative Elements -->
-<div class="fixed top-0 left-0 w-full h-full pointer-events-none overflow-hidden -z-10">
-    <div class="absolute top-1/4 left-1/4 w-72 h-72 bg-cyan-500 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob"></div>
-    <div class="absolute top-1/3 right-1/3 w-72 h-72 bg-pink-500 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-2000"></div>
-    <div class="absolute bottom-1/4 right-1/4 w-72 h-72 bg-blue-500 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-4000"></div>
 </div>
 
 <%- include('./partials/adminFooter.ejs') %>

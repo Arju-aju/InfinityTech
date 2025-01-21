@@ -7,8 +7,9 @@
     <div class="flex-1 overflow-x-hidden overflow-y-auto">
         <div class="container mx-auto px-6 py-8">
             <div class="flex justify-between items-center mb-8">
-                <h3 class="text-3xl font-medium text-white">Categories</h3>
-                <a href="/admin/addCategory" class="btn-primary">
+                <h3 class="text-3xl font-semibold text-white tracking-tight">Categories</h3>
+                <a href="/admin/addCategory" 
+                   class="inline-flex items-center px-4 py-2 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white font-medium transition-all duration-200 transform hover:scale-105">
                     <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
                     </svg>
@@ -17,21 +18,21 @@
             </div>
 
             <!-- Categories Table -->
-            <div class="glass-effect rounded-xl p-6">
+            <div class="backdrop-blur-lg bg-gray-900/50 rounded-2xl p-6 shadow-2xl border border-gray-800">
                 <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-gray-700">
+                    <table class="w-full">
                         <thead>
-                            <tr>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Category Name</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Description</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Status</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Actions</th>
+                            <tr class="border-b border-gray-700">
+                                <th class="px-6 py-4 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Category Name</th>
+                                <th class="px-6 py-4 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Description</th>
+                                <th class="px-6 py-4 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Status</th>
+                                <th class="px-6 py-4 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Actions</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-700">
                             <% categories.forEach(category => { %>
-                            <tr class="hover:bg-white/5 transition-colors">
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                            <tr class="hover:bg-gray-800/30 transition-colors">
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300 font-medium">
                                     <%= category.name %>
                                 </td>
                                 <td class="px-6 py-4 text-sm text-gray-300">
@@ -39,25 +40,30 @@
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <% if (category.isActive) { %>
-                                        <span class="status-badge status-active">Active</span>
+                                        <span class="px-3 py-1 rounded-full text-xs font-medium bg-green-500/20 text-green-300">Active</span>
                                     <% } else { %>
-                                        <span class="status-badge status-inactive">Inactive</span>
+                                        <span class="px-3 py-1 rounded-full text-xs font-medium bg-red-500/20 text-red-300">Inactive</span>
                                     <% } %>
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
-                                    <button onclick="editCategory('<%= category._id %>')" class="btn-secondary inline-flex items-center px-3 py-1">
-                                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
-                                        </svg>
-                                        Edit
-                                    </button>
-                                    <button onclick="toggleCategory('<%= category._id %>', <%= category.isActive %>)" 
-                                            class="<%= category.isActive ? 'btn-danger' : 'btn-primary' %> inline-flex items-center px-3 py-1">
-                                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                        </svg>
-                                        <%= category.isActive ? 'Deactivate' : 'Activate' %>
-                                    </button>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                    <div class="flex space-x-3">
+                                        <button onclick="editCategory('<%= category._id %>')" 
+                                                class="inline-flex items-center px-3 py-1.5 rounded-lg bg-gray-800 text-gray-300 hover:bg-gray-700 hover:text-white transition-all duration-200 transform hover:scale-105">
+                                            <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                            </svg>
+                                            Edit
+                                        </button>
+                                        <button onclick="toggleCategory('<%= category._id %>', <%= category.isActive %>)" 
+                                                class="inline-flex items-center px-3 py-1.5 rounded-lg <%= category.isActive ? 'bg-red-600 hover:bg-red-500' : 'bg-cyan-600 hover:bg-cyan-500' %> text-white transition-all duration-200 transform hover:scale-105">
+                                            <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                                    d="<%= category.isActive ? 'M6 18L18 6M6 6l12 12' : 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z' %>">
+                                                </path>
+                                            </svg>
+                                            <%= category.isActive ? 'Deactivate' : 'Activate' %>
+                                        </button>
+                                    </div>
                                 </td>
                             </tr>
                             <% }) %>
@@ -70,11 +76,11 @@
 </div>
 
 <!-- Edit Category Modal -->
-<div id="editModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
-    <div class="modal-content max-w-lg w-full mx-4">
+<div id="editModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden items-center justify-center z-50">
+    <div class="bg-gray-900/90 rounded-2xl p-8 max-w-lg w-full mx-4 shadow-2xl border border-gray-800">
         <div class="flex justify-between items-center mb-6">
             <h4 class="text-xl font-semibold text-white">Edit Category</h4>
-            <button onclick="closeEditModal()" class="text-gray-400 hover:text-white">
+            <button onclick="closeEditModal()" class="text-gray-400 hover:text-white transition-colors">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                 </svg>
@@ -83,31 +89,34 @@
         <form id="editForm" class="space-y-6">
             <input type="hidden" id="categoryId" name="categoryId">
             <div>
-                <label for="editName" class="form-label">Category Name</label>
-                <input type="text" id="editName" name="name" class="form-input" required>
+                <label for="editName" class="block text-sm font-medium text-gray-300 mb-2">Category Name</label>
+                <input type="text" id="editName" name="name" required
+                    class="w-full px-4 py-3 rounded-lg bg-gray-800 border border-gray-700 text-white placeholder-gray-400 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/50 transition-all duration-200">
             </div>
             <div>
-                <label for="editDescription" class="form-label">Description</label>
-                <textarea id="editDescription" name="description" rows="3" class="form-input"></textarea>
+                <label for="editDescription" class="block text-sm font-medium text-gray-300 mb-2">Description</label>
+                <textarea id="editDescription" name="description" rows="3"
+                    class="w-full px-4 py-3 rounded-lg bg-gray-800 border border-gray-700 text-white placeholder-gray-400 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/50 transition-all duration-200"></textarea>
             </div>
-            <div class="flex justify-end space-x-3">
-                <button type="button" onclick="closeEditModal()" class="btn-secondary">Cancel</button>
-                <button type="submit" class="btn-primary">Save Changes</button>
+            <div class="flex justify-end space-x-3 pt-4">
+                <button type="button" onclick="closeEditModal()" 
+                    class="px-4 py-2 rounded-lg bg-gray-800 text-gray-300 hover:bg-gray-700 hover:text-white transition-all duration-200">
+                    Cancel
+                </button>
+                <button type="submit" 
+                    class="px-4 py-2 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white transition-all duration-200">
+                    Save Changes
+                </button>
             </div>
         </form>
     </div>
 </div>
 
-<!-- Decorative Elements -->
-<div class="fixed top-0 left-0 w-full h-full pointer-events-none overflow-hidden -z-10">
-    <div class="absolute top-1/4 left-1/4 w-72 h-72 bg-cyan-500 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob"></div>
-    <div class="absolute top-1/3 right-1/3 w-72 h-72 bg-pink-500 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-2000"></div>
-    <div class="absolute bottom-1/4 right-1/4 w-72 h-72 bg-blue-500 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-4000"></div>
-</div>
+<!-- SweetAlert2 for confirmations -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <script>
     function editCategory(categoryId) {
-        // Fetch category details and populate modal
         fetch(`/admin/categories/${categoryId}`)
             .then(response => response.json())
             .then(category => {
@@ -126,36 +135,75 @@
 
     function toggleCategory(categoryId, currentStatus) {
         const action = currentStatus ? 'deactivate' : 'activate';
-        if (confirm(`Are you sure you want to ${action} this category?`)) {
-            fetch(`/admin/categories/toggle/${categoryId}`, {
-                method: 'PATCH',
-                headers: {
-                    'Content-Type': 'application/json'
-                }
-            })
-            .then(response => {
-                if (response.ok) {
-                    window.location.reload();
-                }
-            });
-        }
-    }
-
-    // Form submission
-    document.getElementById('editForm').addEventListener('submit', function(e) {
-        e.preventDefault();
-        const categoryId = document.getElementById('categoryId').value;
-        const formData = new FormData(this);
         
-        fetch(`/admin/categories/edit/${categoryId}`, {
-            method: 'POST',
-            body: formData
-        })
-        .then(response => {
-            if (response.ok) {
-                window.location.reload();
+        Swal.fire({
+            title: 'Are you sure?',
+            text: `Do you want to ${action} this category?`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#0891b2',
+            cancelButtonColor: '#6b7280',
+            confirmButtonText: 'Yes, proceed!',
+            background: '#1f2937',
+            color: '#fff'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                fetch(`/admin/categories/toggle/${categoryId}`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                })
+                .then(response => {
+                    if (response.ok) {
+                        window.location.reload();
+                    }
+                });
             }
         });
+    }
+
+    document.getElementById('editForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const categoryId = document.getElementById('categoryId').value;
+        const formData = {
+            name: document.getElementById('editName').value.trim(),
+            description: document.getElementById('editDescription').value.trim()
+        };
+        
+        try {
+            const response = await fetch(`/admin/categories/edit/${categoryId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(formData)
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to update category');
+            }
+
+            await Swal.fire({
+                icon: 'success',
+                title: 'Success!',
+                text: 'Category updated successfully',
+                background: '#1f2937',
+                color: '#fff',
+                confirmButtonColor: '#0891b2'
+            });
+
+            window.location.reload();
+        } catch (error) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error!',
+                text: error.message,
+                background: '#1f2937',
+                color: '#fff',
+                confirmButtonColor: '#0891b2'
+            });
+        }
     });
 </script>
 

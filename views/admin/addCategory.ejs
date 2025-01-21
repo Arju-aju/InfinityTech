@@ -7,56 +7,40 @@
     <div class="flex-1 overflow-x-hidden overflow-y-auto">
         <div class="container mx-auto px-6 py-8">
             <div class="flex justify-between items-center mb-8">
-                <h3 class="text-3xl font-medium text-white">Add New Category</h3>
-                <a href="/admin/categories" class="btn-secondary">
+                <h3 class="text-3xl font-semibold text-white tracking-tight">Add New Category</h3>
+                <a href="/admin/categories" class="inline-flex items-center px-4 py-2 rounded-lg bg-gray-800 hover:bg-gray-700 text-white transition-all duration-200 transform hover:scale-105">
                     <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 17l-5-5m0 0l5-5m-5 5h12"></path>
                     </svg>
                     Back to Categories
                 </a>
             </div>
-
-            <div class="glass-effect rounded-xl p-8 max-w-2xl mx-auto">
-                <% if (typeof message !== 'undefined') { %>
-                    <div class="mb-6 p-4 rounded-lg <%= message.type === 'error' ? 'bg-red-500/20 text-red-100' : 'bg-green-500/20 text-green-100' %>">
-                        <%= message.content %>
-                    </div>
-                <% } %>
-
-                <form action="/admin/addCategory" method="POST" class="space-y-6">
+    
+            <div class="backdrop-blur-lg bg-gray-900/50 rounded-2xl p-8 max-w-2xl mx-auto shadow-2xl border border-gray-800">
+                <form id="categoryForm" class="space-y-8">
                     <div>
-                        <label for="name" class="text-gray-200 text-sm font-medium mb-2 block">Category Name</label>
-                        <input type="text" id="name" name="name" required
-                            class="form-input text-gray-200"
+                        <label for="name" class="block text-sm font-medium text-gray-300 mb-2">Category Name</label>
+                        <input type="text" id="name" name="name"
+                            class="w-full px-4 py-3 rounded-lg bg-gray-800 border border-gray-700 text-white placeholder-gray-400 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/50 transition-all duration-200"
                             placeholder="Enter category name">
-                        <p class="mt-1 text-sm text-gray-400">Choose a unique and descriptive name for the category</p>
+                        <p class="mt-2 text-sm text-gray-400">Choose a unique and descriptive name for the category</p>
                     </div>
-
+    
                     <div>
-                        <label for="description" class="text-gray-200 text-sm font-medium mb-2 block">Description</label>
+                        <label for="description" class="block text-sm font-medium text-gray-300 mb-2">Description</label>
                         <textarea id="description" name="description" rows="4"
-                            class="form-input text-gray-200"
+                            class="w-full px-4 py-3 rounded-lg bg-gray-800 border border-gray-700 text-white placeholder-gray-400 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/50 transition-all duration-200"
                             placeholder="Enter category description"></textarea>
-                        <p class="mt-1 text-sm text-gray-400">Provide a clear description of what this category represents</p>
+                        <p class="mt-2 text-sm text-gray-400">Provide a clear description of what this category represents</p>
                     </div>
 
-                    <div class="flex items-center">
-                        <input type="checkbox" id="isActive" name="isActive" checked
-                            class="w-4 h-4 text-cyan-600 border-gray-600 rounded focus:ring-cyan-500 bg-gray-700">
-                        <label for="isActive" class="ml-2 text-sm text-gray-300">
-                            Make this category active immediately
-                        </label>
-                    </div>
-
-                    <div class="flex justify-end space-x-4 pt-4">
-                        <button type="reset" class="btn-secondary">
-                            Reset Form
-                        </button>
-                        <button type="submit" class="btn-primary">
+                    <div class="flex justify-end">
+                        <button type="submit"
+                            class="inline-flex items-center px-6 py-3 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white font-medium transition-all duration-200 transform hover:scale-105">
                             <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
                             </svg>
-                            Create Category
+                            Add Category
                         </button>
                     </div>
                 </form>
@@ -65,11 +49,63 @@
     </div>
 </div>
 
-<!-- Decorative Elements -->
-<div class="fixed top-0 left-0 w-full h-full pointer-events-none overflow-hidden -z-10">
-    <div class="absolute top-1/4 left-1/4 w-72 h-72 bg-cyan-500 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob"></div>
-    <div class="absolute top-1/3 right-1/3 w-72 h-72 bg-pink-500 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-2000"></div>
-    <div class="absolute bottom-1/4 right-1/4 w-72 h-72 bg-blue-500 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-4000"></div>
-</div>
+<!-- SweetAlert2 -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<!-- Category Form Script -->
+<script>
+document.getElementById('categoryForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+
+    const formData = {
+        name: document.getElementById('name').value,
+        description: document.getElementById('description').value
+    };
+
+    try {
+        const response = await fetch('/admin/addCategory', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(formData)
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            await Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: data.message,
+                background: '#1f2937',
+                color: '#fff',
+                confirmButtonColor: '#0891b2'
+            });
+            return;
+        }
+
+        await Swal.fire({
+            icon: 'success',
+            title: 'Success',
+            text: 'Category added successfully',
+            background: '#1f2937',
+            color: '#fff',
+            confirmButtonColor: '#0891b2'
+        });
+
+        window.location.href = '/admin/categories';
+    } catch (error) {
+        await Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'An unexpected error occurred',
+            background: '#1f2937',
+            color: '#fff',
+            confirmButtonColor: '#0891b2'
+        });
+    }
+});
+</script>
 
 <%- include('./partials/adminFooter.ejs') %>

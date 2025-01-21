@@ -1,245 +1,273 @@
 const Category = require('../../models/categorySchema');
 const Product = require('../../models/productSchema');
 
-const loadCategory = async (req, res) => {
-    try {
-        if (!req.session.admin) {
-            return res.redirect('/admin/login');
-        }
-        res.render('admin/addCategory', {
-            error: null,
-            formData: null
-        });
-    } catch (error) {
-        console.error("Dashboard error", error);
-        res.redirect('/admin/login');
-    }
-};
-
+// Load Categories Page
 const categoryInfo = async (req, res) => {
     try {
-        const page = parseInt(req.query.page) || 1;
-        const limit = 10;
-        const skip = (page - 1) * limit;
-
-        // Get total count
-        const totalItems = await Category.countDocuments();
-        const totalPages = Math.ceil(totalItems / limit);
-
-        // Get paginated categories with product count
-        const categories = await Category.find()
-            .skip(skip)
-            .limit(limit)
-            .sort({ createdAt: -1 });
-
-        // Add product count to each category
-        const categoriesWithCount = await Promise.all(categories.map(async (category) => {
-            const productCount = await Product.countDocuments({ category: category._id });
-            return {
-                ...category.toObject(),
-                productCount
-            };
-        }));
-
-        res.render('admin/categories', {
-            categories: categoriesWithCount || [], // Provide empty array as fallback
-            pagination: {
-                currentPage: page,
-                totalPages,
-                totalItems,
-                startIndex: skip,
-                endIndex: Math.min(skip + limit, totalItems),
-                startPage: Math.max(1, page - 2),
-                endPage: Math.min(totalPages, page + 2)
-            },
-            error: null,
-            success: req.query.success || null,
-            req: req // Pass the request object to access query params in view
-        });
+        const categories = await Category.find({ isDeleted: false })
+            .sort('-createdAt');
+        res.render('admin/categories', { categories });
     } catch (error) {
-        console.error('Error fetching categories:', error);
-        res.render('admin/categories', {
-            categories: [],
-            pagination: {
-                currentPage: 1,
-                totalPages: 0,
-                totalItems: 0,
-                startIndex: 0,
-                endIndex: 0,
-                startPage: 1,
-                endPage: 1
-            },
-            error: 'Failed to fetch categories',
-            success: null,
-            req: req
-        });
+        console.error('Error in categoryInfo:', error);
+        req.flash('error', 'Error loading categories');
+        res.redirect('/admin/dashboard');
     }
 };
 
+// Load Add Category Page
+const loadCategory = async (req, res) => {
+    try {
+        res.render('admin/addCategory');
+    } catch (error) {
+        console.error('Error in loadCategory:', error);
+        res.redirect('/admin/categories');
+    }
+};
+
+// Add New Category
 const addCategory = async (req, res) => {
-    const { name, description } = req.body;
-  
     try {
-        // Check if the category already exists
-        const existingCategory = await Category.findOne({ name });
-        if (existingCategory) {
-            return res.render('admin/addCategory', {
-                error: 'Category already exists',
-                formData: req.body
-            });
-        }
-  
-        // Create a new category
-        const newCategory = new Category({
-            name,
-            description,
-            isActive: true
-        });
-  
-        await newCategory.save();
-        
-        // Redirect to categories page with success message
-        res.redirect('/admin/categories?success=Category added successfully');
-    } catch (error) {
-        console.error('Error adding category:', error);
-        res.render('admin/addCategory', {
-            error: 'Failed to add category',
-            formData: req.body
-        });
-    }
-};
-
-const loadEditCategory = async (req, res) => {
-    try {
-        const category = await Category.findById(req.params.id);
-        
-        // Breadcrumb data for edit page
-        const breadcrumbs = [
-            { name: 'Categories', url: '/admin/category' },
-            { name: 'Edit Category', url: '#' }
-        ];
-
-        res.render('admin/editCategory', { 
-            category,
-            breadcrumbs
-        });
-    } catch (error) {
-        console.error('Error loading category:', error);
-        res.status(500).send('Server Error');
-    }
-};
-
-// Update existing category
-const updateCategory = async (req, res) => {
-    try {
-        const { id } = req.params;
         const { name, description } = req.body;
 
-        const category = await Category.findById(id);
-        if (!category) {
-            return res.status(404).json({ 
-                success: false, 
-                message: 'Category not found' 
+        // Backend Validation
+        if (!name || !name.trim()) {
+            return res.status(400).json({
+                success: false,
+                message: 'Category name is required'
             });
         }
 
-        // Update the category
-        category.name = name;
-        category.description = description;
-        await category.save();
+        if (name.trim().length < 4) {
+            return res.status(400).json({
+                success: false,
+                message: 'Category name must be at least 4 characters'
+            });
+        }
 
-        return res.status(200).json({
+        if (!description || !description.trim()) {
+            return res.status(400).json({
+                success: false,
+                message: 'Category description is required'
+            });
+        }
+
+        if (description.trim().length < 10) {
+            return res.status(400).json({
+                success: false,
+                message: 'Description must be at least 10 characters'
+            });
+        }
+
+        // Check for existing category (case-insensitive)
+        const existingCategory = await Category.findOne({
+            name: { $regex: new RegExp(`^${name.trim()}$`, 'i') },
+            isDeleted: false
+        });
+
+        if (existingCategory) {
+            return res.status(409).json({
+                success: false,
+                message: 'Category with this name already exists'
+            });
+        }
+
+        // Create new category
+        const newCategory = new Category({
+            name: name.trim(),
+            description: description.trim()
+        });
+        
+        await newCategory.save();
+
+        return res.status(201).json({
             success: true,
-            message: 'Category updated successfully'
+            message: 'Category added successfully'
         });
 
     } catch (error) {
-        console.error('Error updating category:', error);
+        console.error('Error in addCategory:', error);
         return res.status(500).json({
             success: false,
-            message: error.message || 'Failed to update category'
+            message: 'An error occurred while adding the category'
         });
     }
 };
 
-// Delete category
+
+// Load Edit Category Page
+const loadEditCategory = async (req, res) => {
+    try {
+        const categoryId = req.params.id;
+        const category = await Category.findOne({ 
+            _id: categoryId,
+            isDeleted: false 
+        });
+
+        if (!category) {
+            req.flash('error', 'Category not found');
+            return res.redirect('/admin/categories');
+        }
+
+        res.render('admin/editCategory', {
+            category,
+            message: {
+                type: req.flash('error').length ? 'error' : 'success',
+                content: req.flash('error')[0] || req.flash('success')[0]
+            }
+        });
+    } catch (error) {
+        console.error('Error in loadEditCategory:', error);
+        req.flash('error', 'Error loading category');
+        res.redirect('/admin/categories');
+    }
+};
+
+// Update Category
+const updateCategory = async (req, res) => {
+    try {
+        const categoryId = req.params.id;
+        const { name, description } = req.body;
+
+        // Validate required fields
+        if (!name || !name.trim()) {
+            return res.status(400).json({
+                success: false,
+                message: 'Category name is required'
+            });
+        }
+
+        if (!description || !description.trim()) {
+            return res.status(400).json({
+                success: false,
+                message: 'Category description is required'
+            });
+        }
+
+        // Check for existing category with same name
+        const existingCategory = await Category.findOne({
+            name: name.trim(),
+            _id: { $ne: categoryId },
+            isDeleted: false
+        });
+
+        if (existingCategory) {
+            return res.status(400).json({
+                success: false,
+                message: 'Category name already exists'
+            });
+        }
+
+        const updatedCategory = await Category.findByIdAndUpdate(
+            categoryId,
+            { 
+                name: name.trim(),
+                description: description.trim()
+            },
+            { new: true, runValidators: true }
+        );
+
+        if (!updatedCategory) {
+            return res.status(404).json({
+                success: false,
+                message: 'Category not found'
+            });
+        }
+
+        res.json({
+            success: true,
+            message: 'Category updated successfully',
+            category: updatedCategory
+        });
+    } catch (error) {
+        console.error('Error in updateCategory:', error);
+        res.status(500).json({
+            success: false,
+            message: error.message || 'Error updating category'
+        });
+    }
+};
+
+// Delete Category
 const deleteCategory = async (req, res) => {
     try {
         const categoryId = req.params.id;
 
-        // First check if there are any products using this category
-        const associatedProducts = await Product.exists({ category: categoryId });
+        // Check if category has associated products
+        const productsCount = await Product.countDocuments({
+            category: categoryId,
+            isDeleted: false
+        });
 
-        if (associatedProducts) {
+        if (productsCount > 0) {
             return res.status(400).json({
                 success: false,
-                message: "Cannot delete category that has associated products. Please remove or reassign products first."
+                message: 'Cannot delete category with associated products',
+                productsCount
             });
         }
 
-        // If no associated products, proceed with deletion
-        const deletedCategory = await Category.findByIdAndDelete(categoryId);
+        const deletedCategory = await Category.findByIdAndUpdate(
+            categoryId,
+            { isDeleted: true },
+            { new: true }
+        );
 
         if (!deletedCategory) {
             return res.status(404).json({
                 success: false,
-                message: "Category not found"
+                message: 'Category not found'
             });
         }
 
-        res.status(200).json({
+        res.json({
             success: true,
-            message: "Category deleted successfully"
+            message: 'Category deleted successfully'
         });
-
     } catch (error) {
-        console.error('Error deleting category:', error);
+        console.error('Error in deleteCategory:', error);
         res.status(500).json({
             success: false,
-            message: "Failed to delete category"
+            message: error.message || 'Error deleting category'
         });
     }
 };
 
+// Toggle Category Status
 const toggleCategoryStatus = async (req, res) => {
     try {
-        const { id } = req.params;
-        const { status } = req.body;
-
-        const category = await Category.findById(id);
+        const categoryId = req.params.id;
+        
+        const category = await Category.findById(categoryId);
         if (!category) {
-            return res.status(404).json({ 
-                success: false, 
-                message: 'Category not found' 
+            return res.status(404).json({
+                success: false,
+                message: 'Category not found'
             });
         }
 
-        // Update isAvailable status
-        category.isAvailable = status;
+        category.isActive = !category.isActive;
         await category.save();
 
-        return res.status(200).json({ 
+        res.json({
             success: true,
-            message: `Category is now ${status ? 'available' : 'unavailable'}`
+            message: `Category ${category.isActive ? 'activated' : 'deactivated'} successfully`,
+            isActive: category.isActive
         });
-
     } catch (error) {
-        console.error('Error toggling category status:', error);
-        return res.status(500).json({ 
-            success: false, 
-            message: error.message || 'Failed to update category status'
+        console.error('Error in toggleCategoryStatus:', error);
+        res.status(500).json({
+            success: false,
+            message: error.message || 'Error toggling category status'
         });
     }
 };
 
-
-
 module.exports = {
-  categoryInfo,
-  addCategory,
-  loadCategory,
-  loadEditCategory,
-  updateCategory,
-  deleteCategory,
-  toggleCategoryStatus
+    categoryInfo,
+    loadCategory,
+    addCategory,
+    loadEditCategory,
+    updateCategory,
+    deleteCategory,
+    toggleCategoryStatus
 };

@@ -1,0 +1,181 @@
+<%- include('../../partials/header.ejs') %>
+
+<!-- Single Product Section -->
+<div class="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-violet-900 py-12">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <!-- Breadcrumbs -->
+        <nav class="flex mb-8" aria-label="Breadcrumb">
+            <ol class="inline-flex items-center space-x-1 md:space-x-3">
+                <li class="inline-flex items-center">
+                    <a href="/" class="text-gray-400 hover:text-white">Home</a>
+                </li>
+                <svg class="w-6 h-6 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
+                </svg>
+                <li class="inline-flex items-center">
+                    <a href="/categories/<%= product.category._id %>" class="text-gray-400 hover:text-white">
+                        <%= product.category.name %>
+                    </a>
+                </li>
+                <svg class="w-6 h-6 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
+                </svg>
+                <li>
+                    <span class="text-gray-500"><%= product.name %></span>
+                </li>
+            </ol>
+        </nav>
+
+        <!-- Product Details -->
+        <div class="glass-effect rounded-2xl overflow-hidden shadow-2xl">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 p-8">
+                <!-- Product Images -->
+                <div class="space-y-4">
+                    <div class="relative pb-[100%] rounded-lg overflow-hidden">
+                        <img id="mainImage" src="<%= product.images[0] %>" alt="<%= product.name %>"
+                             class="absolute inset-0 w-full h-full object-cover transform hover:scale-150 transition-transform duration-300">
+                    </div>
+                    <div class="grid grid-cols-4 gap-4">
+                        <% product.images.forEach((image, index) => { %>
+                            <button onclick="changeMainImage('<%= image %>')" 
+                                    class="relative pb-[100%] rounded-lg overflow-hidden hover:ring-2 hover:ring-cyan-400 transition-all duration-200">
+                                <img src="<%= image %>" alt="<%= product.name %> - View <%= index + 1 %>"
+                                     class="absolute inset-0 w-full h-full object-cover">
+                            </button>
+                        <% }); %>
+                    </div>
+                </div>
+
+                <!-- Product Info -->
+                <div class="space-y-6">
+                    <div>
+                        <h1 class="text-3xl font-bold text-white mb-2"><%= product.name %></h1>
+                        <p class="text-gray-400"><%= product.brand %></p>
+                    </div>
+
+                    <div class="flex items-baseline space-x-4">
+                        <p class="text-4xl font-bold text-cyan-400">₹<%= product.discountedPrice.toLocaleString('en-IN') %></p>
+                        <% if (product.discountPercentage > 0) { %>
+                            <p class="text-xl text-gray-400 line-through">₹<%= product.price.toLocaleString('en-IN') %></p>
+                            <p class="text-lg text-green-400">-<%= product.discountPercentage %>%</p>
+                        <% } %>
+                    </div>
+
+                    <!-- Stock Status -->
+                    <div>
+                        <% if (product.stock < 6) { %>
+                            <span class="px-3 py-1 rounded-full text-sm font-semibold bg-red-100 text-red-800">
+                                Only <%= product.stock %> left in stock!
+                            </span>
+                        <% } else { %>
+                            <span class="px-3 py-1 rounded-full text-sm font-semibold bg-green-100 text-green-800">
+                                In Stock
+                            </span>
+                        <% } %>
+                    </div>
+
+                    <!-- Specifications -->
+                    <div class="space-y-4">
+                        <h2 class="text-xl font-semibold text-white">Specifications</h2>
+                        <div class="grid grid-cols-1 gap-4">
+                            <div class="glass-effect rounded-lg p-4">
+                                <h3 class="text-cyan-400 font-medium mb-2">Processor</h3>
+                                <p class="text-gray-300"><%= product.specifications.processor %></p>
+                            </div>
+                            <div class="glass-effect rounded-lg p-4">
+                                <h3 class="text-cyan-400 font-medium mb-2">RAM</h3>
+                                <p class="text-gray-300"><%= product.specifications.ram %></p>
+                            </div>
+                            <div class="glass-effect rounded-lg p-4">
+                                <h3 class="text-cyan-400 font-medium mb-2">Storage</h3>
+                                <p class="text-gray-300"><%= product.specifications.storage %></p>
+                            </div>
+                            <div class="glass-effect rounded-lg p-4">
+                                <h3 class="text-cyan-400 font-medium mb-2">Graphics</h3>
+                                <p class="text-gray-300"><%= product.specifications.graphics %></p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Add to Cart Button -->
+                    <button onclick="addToCart('<%= product._id %>')"
+                            class="w-full py-3 px-6 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white font-semibold transition-all duration-200 transform hover:scale-105">
+                        Add to Cart
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recommended Products -->
+        <% if (recommendedProducts && recommendedProducts.length > 0) { %>
+            <div class="mt-16">
+                <h2 class="text-2xl font-bold text-white mb-8">You might also like</h2>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <% recommendedProducts.forEach(product => { %>
+                        <a href="/product/<%= product._id %>" class="glass-effect rounded-xl overflow-hidden hover:scale-105 transition-transform duration-300">
+                            <div class="relative pb-[75%]">
+                                <img src="<%= product.images[0] %>" alt="<%= product.name %>"
+                                     class="absolute inset-0 w-full h-full object-cover">
+                                <% if (product.discountPercentage > 0) { %>
+                                    <div class="absolute top-2 right-2 bg-red-500/80 backdrop-blur-sm text-white px-2 py-1 rounded-md text-sm">
+                                        -<%= product.discountPercentage %>%
+                                    </div>
+                                <% } %>
+                            </div>
+                            <div class="p-4">
+                                <h3 class="text-lg font-semibold text-white mb-2"><%= product.name %></h3>
+                                <div class="flex items-baseline space-x-2">
+                                    <p class="text-xl font-bold text-cyan-400">₹<%= product.discountedPrice.toLocaleString('en-IN') %></p>
+                                    <% if (product.discountPercentage > 0) { %>
+                                        <p class="text-sm text-gray-400 line-through">₹<%= product.price.toLocaleString('en-IN') %></p>
+                                    <% } %>
+                                </div>
+                            </div>
+                        </a>
+                    <% }); %>
+                </div>
+            </div>
+        <% } %>
+    </div>
+</div>
+
+<!-- Image Zoom Script -->
+<script>
+function changeMainImage(src) {
+    const mainImage = document.getElementById('mainImage');
+    mainImage.src = src;
+}
+
+// Add to Cart Function
+function addToCart(productId) {
+    fetch(`/cart/add/${productId}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            Swal.fire({
+                title: 'Success!',
+                text: 'Product added to cart',
+                icon: 'success',
+                showConfirmButton: false,
+                timer: 1500
+            });
+        } else {
+            throw new Error(data.message);
+        }
+    })
+    .catch(error => {
+        Swal.fire({
+            title: 'Error!',
+            text: error.message || 'Failed to add product to cart',
+            icon: 'error'
+        });
+    });
+}
+</script>
+
+<%- include('../../partials/footer.ejs') %>

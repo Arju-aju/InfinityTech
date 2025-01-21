@@ -1,3 +1,5 @@
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
     <script>
         // Mobile menu toggle
         const sidebarToggle = document.getElementById('sidebarToggle');
@@ -30,6 +32,30 @@
                     successAlert.style.display = 'none';
                 }, 300);
             }, 3000);
+        }
+
+        // Delete Product Function
+        function deleteProduct(productId) {
+            Swal.fire({
+                title: 'Are you sure?',
+                text: "This product will be deleted. This action cannot be undone.",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Yes, delete it!',
+                background: '#1f2937',
+                color: '#fff'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Create a form for the POST request
+                    const form = document.createElement('form');
+                    form.method = 'POST';
+                    form.action = `/admin/deleteProduct/${productId}`;
+                    document.body.appendChild(form);
+                    form.submit();
+                }
+            });
         }
     </script>
 </body>

@@ -1,0 +1,112 @@
+<%- include('../partials/header.ejs') %>
+
+<!-- Category Products Section -->
+<div class="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-violet-900 py-12">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <!-- Breadcrumbs -->
+        <nav class="flex mb-8" aria-label="Breadcrumb">
+            <ol class="inline-flex items-center space-x-1 md:space-x-3">
+                <li class="inline-flex items-center">
+                    <a href="/" class="text-gray-400 hover:text-white">Home</a>
+                </li>
+                <svg class="w-6 h-6 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
+                </svg>
+                <li>
+                    <a href="/categories" class="text-gray-400 hover:text-white">Categories</a>
+                </li>
+                <svg class="w-6 h-6 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
+                </svg>
+                <li>
+                    <span class="text-gray-500"><%= category.name %></span>
+                </li>
+            </ol>
+        </nav>
+
+        <!-- Category Header -->
+        <div class="glass-effect rounded-xl p-8 mb-8">
+            <h1 class="text-3xl font-bold text-white mb-4"><%= category.name %></h1>
+            <p class="text-gray-300 mb-4"><%= category.description %></p>
+            <div class="text-cyan-400">
+                <%= totalProducts %> Products Found
+            </div>
+        </div>
+
+        <!-- Products Grid -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            <% if (products.length > 0) { %>
+                <% products.forEach(product => { %>
+                    <a href="/product/<%= product._id %>" 
+                       class="glass-effect rounded-xl overflow-hidden hover:scale-105 transition-transform duration-300">
+                        <div class="relative pb-[75%]">
+                            <img src="<%= product.images[0] %>" 
+                                 alt="<%= product.name %>"
+                                 class="absolute inset-0 w-full h-full object-cover">
+                            <% if (product.discountPercentage > 0) { %>
+                                <div class="absolute top-2 right-2 bg-red-500/80 backdrop-blur-sm text-white px-2 py-1 rounded-md text-sm">
+                                    -<%= product.discountPercentage %>%
+                                </div>
+                            <% } %>
+                            <div class="absolute bottom-2 left-2 px-2 py-1 rounded-md text-sm
+                                        <%= product.stock < 6 ? 'bg-red-500/80' : 'bg-green-500/80' %> backdrop-blur-sm text-white">
+                                <%= product.stock < 6 ? 'Low Stock' : 'In Stock' %>
+                            </div>
+                        </div>
+                        <div class="p-4">
+                            <h2 class="text-lg font-semibold text-white mb-1"><%= product.name %></h2>
+                            <p class="text-gray-400 text-sm mb-2"><%= product.brand %></p>
+                            <div class="flex items-baseline space-x-2">
+                                <p class="text-xl font-bold text-cyan-400">₹<%= product.discountedPrice.toLocaleString('en-IN') %></p>
+                                <% if (product.discountPercentage > 0) { %>
+                                    <p class="text-sm text-gray-400 line-through">₹<%= product.price.toLocaleString('en-IN') %></p>
+                                <% } %>
+                            </div>
+                        </div>
+                    </a>
+                <% }); %>
+            <% } else { %>
+                <div class="col-span-full glass-effect rounded-xl p-8 text-center">
+                    <svg class="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M12 12h.01M12 12h.01M12 12h.01M12 12h.01M12 12h.01M12 12h.01"></path>
+                    </svg>
+                    <h3 class="text-xl font-semibold text-white mb-2">No Products Found</h3>
+                    <p class="text-gray-400">We couldn't find any products in this category.</p>
+                    <a href="/categories" class="inline-block mt-4 px-6 py-2 bg-cyan-600 hover:bg-cyan-500 text-white rounded-lg transition-colors">
+                        Browse Other Categories
+                    </a>
+                </div>
+            <% } %>
+        </div>
+
+        <!-- Pagination -->
+        <% if (totalPages > 1) { %>
+            <div class="flex items-center justify-between mt-8">
+                <div class="text-sm text-gray-400">
+                    Showing <span class="font-medium"><%= ((currentPage - 1) * 12) + 1 %></span> to 
+                    <span class="font-medium"><%= Math.min(currentPage * 12, totalProducts) %></span> of 
+                    <span class="font-medium"><%= totalProducts %></span> results
+                </div>
+                <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+                    <% if (currentPage > 1) { %>
+                        <a href="/category/<%= category._id %>?page=<%= currentPage - 1 %>" 
+                           class="relative inline-flex items-center px-4 py-2 rounded-l-md glass-effect text-sm text-gray-200 hover:bg-gray-700/50">
+                            <i class="fas fa-chevron-left mr-1"></i>
+                            Previous
+                        </a>
+                    <% } %>
+
+                    <% if (currentPage < totalPages) { %>
+                        <a href="/category/<%= category._id %>?page=<%= currentPage + 1 %>"
+                           class="relative inline-flex items-center px-4 py-2 rounded-r-md glass-effect text-sm text-gray-200 hover:bg-gray-700/50">
+                            Next
+                            <i class="fas fa-chevron-right ml-1"></i>
+                        </a>
+                    <% } %>
+                </nav>
+            </div>
+        <% } %>
+    </div>
+</div>
+
+<%- include('../partials/footer.ejs') %>

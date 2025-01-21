@@ -30,6 +30,10 @@ const laptopCategorySchema = new Schema({
         type: Boolean,
         default: true,
     },
+    isDeleted: {
+        type: Boolean,
+        default: false
+    },
     isAvailable: {
         type: Boolean,
         default: true
