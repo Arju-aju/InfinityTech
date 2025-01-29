@@ -53,41 +53,51 @@ app.use((req, res, next) => {
     next();
 });
 
-// Add CSP headers
+// Session configuration
+app.use(session({
+    secret: process.env.SESSION_SECRET || 'your-secret-key',
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+        secure: process.env.NODE_ENV === 'production',
+        httpOnly: true,
+        maxAge: 24 * 60 * 60 * 1000 // 24 hours
+    }
+}));
+
+// Initialize Passport and restore authentication state from session
+app.use(passport.initialize());
+app.use(passport.session());
+
+// Flash messages
+app.use(flash());
+
+// Global variables middleware
 app.use((req, res, next) => {
-    res.setHeader(
-        'Content-Security-Policy',
-        "default-src 'self'; " +
-        "img-src 'self' data: https:; " +
-        "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.tailwindcss.com https://cdnjs.cloudflare.com; " +
-        "script-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com https://cdnjs.cloudflare.com https://cdn.jsdelivr.net; " +
-        "font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com; " +
-        "connect-src 'self';"
-    );
+    res.locals.user = req.user || null;
+    res.locals.success_msg = req.flash('success_msg');
+    res.locals.error_msg = req.flash('error_msg');
+    res.locals.error = req.flash('error');
     next();
 });
 
-app.use(
-    session({
-        secret: process.env.SESSION_SECRET,
-        resave: false,
-        saveUninitialized: false,
-        cookie: {
-            secure: process.env.NODE_ENV === 'production',
-            httpOnly: true,
-            maxAge: 72 * 60 * 60 * 1000 // 3 days
-        }
-    })
-);
-
-app.use(passport.initialize());
-app.use(passport.session());
-app.use(flash()); // Add flash middleware
-
-// Add flash messages to all responses
+// Security headers
 app.use((req, res, next) => {
-    res.locals.success = req.flash('success');
-    res.locals.error = req.flash('error');
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+    res.setHeader('X-Frame-Options', 'SAMEORIGIN');
+    res.setHeader('X-XSS-Protection', '1; mode=block');
+    res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+    
+    // Content Security Policy
+    res.setHeader('Content-Security-Policy', `
+        default-src 'self';
+        script-src 'self' 'unsafe-inline' cdn.tailwindcss.com cdn.jsdelivr.net unpkg.com;
+        style-src 'self' 'unsafe-inline' cdn.tailwindcss.com cdnjs.cloudflare.com fonts.googleapis.com unpkg.com cdn.jsdelivr.net;
+        font-src 'self' fonts.gstatic.com cdnjs.cloudflare.com;
+        img-src 'self' data: blob:;
+        connect-src 'self';
+    `.replace(/\s+/g, ' ').trim());
+    
     next();
 });
 
@@ -104,6 +114,13 @@ app.use((req, res, next) => {
 });
 
 // Add locals for templates
+app.use((req, res, next) => {
+    // Set default values for title and description
+    res.locals.title = 'InfinityTech';
+    res.locals.description = 'Your Ultimate Laptop Destination';
+    next();
+});
+
 app.locals.formatPrice = (price) => {
     return price.toLocaleString('en-IN', {
         style: 'currency',

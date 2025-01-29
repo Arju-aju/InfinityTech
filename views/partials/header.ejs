@@ -1,121 +1,243 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>infinityTech- Your Electronics Store</title>
-    
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    
-    <!-- Font Awesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
-    <!-- SweetAlert2 -->
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
-    <!-- Custom Styles -->
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1024, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" />
+    <title><%= locals.title || 'InfinityTech' %></title>
+    <meta
+      name="description"
+      content="<%= locals.description || 'Your Ultimate Laptop Destination' %>"
+    />
+    <link href="/css/output.css" rel="stylesheet" />
+    <script
+      defer
+      src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"
+    ></script>
+    <link rel="stylesheet" href="https://unpkg.com/swiper/swiper-bundle.min.css" />
     <style>
-        .glass-effect {
-            background: rgba(17, 25, 40, 0.75);
-            backdrop-filter: blur(16px) saturate(180%);
-            -webkit-backdrop-filter: blur(16px) saturate(180%);
-            border: 1px solid rgba(255, 255, 255, 0.125);
+      /* Add minimum width to body */
+      body {
+        min-width: 1024px;
+        overflow-x: auto;
+      }
+      @keyframes gradient {
+        0% {
+          background-position: 0% 50%;
         }
-        
-        /* Smooth scrolling */
-        html {
-            scroll-behavior: smooth;
+        50% {
+          background-position: 100% 50%;
         }
-
-        /* Custom scrollbar */
-        ::-webkit-scrollbar {
-            width: 8px;
-            height: 8px;
+        100% {
+          background-position: 0% 50%;
         }
-
-        ::-webkit-scrollbar-track {
-            background: #1a1a1a;
-        }
-
-        ::-webkit-scrollbar-thumb {
-            background: #3b82f6;
-            border-radius: 4px;
-        }
-
-        ::-webkit-scrollbar-thumb:hover {
-            background: #2563eb;
-        }
+      }
+      .gradient-animate {
+        background: linear-gradient(-45deg, #6366f1, #ec4899, #10b981, #6366f1);
+        background-size: 400% 400%;
+        animation: gradient 15s ease infinite;
+      }
+      .nav-link {
+        position: relative;
+        transition: color 0.3s ease;
+      }
+      .nav-link::after {
+        content: "";
+        position: absolute;
+        width: 0;
+        height: 2px;
+        bottom: -2px;
+        left: 0;
+        background: linear-gradient(to right, #60a5fa, #ec4899);
+        transition: width 0.3s ease;
+      }
+      .nav-link:hover::after {
+        width: 100%;
+      }
+      /* Ensure header is above other content */
+      .site-header {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 1000;
+        background: linear-gradient(-45deg, #6366f1, #ec4899, #10b981, #6366f1);
+        background-size: 400% 400%;
+        animation: gradient 15s ease infinite;
+      }
+      /* Add margin to the main content */
+      main {
+        margin-left: 2rem;
+        margin-right: 2rem;
+      }
+      /* Add margin to the navbar */
+      nav {
+        margin-left: 2rem;
+        margin-right: 2rem;
+      }
+      body {
+        min-width: 1024px;
+        overflow-x: auto;
+        margin: 4; /* Reset default margin */
+        padding-top: 4rem; /* Add padding to account for the fixed header */
+      }
     </style>
-</head>
-<body class="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-violet-900">
-    <!-- Navigation -->
-    <nav class="fixed top-0 left-0 right-0 z-50 bg-gray-900/80 backdrop-blur-lg border-b border-gray-800">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex items-center justify-between h-16">
-                <!-- Logo -->
-                <div class="flex-shrink-0">
-                    <a href="/" class="text-2xl font-bold text-white">
-                        infinity<span class="text-cyan-500">Tech</span>
-                    </a>
-                </div>
-
-                <!-- Navigation Links -->
-                <div class="hidden md:block">
-                    <div class="ml-10 flex items-baseline space-x-4">
-                        <a href="/" class="text-gray-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium">Home</a>
-                        <a href="/categories" class="text-gray-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium">Categories</a>
-                        <% if (locals.user) { %>
-                            <a href="/cart" class="text-gray-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium">
-                                Cart <span class="bg-cyan-500 text-white px-2 py-1 rounded-full text-xs"><%= locals.cartCount || 0 %></span>
-                            </a>
-                            <div class="relative group">
-                                <button class="text-gray-300 group-hover:text-white px-3 py-2 rounded-md text-sm font-medium">
-                                    <%= user.name %> <i class="fas fa-chevron-down ml-1"></i>
-                                </button>
-                                <div class="absolute right-0 w-48 py-2 mt-2 bg-gray-900 rounded-md shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
-                                    <a href="/profile" class="block px-4 py-2 text-sm text-gray-300 hover:text-white hover:bg-gray-800">Profile</a>
-                                    <a href="/orders" class="block px-4 py-2 text-sm text-gray-300 hover:text-white hover:bg-gray-800">Orders</a>
-                                    <a href="/logout" class="block px-4 py-2 text-sm text-gray-300 hover:text-white hover:bg-gray-800">Logout</a>
-                                </div>
-                            </div>
-                        <% } else { %>
-                            <a href="/login" class="text-gray-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium">Login</a>
-                            <a href="/signup" class="bg-cyan-500 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-cyan-600 transition-colors">Sign Up</a>
-                        <% } %>
-                    </div>
-                </div>
-
-                <!-- Mobile menu button -->
-                <div class="md:hidden">
-                    <button type="button" class="text-gray-400 hover:text-white focus:outline-none focus:text-white">
-                        <svg class="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
-                        </svg>
-                    </button>
-                </div>
+  </head>
+  <body class="flex flex-col min-h-screen bg-gray-50">
+    <!-- Navbar -->
+    <header class="site-header">
+      <nav class="relative" x-data="{ isOpen: false, isLoggedIn: <%= typeof user !== 'undefined' %> }">
+        <div class="min-w-[1024px] mx-auto px-4">
+          <div class="flex justify-between items-center h-16">
+            <!-- Logo -->
+            <div class="flex items-center">
+              <a href="/" class="flex items-center space-x-2">
+                <span class="text-2xl font-bold text-white">InfinityTech</span>
+              </a>
             </div>
-        </div>
-
-        <!-- Mobile menu -->
-        <div class="hidden md:hidden">
-            <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3">
-                <a href="/" class="text-gray-300 hover:text-white block px-3 py-2 rounded-md text-base font-medium">Home</a>
-                <a href="/categories" class="text-gray-300 hover:text-white block px-3 py-2 rounded-md text-base font-medium">Categories</a>
-                <% if (locals.user) { %>
-                    <a href="/cart" class="text-gray-300 hover:text-white block px-3 py-2 rounded-md text-base font-medium">
-                        Cart <span class="bg-cyan-500 text-white px-2 py-1 rounded-full text-xs"><%= locals.cartCount || 0 %></span>
-                    </a>
-                    <a href="/profile" class="text-gray-300 hover:text-white block px-3 py-2 rounded-md text-base font-medium">Profile</a>
-                    <a href="/orders" class="text-gray-300 hover:text-white block px-3 py-2 rounded-md text-base font-medium">Orders</a>
-                    <a href="/logout" class="text-gray-300 hover:text-white block px-3 py-2 rounded-md text-base font-medium">Logout</a>
-                <% } else { %>
-                    <a href="/login" class="text-gray-300 hover:text-white block px-3 py-2 rounded-md text-base font-medium">Login</a>
-                    <a href="/signup" class="bg-cyan-500 text-white block px-3 py-2 rounded-md text-base font-medium hover:bg-cyan-600 transition-colors">Sign Up</a>
-                <% } %>
+    
+            <!-- Desktop Navigation Links -->
+            <div class="flex items-center space-x-8">
+              <nav class="flex space-x-6 gap-8">
+                <a href="/" class="nav-link text-white hover:text-gray-200">Home</a>
+                <a href="/shop" class="nav-link text-white hover:text-gray-200">Shop</a>
+                <a href="/about" class="nav-link text-white hover:text-gray-200">About</a>
+                <a href="/contact" class="nav-link text-white hover:text-gray-200">Contact</a>
+              </nav>
             </div>
-        </div>
-    </nav>
+    
+            <!-- Search Bar -->
+            <div class="w-48 relative">
+              <form action="/search" method="GET" class="w-full">
+                <div class="relative">
+                  <input
+                    type="text"
+                    name="q"
+                    placeholder="Search..."
+                    class="w-full h-8 pl-8 pr-3 text-sm rounded-full bg-white/10 border border-white/20 focus:outline-none focus:border-blue-300 text-white placeholder-gray-300"
+                  />
+                  <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                    <svg
+                      class="w-4 h-4 text-gray-300"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                      />
+                    </svg>
+                  </div>
+                  <button
+                    type="submit"
+                    class="absolute right-1 top-1/2 transform -translate-y-1/2 text-gray-300 hover:text-white transition-colors duration-300"
+                  >
+                    <svg 
+                      class="w-4 h-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                      />
+                    </svg>
+                  </button>
+                </div>
+              </form>
+            </div>
+    
+            <!-- Right Side Icons -->
+            <div class="flex items-center space-x-6">
+              <% if (!locals.user) { %>
+              <div class="flex items-center space-x-4">
+                <a href="/login" class="text-sm text-white hover:text-gray-200">Login</a>
+                <a href="/signup" class="px-4 py-2 text-sm bg-white text-indigo-600 rounded-md hover:bg-gray-100">Sign Up</a>
+              </div>
+              <% } else { %>
+              <div class="flex items-center space-x-4">
+                <!-- Wishlist -->
+                <a href="/wishlist" class="relative text-white hover:text-gray-200">
+                  <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+                  </svg>
+                  <% if (locals.wishlistCount && locals.wishlistCount > 0) { %>
+                  <span class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">
+                    <%= locals.wishlistCount %>
+                  </span>
+                  <% } %>
+                </a>
+    
+                <!-- Cart -->
+                <a href="/cart" class="relative text-white hover:text-gray-200">
+                  <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/>
+                  </svg>
+                  <% if (locals.cartCount && locals.cartCount > 0) { %>
+                  <span class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">
+                    <%= locals.cartCount %>
+                  </span>
+                  <% } %>
+                </a>
+    
+                <!-- Profile Dropdown -->
 
-    <!-- Page Content -->
-    <main class="pt-16"><!-- Content will be injected here -->
+
+                <div class="relative">
+                  <button class="flex items-center space-x-2 text-white hover:text-gray-200" id="profileDropdown">
+                    <span class="text-sm font-medium"><%= locals.user.name %></span>
+                      <i class="fas fa-chevron-down ml-2"></i>
+                  </button>
+
+                  <!-- Dropdown Menu -->
+                  <div class="glass-effect absolute right-0 mt-2 w-48 rounded-lg py-2 hidden" id="profileMenu">
+                      <a href="/profile" class="block px-4 py-2 text-gray-300 hover:text-white hover:bg-white/10">
+                          <i class="fas fa-user mr-2"></i> Profile
+                      </a>
+                      <a href="/settings" class="block px-4 py-2 text-gray-300 hover:text-white hover:bg-white/10">
+                          <i class="fas fa-cog mr-2"></i> Settings
+                      </a>
+                      <div class="border-t border-gray-700 my-2"></div>
+                      <a href="/logout" class="block px-4 py-2 text-red-400 hover:text-red-300 hover:bg-white/10">
+                          <i class="fas fa-sign-out-alt mr-2"></i> Logout
+                      </a>
+                  </div>
+              </div>
+              </div>
+              <% } %>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-grow pt-16">
+      <!-- Your main content goes here -->
+    </main>
+    <script src="https://unpkg.com/swiper/swiper-bundle.min.js"></script>
+    <script>
+      // Profile Dropdown Toggle
+      const profileDropdown = document.getElementById('profileDropdown');
+      const profileMenu = document.getElementById('profileMenu');
+
+      if (profileDropdown && profileMenu) {
+          profileDropdown.addEventListener('click', () => {
+              profileMenu.classList.toggle('hidden');
+          });
+
+          // Close dropdown when clicking outside
+          document.addEventListener('click', (e) => {
+              if (!profileDropdown.contains(e.target) && !profileMenu.contains(e.target)) {
+                  profileMenu.classList.add('hidden');
+              }
+          });
+      }
+  </script>
+  </body>
+</html>

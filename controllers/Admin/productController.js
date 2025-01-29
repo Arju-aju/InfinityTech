@@ -186,18 +186,36 @@ const addProduct = async (req, res) => {
 const loadEditProduct = async (req, res) => {
     try {
         const productId = req.params.id;
-        const product = await Product.findOne({ 
-            _id: productId, 
-            isDeleted: false 
-        }).populate('category', 'name');
+        if (!productId) {
+            req.flash('error', 'Product ID is required');
+            return res.redirect('/admin/products');
+        }
+
+        const [product, categories] = await Promise.all([
+            Product.findOne({ 
+                _id: productId, 
+                isDeleted: false 
+            }).populate('category', 'name').lean(),
+            Category.find({ isDeleted: false }).lean()
+        ]);
         
         if (!product) {
             req.flash('error', 'Product not found');
             return res.redirect('/admin/products');
         }
 
-        const categories = await Category.find({ isDeleted: false });
-        
+        // Ensure specifications object exists
+        product.specifications = product.specifications || {
+            processor: '',
+            ram: '',
+            storage: '',
+            graphics: ''
+        };
+
+        // Ensure all required fields are present
+        product.discountPercentage = product.discountPercentage || 0;
+        product.images = product.images || [];
+
         res.render('admin/editProduct', {
             product,
             categories,
@@ -208,7 +226,7 @@ const loadEditProduct = async (req, res) => {
         });
     } catch (error) {
         console.error('Error in loadEditProduct:', error);
-        req.flash('error', 'Error loading product');
+        req.flash('error', 'Error loading product. Please try again.');
         res.redirect('/admin/products');
     }
 };
@@ -228,14 +246,26 @@ const updateProduct = async (req, res) => {
             specifications
         } = req.body;
 
+        // Check if product exists
+        const existingProduct = await Product.findById(productId);
+        if (!existingProduct) {
+            // Delete uploaded files if any
+            if (req.files) {
+                await Promise.all(req.files.map(file => 
+                    fs.unlink(file.path).catch(err => console.error('Error deleting file:', err))
+                ));
+            }
+            return res.status(404).json({
+                success: false,
+                message: 'Product not found'
+            });
+        }
+
         // Validate required fields
         const requiredFields = {
             name,
-            brand,
-            category,
             price,
-            stock,
-            description
+            stock
         };
 
         const missingFields = Object.entries(requiredFields)
@@ -243,32 +273,15 @@ const updateProduct = async (req, res) => {
             .map(([field]) => field);
 
         if (missingFields.length > 0) {
+            // Delete uploaded files if validation fails
+            if (req.files) {
+                await Promise.all(req.files.map(file => 
+                    fs.unlink(file.path).catch(err => console.error('Error deleting file:', err))
+                ));
+            }
             return res.status(400).json({
                 success: false,
                 message: `Missing required fields: ${missingFields.join(', ')}`
-            });
-        }
-
-        // Check if product exists
-        const existingProduct = await Product.findById(productId);
-        if (!existingProduct) {
-            return res.status(404).json({
-                success: false,
-                message: 'Product not found'
-            });
-        }
-
-        // Check for duplicate name (excluding current product)
-        const duplicateProduct = await Product.findOne({
-            name: name.trim(),
-            _id: { $ne: productId },
-            isDeleted: false
-        });
-
-        if (duplicateProduct) {
-            return res.status(400).json({
-                success: false,
-                message: 'A product with this name already exists'
             });
         }
 
@@ -277,18 +290,46 @@ const updateProduct = async (req, res) => {
         const parsedStock = parseInt(stock);
         const parsedDiscount = parseFloat(discountPercentage) || 0;
 
-        if (parsedPrice < 0 || parsedStock < 0 || parsedDiscount < 0 || parsedDiscount > 100) {
+        if (isNaN(parsedPrice) || parsedPrice <= 0) {
             return res.status(400).json({
                 success: false,
-                message: 'Invalid values for price, stock, or discount'
+                message: 'Price must be a valid number greater than 0'
             });
         }
 
-        // Extract specifications
-        const processor = specifications?.processor || req.body['specifications[processor]'];
-        const ram = specifications?.ram || req.body['specifications[ram]'];
-        const storage = specifications?.storage || req.body['specifications[storage]'];
-        const graphics = specifications?.graphics || req.body['specifications[graphics]'];
+        if (isNaN(parsedStock) || parsedStock < 0) {
+            return res.status(400).json({
+                success: false,
+                message: 'Stock must be a valid number greater than or equal to 0'
+            });
+        }
+
+        if (isNaN(parsedDiscount) || parsedDiscount < 0 || parsedDiscount > 100) {
+            return res.status(400).json({
+                success: false,
+                message: 'Discount percentage must be between 0 and 100'
+            });
+        }
+
+        // Check if any changes were made
+        const hasChanges = (
+            name !== existingProduct.name ||
+            brand !== existingProduct.brand ||
+            category !== existingProduct.category.toString() ||
+            parsedPrice !== existingProduct.price ||
+            parsedStock !== existingProduct.stock ||
+            parsedDiscount !== existingProduct.discountPercentage ||
+            description !== existingProduct.description ||
+            JSON.stringify(specifications) !== JSON.stringify(existingProduct.specifications) ||
+            (req.files && req.files.length > 0)
+        );
+
+        if (!hasChanges) {
+            return res.status(400).json({
+                success: false,
+                message: 'No changes detected. Please modify at least one field.'
+            });
+        }
 
         // Handle image updates
         let images = existingProduct.images;
@@ -297,37 +338,65 @@ const updateProduct = async (req, res) => {
             images = [...images, ...newImages];
         }
 
-        // Update product with new values only if they're different
-        const updateData = {
-            name: name.trim() !== existingProduct.name ? name.trim() : undefined,
-            brand: brand.trim() !== existingProduct.brand ? brand.trim() : undefined,
-            category: category !== existingProduct.category.toString() ? category : undefined,
-            price: parsedPrice !== existingProduct.price ? parsedPrice : undefined,
-            stock: parsedStock !== existingProduct.stock ? parsedStock : undefined,
-            discountPercentage: parsedDiscount !== existingProduct.discountPercentage ? parsedDiscount : undefined,
-            description: description.trim() !== existingProduct.description ? description.trim() : undefined,
-            specifications: {
-                processor: processor?.trim() !== existingProduct.specifications?.processor ? processor.trim() : existingProduct.specifications?.processor,
-                ram: ram?.trim() !== existingProduct.specifications?.ram ? ram.trim() : existingProduct.specifications?.ram,
-                storage: storage?.trim() !== existingProduct.specifications?.storage ? storage.trim() : existingProduct.specifications?.storage,
-                graphics: graphics?.trim() !== existingProduct.specifications?.graphics ? graphics.trim() : existingProduct.specifications?.graphics
-            },
-            images: images.length !== existingProduct.images.length ? images : existingProduct.images
-        };
-
-        // Remove undefined values
-        Object.keys(updateData).forEach(key => {
-            if (updateData[key] === undefined) {
-                delete updateData[key];
+        // Parse specifications if it's a string
+        let parsedSpecs = specifications;
+        if (typeof specifications === 'string') {
+            try {
+                parsedSpecs = JSON.parse(specifications);
+            } catch (error) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Invalid specifications format'
+                });
             }
-        });
+        }
+
+        // Validate specifications
+        if (!parsedSpecs || typeof parsedSpecs !== 'object') {
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid specifications format'
+            });
+        }
+
+        const requiredSpecs = ['processor', 'ram', 'storage', 'graphics'];
+        const missingSpecs = requiredSpecs.filter(spec => !parsedSpecs[spec]);
+
+        if (missingSpecs.length > 0) {
+            return res.status(400).json({
+                success: false,
+                message: `Missing specifications: ${missingSpecs.join(', ')}`
+            });
+        }
+
+        // Update product with validated data
+        const updateData = {
+            name: name.trim(),
+            brand: brand.trim(),
+            category,
+            price: parsedPrice,
+            stock: parsedStock,
+            discountPercentage: parsedDiscount,
+            description: description.trim(),
+            specifications: {
+                processor: parsedSpecs.processor.trim(),
+                ram: parsedSpecs.ram.trim(),
+                storage: parsedSpecs.storage.trim(),
+                graphics: parsedSpecs.graphics.trim()
+            },
+            images
+        };
 
         // Update product
         const updatedProduct = await Product.findByIdAndUpdate(
             productId,
             { $set: updateData },
-            { new: true }
+            { new: true, runValidators: true }
         ).populate('category');
+
+        if (!updatedProduct) {
+            throw new Error('Failed to update product');
+        }
 
         res.json({
             success: true,
@@ -336,10 +405,52 @@ const updateProduct = async (req, res) => {
         });
     } catch (error) {
         console.error('Error in updateProduct:', error);
+
+        // Delete uploaded files if update fails
+        if (req.files) {
+            await Promise.all(req.files.map(file => 
+                fs.unlink(file.path).catch(err => console.error('Error deleting file:', err))
+            ));
+        }
+
         res.status(500).json({
             success: false,
-            message: error.message || 'Error updating product'
+            message: error.message || 'An error occurred while updating the product'
         });
+    }
+};
+
+// Toggle featured status
+const toggleFeatured = async (req, res) => {
+    try {
+        const product = await Product.findById(req.params.id);
+        if (!product) {
+            return res.status(404).json({ success: false, message: 'Product not found' });
+        }
+        
+        product.isFeatured = !product.isFeatured;
+        await product.save();
+        
+        res.json({ success: true, product });
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+};
+
+// Soft delete product
+const softDelete = async (req, res) => {
+    try {
+        const product = await Product.findById(req.params.id);
+        if (!product) {
+            return res.status(404).json({ success: false, message: 'Product not found' });
+        }
+        
+        product.isDeleted = !product.isDeleted;
+        await product.save();
+        
+        res.json({ success: true, message: 'Product status updated successfully' });
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
     }
 };
 
@@ -438,12 +549,48 @@ const deleteProduct = async (req, res) => {
     }
 };
 
+// Get all products
+const getAllProducts = async (req, res) => {
+    try {
+        const products = await Product.find({ isDeleted: false })
+            .populate('category')
+            .sort('-createdAt')
+            .lean();
+        
+        res.json({ success: true, products });
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+};
+
+// Get product details
+const getProductDetails = async (req, res) => {
+    try {
+        const product = await Product.findOne({ 
+            _id: req.params.id,
+            isDeleted: false 
+        }).populate('category');
+        
+        if (!product) {
+            return res.status(404).json({ success: false, message: 'Product not found' });
+        }
+        
+        res.json({ success: true, product });
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+};
+
 module.exports = {
     loadProduct,
     loadAddProduct,
     addProduct,
     loadEditProduct,
     updateProduct,
+    toggleFeatured,
+    softDelete,
     deleteProduct,
-    deleteProductImage
+    deleteProductImage,
+    getAllProducts,
+    getProductDetails
 };

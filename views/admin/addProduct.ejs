@@ -30,7 +30,7 @@
                         <div class="space-y-6">
                             <div>
                                 <label for="name" class="block text-sm font-medium text-gray-300 mb-2">Product Name*</label>
-                                <input type="text" id="name" name="name" required minlength="3"
+                                <input type="text" id="name" name="name"   minlength="3"
                                     class="w-full px-4 py-3 rounded-lg bg-gray-800 border border-gray-700 text-white placeholder-gray-400 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/50 transition-all duration-200"
                                     placeholder="Enter product name">
                                 <div class="error-message text-red-500 text-sm mt-1"></div>
@@ -38,7 +38,7 @@
 
                             <div>
                                 <label for="brand" class="block text-sm font-medium text-gray-300 mb-2">Brand*</label>
-                                <input type="text" id="brand" name="brand" required
+                                <input type="text" id="brand" name="brand"  
                                     class="w-full px-4 py-3 rounded-lg bg-gray-800 border border-gray-700 text-white placeholder-gray-400 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/50 transition-all duration-200"
                                     placeholder="Enter brand name">
                                 <div class="error-message text-red-500 text-sm mt-1"></div>
@@ -46,7 +46,7 @@
 
                             <div>
                                 <label for="description" class="block text-sm font-medium text-gray-300 mb-2">Description*</label>
-                                <textarea id="description" name="description" required minlength="10" rows="4"
+                                <textarea id="description" name="description"   minlength="10" rows="4"
                                     class="w-full px-4 py-3 rounded-lg bg-gray-800 border border-gray-700 text-white placeholder-gray-400 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/50 transition-all duration-200"
                                     placeholder="Enter product description"></textarea>
                                 <div class="error-message text-red-500 text-sm mt-1"></div>
@@ -54,7 +54,7 @@
 
                             <div>
                                 <label for="category" class="block text-sm font-medium text-gray-300 mb-2">Category*</label>
-                                <select id="category" name="category" required 
+                                <select id="category" name="category"   
                                     class="w-full px-4 py-3 rounded-lg bg-gray-800 border border-gray-700 text-white focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/50 transition-all duration-200">
                                     <option value="">Select a category</option>
                                     <% categories.forEach(category => { %>
@@ -67,7 +67,7 @@
                             <div class="grid grid-cols-2 gap-4">
                                 <div>
                                     <label for="price" class="block text-sm font-medium text-gray-300 mb-2">Price (₹)*</label>
-                                    <input type="number" id="price" name="price" required
+                                    <input type="number" id="price" name="price"  
                                         class="w-full px-4 py-3 rounded-lg bg-gray-800 border border-gray-700 text-white placeholder-gray-400 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/50 transition-all duration-200"
                                         min="0" step="0.01" placeholder="Enter price">
                                     <div class="error-message text-red-500 text-sm mt-1"></div>
@@ -84,7 +84,7 @@
 
                             <div>
                                 <label for="stock" class="block text-sm font-medium text-gray-300 mb-2">Stock Quantity*</label>
-                                <input type="number" id="stock" name="stock" required
+                                <input type="number" id="stock" name="stock"  
                                     class="w-full px-4 py-3 rounded-lg bg-gray-800 border border-gray-700 text-white placeholder-gray-400 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/50 transition-all duration-200"
                                     min="0" step="1" placeholder="Enter stock quantity">
                                 <div class="error-message text-red-500 text-sm mt-1"></div>
@@ -139,7 +139,7 @@
                                         <div class="flex text-sm text-gray-400">
                                             <label for="images" class="relative cursor-pointer rounded-md font-medium text-cyan-500 hover:text-cyan-400 focus-within:outline-none">
                                                 <span>Upload images</span>
-                                                <input id="images" name="images" type="file" class="sr-only" accept="image/*" multiple required>
+                                                <input id="images" name="images" type="file" class="sr-only" accept="image/*" multiple  >
                                             </label>
                                             <p class="pl-1">or drag and drop</p>
                                         </div>

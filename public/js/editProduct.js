@@ -1,277 +1,261 @@
-// Handle form validation and image management
+// Handle form submission and image management
 document.addEventListener('DOMContentLoaded', function() {
     const form = document.getElementById('editProductForm');
     
     // Only proceed if we're on the edit product page
     if (!form) return;
 
-    const originalValues = {};
-    const requiredFields = ['name', 'brand', 'description', 'price', 'stock', 'category'];
-    const numericFields = ['price', 'stock', 'discountPercentage'];
-    
-    // Store original values for comparison
-    requiredFields.concat(numericFields).forEach(field => {
-        const input = document.getElementById(field);
-        if (input) {
-            originalValues[field] = input.value;
-        }
-    });
+    // Store initial form values
+    const initialValues = {
+        name: form.name.value,
+        brand: form.brand.value,
+        description: form.description.value,
+        category: form.category.value,
+        price: form.price.value,
+        stock: form.stock.value,
+        processor: form.processor?.value || '',
+        ram: form.ram?.value || '',
+        storage: form.storage?.value || '',
+        graphics: form.graphics?.value || ''
+    };
 
-    // Store original specifications
-    ['processor', 'ram', 'storage', 'graphics'].forEach(spec => {
-        const input = document.getElementById(spec);
-        if (input) {
-            originalValues[`spec_${spec}`] = input.value;
-        }
-    });
+    // Function to check if form values have changed
+    function hasFormChanged() {
+        const currentValues = {
+            name: form.name.value.trim(),
+            brand: form.brand.value.trim(),
+            description: form.description.value.trim(),
+            category: form.category.value,
+            price: form.price.value,
+            stock: form.stock.value,
+            processor: form.processor?.value.trim() || '',
+            ram: form.ram?.value.trim() || '',
+            storage: form.storage?.value.trim() || '',
+            graphics: form.graphics?.value.trim() || ''
+        };
 
-    // Validate form before submission
+        // Check if any field has changed
+        return Object.keys(initialValues).some(key => initialValues[key] !== currentValues[key]);
+    }
+
+    // Function to validate form
+    function validateForm() {
+        // Required fields validation
+        const requiredFields = ['name', 'price', 'stock'];
+        const emptyFields = requiredFields.filter(field => !form[field].value.trim());
+        
+        if (emptyFields.length > 0) {
+            throw new Error(`Please fill in all required fields: ${emptyFields.join(', ')}`);
+        }
+
+        // Price validation
+        if (parseFloat(form.price.value) <= 0) {
+            throw new Error('Price must be greater than 0');
+        }
+
+        // Stock validation
+        if (parseInt(form.stock.value) < 0) {
+            throw new Error('Stock cannot be negative');
+        }
+
+        // Check if any changes were made
+        if (!hasFormChanged() && !form.images.files.length) {
+            throw new Error('No changes detected. Please modify at least one field before updating.');
+        }
+
+        return true;
+    }
+
+    // Handle form submission
     form.addEventListener('submit', async function(e) {
         e.preventDefault();
-        let isValid = true;
-        let firstError = null;
-        let hasChanges = false;
-
-        // Check for any changes in main fields
-        requiredFields.concat(numericFields).forEach(field => {
-            const input = document.getElementById(field);
-            if (input && input.value !== originalValues[field]) {
-                hasChanges = true;
-            }
-        });
-
-        // Check for changes in specifications
-        ['processor', 'ram', 'storage', 'graphics'].forEach(spec => {
-            const input = document.getElementById(spec);
-            if (input && input.value !== originalValues[`spec_${spec}`]) {
-                hasChanges = true;
-            }
-        });
-
-        // Check if new images were added
-        const newImages = document.getElementById('images')?.files;
-        if (newImages && newImages.length > 0) {
-            hasChanges = true;
-        }
-
-        if (!hasChanges) {
-            Swal.fire({
-                icon: 'info',
-                title: 'No Changes Detected',
-                text: 'Please make some changes before updating the product.'
-            });
-            return false;
-        }
-
-        // Validate required fields
-        requiredFields.forEach(field => {
-            const input = document.getElementById(field);
-            if (!input) return;
-            
-            const errorDiv = input.nextElementSibling;
-            if (!errorDiv) return;
-            
-            if (!input.value.trim()) {
-                isValid = false;
-                errorDiv.textContent = `${field.charAt(0).toUpperCase() + field.slice(1)} is required`;
-                if (!firstError) firstError = input;
-            } else {
-                errorDiv.textContent = '';
-            }
-        });
-
-        // Validate numeric fields
-        numericFields.forEach(field => {
-            const input = document.getElementById(field);
-            if (!input) return;
-            
-            const errorDiv = input.nextElementSibling;
-            if (!errorDiv) return;
-            
-            const value = parseFloat(input.value);
-
-            if (input.value && (isNaN(value) || value < 0)) {
-                isValid = false;
-                errorDiv.textContent = `${field.charAt(0).toUpperCase() + field.slice(1)} must be a positive number`;
-                if (!firstError) firstError = input;
-            }
-        });
-
-        // Validate discount percentage
-        const discountInput = document.getElementById('discountPercentage');
-        if (discountInput) {
-            const errorDiv = discountInput.nextElementSibling;
-            if (errorDiv && discountInput.value) {
-                const discount = parseFloat(discountInput.value);
-                if (discount < 0 || discount > 100) {
-                    isValid = false;
-                    errorDiv.textContent = 'Discount must be between 0 and 100';
-                    if (!firstError) firstError = discountInput;
-                }
-            }
-        }
-
-        if (!isValid) {
-            if (firstError) firstError.focus();
-            return false;
-        }
-
-        // Submit form if valid
+        
         try {
+            // Validate form
+            validateForm();
+
+            // Show loading state
+            Swal.fire({
+                title: 'Processing...',
+                text: 'Please wait while we update the product',
+                allowOutsideClick: false,
+                showConfirmButton: false,
+                willOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+            
             const formData = new FormData(form);
-            const response = await fetch(form.action, {
+            const productId = form.getAttribute('data-product-id');
+
+            if (!productId) {
+                throw new Error('Product ID not found');
+            }
+
+            // Ensure specifications are properly structured
+            const specifications = {
+                processor: formData.get('processor'),
+                ram: formData.get('ram'),
+                storage: formData.get('storage'),
+                graphics: formData.get('graphics')
+            };
+            
+            // Remove individual specification fields and add as object
+            formData.delete('processor');
+            formData.delete('ram');
+            formData.delete('storage');
+            formData.delete('graphics');
+            formData.append('specifications', JSON.stringify(specifications));
+
+            const response = await fetch(`/admin/editProduct/${productId}`, {
                 method: 'POST',
                 body: formData
             });
 
             const result = await response.json();
 
-            if (result.success) {
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Success!',
-                    text: result.message,
-                    showConfirmButton: false,
-                    timer: 1500
-                }).then(() => {
-                    window.location.href = '/admin/products';
-                });
-            } else {
-                throw new Error(result.message);
+            if (!response.ok) {
+                throw new Error(result.message || 'Failed to update product');
             }
+
+            // Show success message
+            await Swal.fire({
+                icon: 'success',
+                title: 'Success!',
+                text: 'Product updated successfully',
+                timer: 2000,
+                showConfirmButton: false
+            });
+
+            // Redirect back to products page
+            window.location.href = '/admin/products';
         } catch (error) {
+            console.error('Error:', error);
             Swal.fire({
                 icon: 'error',
-                title: 'Error!',
-                text: error.message || 'Failed to update product'
+                title: 'Error',
+                text: error.message || 'Failed to update product. Please try again.',
+                confirmButtonText: 'OK'
             });
         }
     });
 
     // Preview new images before upload
     function previewNewImages(input) {
-        const previewContainer = document.getElementById('newImagePreview');
-        if (!previewContainer) return;
+        const container = document.getElementById('imagePreviewContainer');
+        container.innerHTML = ''; // Clear existing previews
 
-        previewContainer.innerHTML = '';
-        const files = Array.from(input.files);
-
-        files.forEach(file => {
-            if (!file.type.startsWith('image/')) {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Invalid File',
-                    text: 'Please upload only image files'
-                });
-                return;
-            }
-
-            if (file.size > 5 * 1024 * 1024) {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'File Too Large',
-                    text: 'Image size should not exceed 5MB'
-                });
-                return;
-            }
-
-            const reader = new FileReader();
-            const previewDiv = document.createElement('div');
-            previewDiv.className = 'relative group';
-
-            reader.onload = function(e) {
-                previewDiv.innerHTML = `
-                    <img src="${e.target.result}" alt="Preview" class="w-full h-40 object-cover rounded-lg border border-gray-700">
-                    <button type="button" class="absolute top-2 right-2 p-2 bg-red-500/80 backdrop-blur-sm rounded-full text-white opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                        </svg>
-                    </button>
-                `;
-
-                const removeButton = previewDiv.querySelector('button');
-                removeButton.addEventListener('click', () => {
-                    previewDiv.remove();
-                    // Remove file from input
-                    const dt = new DataTransfer();
-                    const { files } = input;
-                    for (let i = 0; i < files.length; i++) {
-                        if (files[i] !== file) {
-                            dt.items.add(files[i]);
-                        }
-                    }
-                    input.files = dt.files;
-                });
-            };
-
-            reader.readAsDataURL(file);
-            previewContainer.appendChild(previewDiv);
-        });
-    }
-
-    // Make previewNewImages available globally
-    window.previewNewImages = previewNewImages;
-});
-
-// Handle image deletion
-async function deleteImage(productId, imagePath, element) {
-    try {
-        const result = await Swal.fire({
-            title: 'Are you sure?',
-            text: "You won't be able to recover this image!",
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#d33',
-            cancelButtonColor: '#3085d6',
-            confirmButtonText: 'Yes, delete it!'
-        });
-
-        if (!result.isConfirmed) return;
-
-        const response = await fetch(`/admin/product/deleteImage/${productId}`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ imagePath })
-        });
-
-        const data = await response.json();
-
-        if (data.success) {
-            element.closest('.relative').remove();
-            Swal.fire({
-                icon: 'success',
-                title: 'Deleted!',
-                text: 'Image has been deleted.',
-                showConfirmButton: false,
-                timer: 1500
+        if (input.files && input.files.length > 0) {
+            Array.from(input.files).forEach(file => {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const div = document.createElement('div');
+                    div.className = 'relative group';
+                    div.innerHTML = `
+                        <img src="${e.target.result}" 
+                             alt="New image preview" 
+                             class="w-full h-32 object-cover rounded-lg">
+                        <div class="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                            <i class="fas fa-times"></i>
+                        </div>
+                    `;
+                    container.appendChild(div);
+                };
+                reader.readAsDataURL(file);
             });
-        } else {
-            throw new Error(data.message);
         }
-    } catch (error) {
-        Swal.fire({
-            icon: 'error',
-            title: 'Error!',
-            text: error.message || 'Failed to delete image'
-        });
     }
-}
 
-// Handle product deletion
-function confirmDelete(productId) {
-    Swal.fire({
-        title: 'Are you sure?',
-        text: "You won't be able to revert this!",
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#d33',
-        cancelButtonColor: '#3085d6',
-        confirmButtonText: 'Yes, delete it!'
-    }).then((result) => {
-        if (result.isConfirmed) {
-            window.location.href = `/admin/deleteProduct/${productId}`;
+    // Handle image deletion
+    async function deleteImage(productId, imagePath, element) {
+        try {
+            const result = await Swal.fire({
+                title: 'Delete Image?',
+                text: 'Are you sure you want to delete this image?',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Yes, delete it!'
+            });
+
+            if (result.isConfirmed) {
+                const response = await fetch(`/admin/deleteProductImage/${productId}/${encodeURIComponent(imagePath)}`, {
+                    method: 'DELETE'
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to delete image');
+                }
+
+                // Remove the image from the DOM
+                element.remove();
+
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Deleted!',
+                    text: 'Image has been deleted.',
+                    timer: 2000,
+                    showConfirmButton: false
+                });
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: error.message || 'Failed to delete image. Please try again.',
+                confirmButtonText: 'OK'
+            });
         }
-    });
-}
+    }
+
+    // Handle product deletion
+    async function confirmDelete(productId) {
+        try {
+            const result = await Swal.fire({
+                title: 'Delete Product?',
+                text: "This action cannot be undone!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Yes, delete it!'
+            });
+
+            if (result.isConfirmed) {
+                const response = await fetch(`/admin/deleteProduct/${productId}`, {
+                    method: 'DELETE'
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to delete product');
+                }
+
+                await Swal.fire({
+                    icon: 'success',
+                    title: 'Deleted!',
+                    text: 'Product has been deleted.',
+                    timer: 2000,
+                    showConfirmButton: false
+                });
+
+                // Redirect to products page
+                window.location.href = '/admin/products';
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: error.message || 'Failed to delete product. Please try again.',
+                confirmButtonText: 'OK'
+            });
+        }
+    }
+
+    // Make functions available globally
+    window.previewNewImages = previewNewImages;
+    window.deleteImage = deleteImage;
+    window.confirmDelete = confirmDelete;
+});

@@ -13,6 +13,10 @@ const productSchema = new Schema({
         required: [true, 'Brand is required'],
         trim: true
     },
+    description: {
+        type: String,
+        required: true
+    },
     category: {
         type: Schema.Types.ObjectId,
         ref: 'LaptopCategory',
@@ -61,9 +65,13 @@ const productSchema = new Schema({
         type: String,
         required: [true, 'At least one product image is required']
     }],
+    isFeatured: {
+        type: Boolean,
+        default: false // Field to mark product as featured
+    },
     isDeleted: {
         type: Boolean,
-        default: false
+        default: false // Soft delete flag
     }
 }, {
     timestamps: true

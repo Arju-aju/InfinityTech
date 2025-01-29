@@ -1,16 +1,18 @@
 const express = require('express');
 const adminControllers = require('../controllers/Admin/adminController');
-const { userAuth,adminAuth } = require('../middleware/auth');
+const { userAuth, adminAuth, redirectLoggedInAdmin } = require('../middleware/auth');
 const customerController = require('../controllers/Admin/customerController');
 const categoryController = require('../controllers/Admin/categoryController')
 const productController = require('../controllers/Admin/productController')
 const router = express.Router();
+const Product = require('../models/productSchema');
 const { upload } = require('../config/multer');
+const validationMiddleware = require('../middleware/validation');
 
-// Fix the route path - add /admin prefix
+// Admin Authentication Routes
 router.get('/pageerror', adminControllers.pageerror);
-router.get('/login', adminControllers.loadLogin);
-router.post('/login', adminControllers.login);
+router.get('/login', redirectLoggedInAdmin, adminControllers.loadLogin);
+router.post('/login', redirectLoggedInAdmin, adminControllers.login);
 router.get('/dashboard', adminAuth, adminControllers.loadDashboard);
 router.get('/logout', adminControllers.logout);
 
@@ -30,14 +32,12 @@ router.put('/toggleCategoryStatus/:id', adminAuth, categoryController.toggleCate
 // Product Management Routes
 router.get('/products', adminAuth, productController.loadProduct);
 router.get('/addProduct', adminAuth, productController.loadAddProduct);
-router.post('/addProduct', adminAuth, upload.array('images', 5), (req, res, next) => {
-    console.log('Received body:', req.body);
-    console.log('Received files:', req.files);
-    next();
-}, productController.addProduct);
+router.post('/addProduct', adminAuth, upload.array('images', 5), validationMiddleware.validateProduct, productController.addProduct);
 router.get('/editProduct/:id', adminAuth, productController.loadEditProduct);
-router.post('/editProduct/:id', adminAuth, upload.array('images', 5), productController.updateProduct);
-router.post('/deleteProduct/:id', adminAuth, productController.deleteProduct);
-router.post('/deleteImage/:productId/:imageIndex', adminAuth, productController.deleteProductImage);
+router.post('/editProduct/:id', adminAuth, upload.array('images', 5), validationMiddleware.validateProduct, productController.updateProduct);
+router.delete('/deleteProduct/:id', adminAuth, productController.deleteProduct);
+router.delete('/deleteProductImage/:productId/:imagePath', adminAuth, productController.deleteProductImage);
+router.patch('/products/:id/toggle-featured', adminAuth, productController.toggleFeatured);
+router.patch('/products/:id/soft-delete', adminAuth, productController.softDelete);
 
 module.exports = router;

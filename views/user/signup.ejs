@@ -1,0 +1,178 @@
+<%- include('../partials/header') %>
+
+<!-- Main Content -->
+<main
+  class="container mx-auto py-16 px-6 grid grid-cols-1 md:grid-cols-2 gap-12"
+>
+  <!-- Image Section -->
+  <div class="flex justify-center">
+    <img src="image/login.jpg" alt="Shopping Cart" class="w-full max-w-md" />
+  </div>
+
+  <!-- Signup Form -->
+
+  <div class="bg-white rounded-lg shadow-lg p-8 max-w-md mx-auto">
+    <h2 class="text-3xl font-semibold text-gray-700 mb-6">Create an account</h2>
+
+    <!-- Form -->
+
+    <form id="signupForm" class="space-y-4" method="POST" action="/signup">
+      <div>
+        <label for="name">Full Name</label>
+        <input
+          type="text"
+          placeholder="Name"
+          id="name"
+          name="name"
+          class="w-full border border-gray-300 rounded-md p-2 focus:outline-purple-500 form-control"
+        />
+        <p id="nameError" class="text-red-500 text-xs hidden">Name is required.</p>
+      </div>
+      <div>
+        <label for="email">Email Address</label>
+        <input
+          type="email"
+          placeholder="Email"
+          id="email"
+          name="email"
+          class="w-full border border-gray-300 rounded-md p-2 focus:outline-purple-500 form-control"
+        />
+        <p id="emailError" class="text-red-500 text-xs hidden">Valid email is required.</p>
+      </div>
+      <div>
+        <label for="phone">Phone Number</label>
+        <input
+          type="text"
+          placeholder="Phone Number"
+          id="phone"
+          name="phone"
+          class="w-full border border-gray-300 rounded-md p-2 focus:outline-purple-500 form-control"
+        />
+        <p id="phoneError" class="text-red-500 text-xs hidden">
+          Phone number must start with 6, 7, 8, or 9 and have 10 digits.
+        </p>
+      </div>
+      <div>
+        <label for="password">Password</label>
+        <input
+          type="password"
+          placeholder="Password"
+          id="password"
+          name="password"
+          class="w-full border border-gray-300 rounded-md p-2 focus:outline-purple-500 form-control"
+        />
+        <p id="passwordError" class="text-red-500 text-xs hidden">Password is required.</p>
+      </div>
+      <div>
+        <label for="confirmPassword">Confirm Password</label>
+        <input
+          type="password"
+          placeholder="Confirm Password"
+          id="confirmPassword"
+          name="confirmPassword"
+          class="w-full border border-gray-300 rounded-md p-2 focus:outline-purple-500 form-control"
+        />
+        <p id="confirmPasswordError" class="text-red-500 text-xs hidden">Passwords do not match.</p>
+      </div>
+      <button
+        type="submit"
+        class="w-full bg-purple-500 text-white font-semibold p-2 rounded-md hover:bg-purple-600"
+      >
+        Create Account
+      </button>
+      <div class="mt-4">
+        <a
+          href="/auth/google"
+          class="w-full flex justify-center items-center border py-2 rounded-md hover:bg-gray-100 transition duration-200">
+          Sign up with Google
+      </a>
+      </div>
+    </form>
+
+    <!-- Footer Text -->
+
+    <p class="text-sm text-gray-500 mt-6 text-center">
+      Already have an account?
+      <a href="#" class="text-purple-500 hover:underline">Log in</a>
+    </p>
+  
+    <!-- Form -->
+
+  </div>
+</main>
+
+
+
+<script>
+
+document.getElementById("signupForm").addEventListener("submit", function (e) {
+  e.preventDefault();
+    // Get form values
+    const name = document.getElementById("name").value.trim();
+    const email = document.getElementById("email").value.trim();
+    const phone = document.getElementById("phone").value.trim();
+    const password = document.getElementById("password").value;
+    const confirmPassword = document.getElementById("confirmPassword").value;
+
+    // Error message elements
+    const nameError = document.getElementById("nameError");
+    const emailError = document.getElementById("emailError");
+    const phoneError = document.getElementById("phoneError");
+    const passwordError = document.getElementById("passwordError");
+    const confirmPasswordError = document.getElementById("confirmPasswordError");
+
+    // Reset error messages
+    nameError.classList.add("hidden");
+    emailError.classList.add("hidden");
+    phoneError.classList.add("hidden");
+    passwordError.classList.add("hidden");
+    confirmPasswordError.classList.add("hidden");
+
+    let isValid = true;
+
+    // Name validation
+    if (!name || !email || !phone || !password || password !== confirmPassword) {
+    Swal.fire({
+      icon: "error",
+      title: "Validation Error",
+      text: "Please check all fields and ensure they are valid.",
+    });
+    return;
+  }
+
+  // Submit form if validation passes
+  Swal.fire({
+    icon: "success",
+    title: "Form Submitted",
+    text: "Redirecting...",
+  }).then(() => {
+    e.target.submit();
+  });
+});
+   
+
+  // Function to validate email
+
+  function validateEmail(email) {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  }
+
+  // Function to validate phone number (starts with 6, 7, 8, or 9 and 10 digits)
+
+  function validatePhone(phone) {
+    const phoneRegex = /^[6-9][0-9]{9}$/;
+    return phoneRegex.test(phone);
+  }
+</script>
+
+<style>
+.error-message {
+    color: #ff0000;
+    font-size: 0.75rem;
+    margin-top: 0.25rem;
+}
+</style>
+</script>
+
+<%-include('../../views/partials/user/footer')%>
