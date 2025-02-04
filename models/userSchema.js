@@ -1,85 +1,86 @@
-const mongoose = require('mongoose')
-const {Schema} = mongoose
+const mongoose = require('mongoose');
+const { Schema } = mongoose;
 
-
-const userSchema =  new Schema({
-    name:{
+const userSchema = new Schema({
+    name: {
         type: String,
-        required:true
+        required: true
     },
-    email:{
-        type : String,
-        required : true,
-        unique : true
+    email: {
+        type: String,
+        required: true,
+        unique: true
     },
-    phone:{
-        type :String,
-        required:false,
-        unique : false,
-        sparse : true,
+    phone: {
+        type: String,
+        required: false,
+        unique: false,
+        sparse: true,
         default: null
     },
-    googleId:{
-        type : String,
-        default:null
+    googleId: {
+        type: String,
+        default: null
     },
-    password:{
-        type : String,
+    password: {
+        type: String,
         required: false
+    },
+    isVerified: {  // ✅ Add this field
+        type: Boolean,
+        default: false
     },
     isBlocked: {
         type: Boolean,
         default: false
     },
-    isAdmin:{
+    isAdmin: {
         type: Boolean,
         default: false
     },
-    cart:[{
+    cart: [{
         type: Schema.Types.ObjectId,
-        ref : "Cart",
+        ref: "Cart",
     }],
-    wallet:{
+    wallet: {
         type: Number,
-        default:0
+        default: 0
     },
-    orderHistory:[{
-        type : Schema.Types.ObjectId,
-        ref:'Order'
+    orderHistory: [{
+        type: Schema.Types.ObjectId,
+        ref: 'Order'
     }],
-    createdOn:{
-        type:Date,
-        default:Date.now,
+    createdOn: {
+        type: Date,
+        default: Date.now,
     },
-    referalCode:{
-        type:String,
-        required:false
+    referalCode: {
+        type: String,
+        required: false
     },
-    redemmed:{
-        type:Boolean,
-        default:false
+    redemmed: {
+        type: Boolean,
+        default: false
     },
-    redemmedUsers:[{
-        type:Schema.Types.ObjectId,
-        ref:'user'
+    redemmedUsers: [{
+        type: Schema.Types.ObjectId,
+        ref: 'User'
     }],
-    searchHistory:[{
-        category:{
-            type:Schema.Types.ObjectId,
-            ref:'Category',
-            required:true
+    searchHistory: [{
+        category: {
+            type: Schema.Types.ObjectId,
+            ref: 'Category',
+            required: true
         },
-        brand:{
-            type:String,
+        brand: {
+            type: String,
         },
-        searchOn:{
+        searchOn: {
             type: Date,
-            default:Date.now
+            default: Date.now
         }
     }]
-})
+});
 
-
-const User = mongoose.model("User",userSchema)
-
-module.exports = User
+const User = mongoose.model("User", userSchema);
+module.exports = User;

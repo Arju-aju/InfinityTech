@@ -5,34 +5,35 @@ const User = require('../../models/userSchema'); // Add this line
 // Get Home Page Products
 const getHomePageProducts = async (req, res) => {
     try {
-        // Calculate date 7 days ago for new arrivals
         const sevenDaysAgo = new Date();
         sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
-        // Fetch new arrivals (products added in last 7 days)
         const newArrivals = await Product.find({ 
             isListed: true,
+            isDeleted: false,
             createdAt: { $gte: sevenDaysAgo }
         })
         .sort({ createdAt: -1 })
         .limit(8);
 
-        // Fetch featured products (products with discount > 56%)
         const featuredProducts = await Product.find({ 
             isListed: true,
+            isDeleted: false,
             discount: { $gt: 56 }
         })
         .sort({ discount: -1 })
         .limit(8);
 
-        // Fetch top-selling products based on sales count
-        const topSellingProducts = await Product.find({ isListed: true })
-            .sort({ salesCount: -1 })
-            .limit(8);
+        const topSellingProducts = await Product.find({ 
+            isListed: true,
+            isDeleted: false
+        })
+        .sort({ salesCount: -1 })
+        .limit(8);
 
-        // Fetch all discounted products
         const dealProducts = await Product.find({ 
             isListed: true,
+            isDeleted: false,
             discount: { $gt: 0 }
         })
         .sort({ discount: -1 })
@@ -48,6 +49,8 @@ const getHomePageProducts = async (req, res) => {
                 content: req.flash('error')[0] || req.flash('success')[0]
             }
         });
+     
+
     } catch (error) {
         console.error('Error in getHomePageProducts:', error);
         req.flash('error', 'Error loading home page');
@@ -56,30 +59,34 @@ const getHomePageProducts = async (req, res) => {
 };
 
 // Get Single Product Details
+
 const getSingleProduct = async (req, res) => {
     try {
         const productId = req.params.id;
-        const product = await Product.findById(productId).populate('category');
+        const product = await Product.findOne({
+            _id: productId,
+            isListed: true,
+            isDeleted: false
+        }).populate('category');
 
         if (!product) {
-            req.flash('error', 'Product not found');
+            req.flash('error', 'Product not found or unavailable');
             return res.redirect('/shop');
         }
 
-        // Calculate discounted price
         const discountedPrice = product.price - (product.price * (product.discountPercentage / 100));
 
-        // Get recommended products from same category
         const recommendedProducts = await Product.find({
             category: product.category._id,
-            _id: { $ne: product._id }  // Exclude current product
+            _id: { $ne: product._id },
+            isListed: true,
+            isDeleted: false
         })
         .populate('category')
         .limit(4)
         .sort('-createdAt')
         .lean();
 
-        // Calculate discounted prices for recommended products
         recommendedProducts.forEach(prod => {
             prod.discountedPrice = prod.price - (prod.price * (prod.discountPercentage / 100));
         });
@@ -101,6 +108,7 @@ const getSingleProduct = async (req, res) => {
         res.redirect('/shop');
     }
 };
+
 
 // Get All Categories
 const getAllCategories = async (req, res) => {
@@ -144,16 +152,23 @@ const getCategoryProducts = async (req, res) => {
         }
 
         const [products, totalProducts] = await Promise.all([
-            Product.find({ category: categoryId })
-                .populate('category')
-                .skip(skip)
-                .limit(limit)
-                .sort('-createdAt')
-                .lean(),
-            Product.countDocuments({ category: categoryId })
+            Product.find({ 
+                category: categoryId,
+                isListed: true,
+                isDeleted: false
+            })
+            .populate('category')
+            .skip(skip)
+            .limit(limit)
+            .sort('-createdAt')
+            .lean(),
+            Product.countDocuments({ 
+                category: categoryId,
+                isListed: true,
+                isDeleted: false
+            })
         ]);
 
-        // Calculate discounted prices
         products.forEach(product => {
             product.discountedPrice = product.price - (product.price * (product.discountPercentage / 100));
         });
@@ -177,22 +192,29 @@ const getCategoryProducts = async (req, res) => {
         res.redirect('/categories');
     }
 };
-
 // Load Shop Page
 const loadShop = async (req, res) => {
     try {
         const page = parseInt(req.query.page) || 1;
         const limit = parseInt(req.query.limit) || 12;
         const skip = (page - 1) * limit;
+        const selectedCategory = req.query.category || null; // Get the selected category from query
 
-        const [products, totalProducts] = await Promise.all([
-            Product.find({ isListed: true })
+        // Build filter object
+        const filter = { isListed: true };
+        if (selectedCategory) {
+            filter.category = selectedCategory;
+        }
+
+        const [products, totalProducts, categories] = await Promise.all([
+            Product.find(filter)
                 .populate('category')
                 .skip(skip)
                 .limit(limit)
                 .sort('-createdAt')
                 .lean(),
-            Product.countDocuments({ isListed: true })
+            Product.countDocuments(filter),
+            LaptopCategory.find().sort('name').lean()
         ]);
 
         // Calculate discounted prices
@@ -204,9 +226,11 @@ const loadShop = async (req, res) => {
 
         res.render('user/shop', {
             products,
+            categories,
             currentPage: page,
             totalPages,
             totalProducts,
+            selectedCategory, // Pass selectedCategory to the template
             message: {
                 type: req.flash('error').length ? 'error' : 'success',
                 content: req.flash('error')[0] || req.flash('success')[0]
@@ -225,6 +249,7 @@ const searchProducts = async (req, res) => {
         const searchQuery = req.query.q;
         const products = await Product.find({
             isListed: true,
+            isDeleted: false,
             $or: [
                 { name: { $regex: searchQuery, $options: 'i' } },
                 { description: { $regex: searchQuery, $options: 'i' } }
@@ -233,7 +258,6 @@ const searchProducts = async (req, res) => {
         .populate('category')
         .lean();
 
-        // Calculate discounted prices
         products.forEach(product => {
             product.discountedPrice = product.price - (product.price * (product.discountPercentage / 100));
         });
@@ -259,30 +283,30 @@ const addToCart = async (req, res) => {
         const { productId, quantity = 1 } = req.body;
         const userId = req.session.user._id;
 
-        // Find the product
-        const product = await Product.findById(productId);
-        if (!product || product.isDeleted) {
+        const product = await Product.findOne({ 
+            _id: productId,
+            isListed: true,
+            isDeleted: false
+        });
+
+        if (!product) {
             return res.status(404).json({
                 success: false,
-                message: 'Product not found'
+                message: 'Product not found or unavailable'
             });
         }
 
-        // Calculate the price
         const price = product.price;
         const discountedPrice = price - (price * (product.discountPercentage / 100));
 
-        // Add to cart logic
         const user = await User.findById(userId);
         const existingCartItem = user.cart.find(item => 
             item.product.toString() === productId
         );
 
         if (existingCartItem) {
-            // Update quantity if product already in cart
             existingCartItem.quantity += parseInt(quantity);
         } else {
-            // Add new product to cart
             user.cart.push({
                 product: productId,
                 quantity: parseInt(quantity),

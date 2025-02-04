@@ -93,11 +93,17 @@ const addCategory = async (req, res) => {
     }
 };
 
-
 // Load Edit Category Page
 const loadEditCategory = async (req, res) => {
     try {
         const categoryId = req.params.id;
+        
+        // Ensure valid MongoDB ObjectId
+        if (!categoryId.match(/^[0-9a-fA-F]{24}$/)) {
+            req.flash('error', 'Invalid category ID');
+            return res.redirect('/admin/categories');
+        }
+
         const category = await Category.findOne({ 
             _id: categoryId,
             isDeleted: false 
@@ -108,8 +114,14 @@ const loadEditCategory = async (req, res) => {
             return res.redirect('/admin/categories');
         }
 
+        // Pass category data to the view
         res.render('admin/editCategory', {
-            category,
+            category: {
+                id: category._id,
+                name: category.name,
+                description: category.description,
+                isActive: category.isActive
+            },
             message: {
                 type: req.flash('error').length ? 'error' : 'success',
                 content: req.flash('error')[0] || req.flash('success')[0]
@@ -163,7 +175,7 @@ const updateCategory = async (req, res) => {
                 name: name.trim(),
                 description: description.trim()
             },
-            { new: true, runValidators: true }
+            { new: true }
         );
 
         if (!updatedCategory) {
@@ -182,7 +194,7 @@ const updateCategory = async (req, res) => {
         console.error('Error in updateCategory:', error);
         res.status(500).json({
             success: false,
-            message: error.message || 'Error updating category'
+            message: 'Error updating category'
         });
     }
 };
@@ -245,19 +257,57 @@ const toggleCategoryStatus = async (req, res) => {
             });
         }
 
+        // Toggle the status
         category.isActive = !category.isActive;
         await category.save();
 
         res.json({
             success: true,
             message: `Category ${category.isActive ? 'activated' : 'deactivated'} successfully`,
-            isActive: category.isActive
+            isActive: category.isActive,
+            category: {
+                _id: category._id,
+                name: category.name,
+                isActive: category.isActive
+            }
         });
     } catch (error) {
         console.error('Error in toggleCategoryStatus:', error);
         res.status(500).json({
             success: false,
             message: error.message || 'Error toggling category status'
+        });
+    }
+};
+const getCategoryDetails = async (req, res) => {
+    try {
+        const categoryId = req.params.id;
+        const category = await Category.findOne({ 
+            _id: categoryId,
+            isDeleted: false 
+        });
+
+        if (!category) {
+            return res.status(404).json({
+                success: false,
+                message: 'Category not found'
+            });
+        }
+
+        res.json({
+            success: true,
+            category: {
+                _id: category._id,
+                name: category.name,
+                description: category.description,
+                isActive: category.isActive
+            }
+        });
+    } catch (error) {
+        console.error('Error in getCategoryDetails:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error fetching category details'
         });
     }
 };
@@ -269,5 +319,6 @@ module.exports = {
     loadEditCategory,
     updateCategory,
     deleteCategory,
-    toggleCategoryStatus
+    toggleCategoryStatus,
+    getCategoryDetails
 };

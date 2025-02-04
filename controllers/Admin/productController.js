@@ -421,36 +421,65 @@ const updateProduct = async (req, res) => {
 };
 
 // Toggle featured status
-const toggleFeatured = async (req, res) => {
+const toggleListStatus = async (req, res) => {
     try {
-        const product = await Product.findById(req.params.id);
+        const productId = req.params.id;
+        const product = await Product.findById(productId);
+        
         if (!product) {
-            return res.status(404).json({ success: false, message: 'Product not found' });
+            return res.status(404).json({ 
+                success: false, 
+                message: 'Product not found' 
+            });
         }
         
-        product.isFeatured = !product.isFeatured;
+        // Toggle the isListed status
+        product.isListed = !product.isListed;
         await product.save();
         
-        res.json({ success: true, product });
+        return res.json({
+            success: true,
+            message: `Product ${product.isListed ? 'listed' : 'unlisted'} successfully`,
+            isListed: product.isListed
+        });
     } catch (error) {
-        res.status(500).json({ success: false, error: error.message });
+        console.error('Error in toggleListStatus:', error);
+        return res.status(500).json({
+            success: false,
+            message: 'Error updating product status'
+        });
     }
 };
 
 // Soft delete product
 const softDelete = async (req, res) => {
     try {
-        const product = await Product.findById(req.params.id);
+        const productId = req.params.id;
+        
+        const product = await Product.findById(productId);
         if (!product) {
-            return res.status(404).json({ success: false, message: 'Product not found' });
+            return res.status(404).json({ 
+                success: false, 
+                message: 'Product not found' 
+            });
         }
         
+        // Toggle the isDeleted status
         product.isDeleted = !product.isDeleted;
         await product.save();
         
-        res.json({ success: true, message: 'Product status updated successfully' });
+        res.json({ 
+            success: true, 
+            message: `Product ${product.isDeleted ? 'deactivated' : 'activated'} successfully`,
+            isDeleted: product.isDeleted
+        });
     } catch (error) {
-        res.status(500).json({ success: false, error: error.message });
+        console.error('Error in softDelete:', error);
+        res.status(500).json({ 
+            success: false, 
+            message: 'Error updating product status',
+            error: error.message 
+        });
     }
 };
 
@@ -512,8 +541,9 @@ const deleteProductImage = async (req, res) => {
 const deleteProduct = async (req, res) => {
     try {
         const productId = req.params.id;
-        const product = await Product.findById(productId);
 
+        // Find the product
+        const product = await Product.findById(productId);
         if (!product) {
             return res.status(404).json({
                 success: false,
@@ -521,19 +551,19 @@ const deleteProduct = async (req, res) => {
             });
         }
 
-        // Delete product images from filesystem
-        if (product.images && product.images.length > 0) {
-            await Promise.all(product.images.map(imagePath => {
-                const fullPath = path.join(__dirname, '../../public', imagePath);
-                return fs.unlink(fullPath).catch(err => {
-                    console.error('Error deleting image:', err);
-                    // Continue even if file deletion fails
-                    return Promise.resolve();
-                });
-            }));
-        }
+        // Remove product images from the filesystem
+        await Promise.all(
+            product.images.map(async (imagePath) => {
+                const absolutePath = path.join(__dirname, '../../public', imagePath);
+                try {
+                    await fs.unlink(absolutePath);
+                } catch (err) {
+                    console.warn('Warning: Could not delete image file:', err);
+                }
+            })
+        );
 
-        // Delete the product from database
+        // Delete the product from the database
         await Product.findByIdAndDelete(productId);
 
         res.json({
@@ -544,7 +574,7 @@ const deleteProduct = async (req, res) => {
         console.error('Error in deleteProduct:', error);
         res.status(500).json({
             success: false,
-            message: 'Error deleting product'
+            message: error.message || 'Error deleting product'
         });
     }
 };
@@ -587,7 +617,7 @@ module.exports = {
     addProduct,
     loadEditProduct,
     updateProduct,
-    toggleFeatured,
+    toggleListStatus,
     softDelete,
     deleteProduct,
     deleteProductImage,

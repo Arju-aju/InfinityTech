@@ -82,6 +82,7 @@ const loadSignup = async (req, res) => {
 // Handle Signup Submit
 const signup = async (req, res) => {
     try {
+        console.log('Signup detail  :======',req.body);
         const { name, email, phone, password, confirmPassword } = req.body;
 
         // Validate required fields
@@ -393,13 +394,19 @@ const resendOtp = async (req, res) => {
 // Logout
 const logout = async (req, res) => {
     try {
-        req.session.destroy();
-        res.redirect('/login');
+        req.session.destroy((err) => {
+            if (err) {
+                console.error('Logout Error:', err);
+                return res.status(500).send('Logout failed');
+            }
+            res.redirect('/');
+        });
     } catch (error) {
         console.log("Logout error", error);
         res.redirect("/pageNotFound");
     }
 };
+
 
 // Load Home Page
 const loadHomePage = async (req, res) => {
@@ -415,6 +422,7 @@ const loadHomePage = async (req, res) => {
 
         // Fetch new arrivals (products added in last 7 days)
         const newArrivals = await Product.find({ 
+            isListed:true,
             isDeleted: false,
             createdAt: { $gte: sevenDaysAgo }
         })
@@ -434,7 +442,7 @@ const loadHomePage = async (req, res) => {
             isDeleted: false,
             discountPercentage: { $gt: 55 }
         });
-        console.log('Featured Products Found:', JSON.stringify(featuredProducts, null, 2));
+        
 
         // Fetch top-selling products
         const topSellingProducts = await Product.find({ 
@@ -451,6 +459,7 @@ const loadHomePage = async (req, res) => {
         .sort({ discountPercentage: -1 })
         .limit(8);
 
+        console.log('New aariival Products Found:', JSON.stringify(newArrivals, null, 2));
         // Log all product counts
         console.log('Product Counts:', {
             newArrivals: newArrivals.length,

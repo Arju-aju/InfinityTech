@@ -139,14 +139,18 @@
                 }
                 return response.json();
             })
-            .then(category => {
-                document.getElementById('categoryId').value = category._id;
-                document.getElementById('editName').value = category.name;
-                document.getElementById('editDescription').value = category.description;
-                
-                const editModal = document.getElementById('editModal');
-                editModal.classList.remove('hidden');
-                editModal.classList.add('flex');
+            .then(data => {
+                if (data.success && data.category) {
+                    document.getElementById('categoryId').value = data.category._id;
+                    document.getElementById('editName').value = data.category.name;
+                    document.getElementById('editDescription').value = data.category.description;
+                    
+                    const editModal = document.getElementById('editModal');
+                    editModal.classList.remove('hidden');
+                    editModal.classList.add('flex');
+                } else {
+                    throw new Error(data.message || 'Failed to load category details');
+                }
             })
             .catch(error => {
                 console.error('Error:', error);
@@ -161,67 +165,6 @@
             });
     }
 
-    function toggleCategory(categoryId) {
-        fetch(`/admin/toggleCategoryStatus/${categoryId}`, {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json'
-            }
-        })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Failed to toggle category status');
-            }
-            return response.json();
-        })
-        .then(result => {
-            const statusBadge = document.querySelector(`#status-${categoryId}`);
-            const toggleButton = document.querySelector(`#toggle-${categoryId}`);
-            
-            if (statusBadge && toggleButton) {
-                if (result.isActive) {
-                    statusBadge.textContent = 'Active';
-                    statusBadge.className = statusBadge.className.replace('bg-red-100 text-red-800', 'bg-green-100 text-green-800');
-                    toggleButton.textContent = 'Deactivate';
-                    toggleButton.className = toggleButton.className.replace('bg-cyan-600 hover:bg-cyan-500', 'bg-red-600 hover:bg-red-500');
-                } else {
-                    statusBadge.textContent = 'Inactive';
-                    statusBadge.className = statusBadge.className.replace('bg-green-100 text-green-800', 'bg-red-100 text-red-800');
-                    toggleButton.textContent = 'Activate';
-                    toggleButton.className = toggleButton.className.replace('bg-red-600 hover:bg-red-500', 'bg-cyan-600 hover:bg-cyan-500');
-                }
-
-                const svg = toggleButton.querySelector('svg path');
-                if (svg) {
-                    svg.setAttribute('d', result.isActive 
-                        ? 'M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z'
-                        : 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z'
-                    );
-                }
-
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Success!',
-                    text: result.message,
-                    background: '#1f2937',
-                    color: '#fff',
-                    confirmButtonColor: '#0891b2'
-                });
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            Swal.fire({
-                icon: 'error',
-                title: 'Error!',
-                text: error.message,
-                background: '#1f2937',
-                color: '#fff',
-                confirmButtonColor: '#0891b2'
-            });
-        });
-    }
-
     document.getElementById('editForm').addEventListener('submit', function(e) {
         e.preventDefault();
         const categoryId = document.getElementById('categoryId').value;
@@ -230,30 +173,30 @@
             description: document.getElementById('editDescription').value.trim()
         };
         
-        fetch(`/admin/categories/edit/${categoryId}`, {
-            method: 'POST',
+        // Updated endpoint to match the controller
+        fetch(`/admin/updateCategory/${categoryId}`, {
+            method: 'PUT',
             headers: {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify(formData)
         })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Failed to update category');
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Success!',
+                    text: data.message,
+                    background: '#1f2937',
+                    color: '#fff',
+                    confirmButtonColor: '#0891b2'
+                }).then(() => {
+                    window.location.reload();
+                });
+            } else {
+                throw new Error(data.message);
             }
-            return response.json();
-        })
-        .then(() => {
-            Swal.fire({
-                icon: 'success',
-                title: 'Success!',
-                text: 'Category updated successfully',
-                background: '#1f2937',
-                color: '#fff',
-                confirmButtonColor: '#0891b2'
-            }).then(() => {
-                window.location.reload();
-            });
         })
         .catch(error => {
             Swal.fire({
@@ -266,6 +209,93 @@
             });
         });
     });
+
+    function closeEditModal() {
+        const editModal = document.getElementById('editModal');
+        editModal.classList.add('hidden');
+        editModal.classList.remove('flex');
+        document.getElementById('editForm').reset();
+    }
+    function toggleCategory(categoryId) {
+    const toggleButton = document.querySelector(`#toggle-${categoryId}`);
+    const statusBadge = document.querySelector(`#status-${categoryId}`);
+
+    fetch(`/admin/toggleCategoryStatus/${categoryId}`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Update the status badge
+            if (statusBadge) {
+                statusBadge.textContent = data.isActive ? 'Active' : 'Inactive';
+                if (data.isActive) {
+                    statusBadge.classList.remove('bg-red-100', 'text-red-800');
+                    statusBadge.classList.add('bg-green-100', 'text-green-800');
+                } else {
+                    statusBadge.classList.remove('bg-green-100', 'text-green-800');
+                    statusBadge.classList.add('bg-red-100', 'text-red-800');
+                }
+            }
+
+            // Update the toggle button
+            if (toggleButton) {
+                // Update button text and icon
+                const buttonText = data.isActive ? 'Deactivate' : 'Activate';
+                const svgPath = data.isActive 
+                    ? 'M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z'
+                    : 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z';
+
+                // Update button classes
+                if (data.isActive) {
+                    toggleButton.classList.remove('bg-cyan-600', 'hover:bg-cyan-500');
+                    toggleButton.classList.add('bg-red-600', 'hover:bg-red-500');
+                } else {
+                    toggleButton.classList.remove('bg-red-600', 'hover:bg-red-500');
+                    toggleButton.classList.add('bg-cyan-600', 'hover:bg-cyan-500');
+                }
+
+                // Update button content
+                toggleButton.innerHTML = `
+                    <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="${svgPath}"></path>
+                    </svg>
+                    ${buttonText}
+                `;
+            }
+
+            // Show success message
+            Swal.fire({
+                icon: 'success',
+                title: 'Success!',
+                text: data.message,
+                background: '#1f2937',
+                color: '#fff',
+                confirmButtonColor: '#0891b2',
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 3000
+            });
+        } else {
+            throw new Error(data.message || 'Failed to toggle category status');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        Swal.fire({
+            icon: 'error',
+            title: 'Error!',
+            text: error.message,
+            background: '#1f2937',
+            color: '#fff',
+            confirmButtonColor: '#0891b2'
+        });
+    });
+}
 </script>
 
 <%- include('./partials/adminFooter.ejs') %>

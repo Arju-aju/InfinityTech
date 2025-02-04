@@ -18,11 +18,7 @@
             </div>
     
             <div class="backdrop-blur-lg bg-gray-900/50 rounded-2xl p-8 max-w-4xl mx-auto shadow-2xl border border-gray-800">
-                <% if (typeof message !== 'undefined') { %>
-                    <div class="mb-6 p-4 rounded-lg backdrop-blur-sm <%= message.type === 'error' ? 'bg-red-500/20 text-red-100' : 'bg-green-500/20 text-green-100' %>">
-                        <%= message.content %>
-                    </div>
-                <% } %>
+
     
                 <form id="addProductForm" action="/admin/addProduct" method="POST" enctype="multipart/form-data" class="space-y-8">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-8">

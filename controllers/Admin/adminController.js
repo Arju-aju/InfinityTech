@@ -10,7 +10,7 @@ const pageerror = async(req,res) => {
 const loadLogin = (req, res) => {
     try {
         if (req.session.admin) {
-            return res.redirect('/admin/dashboard');
+            return res.redirect('/admin/dashboard'); // Prevents logged-in admin from accessing login page
         }
         res.render('adminLogin', { message: null });
     } catch (error) {
@@ -23,41 +23,38 @@ const login = async (req, res) => {
     try {
         const { email, password } = req.body;
         
-        // Add validation for email and password
         if (!email || !password) {
-            return res.render('adminLogin', { 
-                message: 'Email and password are required' 
-            });
+            return res.render('adminLogin', { message: 'Email and password are required' });
         }
 
-        // Find admin user - notice the isAdmin: 1 condition
-        const admin = await User.findOne({ email: email, isAdmin: 1 });
+        const admin = await User.findOne({ email: email, isAdmin: true });
         
         if (!admin) {
-            return res.render('adminLogin', { 
-                message: 'Invalid admin credentials' 
-            });
+            return res.render('adminLogin', { message: 'Invalid admin credentials' });
         }
 
-        // Always use await with bcrypt.compare
         const passwordMatch = await bcrypt.compare(password, admin.password);
         
         if (passwordMatch) {
             req.session.admin = {
                 id: admin._id,
-                email: admin.email
+                email: admin.email,
+                isAdmin: admin.isAdmin
             };
-            return res.redirect('/admin/dashboard');
-        } else {
-            return res.render('adminLogin', { 
-                message: 'Invalid password' 
+            
+            req.session.save((err) => {
+                if (err) {
+                    console.error("Session save error:", err);
+                    return res.render('adminLogin', { message: 'An error occurred during login' });
+                }
+                res.redirect('/admin/dashboard');
             });
+        } else {
+            return res.render('adminLogin', { message: 'Invalid password' });
         }
     } catch (error) {
-        console.error("Login error", error);
-        return res.render('adminLogin', { 
-            message: 'An error occurred during login' 
-        });
+        console.error("Login error:", error);
+        return res.render('adminLogin', { message: 'An error occurred during login' });
     }
 };
 
@@ -73,24 +70,25 @@ const loadDashboard = async (req, res) => {
     }
 };
 
-const logout = async(req,res)=>{
+const logout = async (req, res) => {
     try {
-        
-        req.session.destroy(err => {
-            if(err){
-                console.log('Error destroying session',err);
-                return res.redirect('/pageerror')
-            }
-            res.redirect('/admin/login')
-        })
-
+        if (req.session) {
+            req.session.destroy(err => {
+                if (err) {
+                    console.error('Error destroying session:', err);
+                    return res.redirect('/admin/pageerror');
+                }
+                res.clearCookie('connect.sid'); // Clears session cookie
+                res.redirect('/admin/login');
+            });
+        } else {
+            res.redirect('/admin/login');
+        }
     } catch (error) {
-
-        console.log(('Unexpected error during logout',error));
-        res.redirect('/pageerror')
-        
+        console.error('Unexpected error during logout:', error);
+        res.redirect('/admin/pageerror');
     }
-}
+};
 
 module.exports = {
     pageerror,

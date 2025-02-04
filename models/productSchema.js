@@ -65,9 +65,9 @@ const productSchema = new Schema({
         type: String,
         required: [true, 'At least one product image is required']
     }],
-    isFeatured: {
+    isListed: {
         type: Boolean,
-        default: false // Field to mark product as featured
+        default: true // Field to mark product as featured
     },
     isDeleted: {
         type: Boolean,

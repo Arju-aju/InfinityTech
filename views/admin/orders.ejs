@@ -1,0 +1,270 @@
+<%- include('./partials/adminHeader.ejs') %>
+<div class="flex h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-violet-900">
+    <%- include('./partials/adminSidebar.ejs') %>
+
+    <!-- Main Content -->
+    <main class="flex-1 overflow-x-hidden overflow-y-auto bg-opacity-50">
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <!-- Breadcrumbs -->
+            <nav class="mb-6">
+                <ol class="flex items-center space-x-2 text-sm text-gray-300">
+                    <li class="flex items-center">
+                        <a href="/admin/dashboard" class="hover:text-cyan-400 transition-colors">Dashboard</a>
+                        <span class="mx-2">/</span>
+                    </li>
+                    <li>
+                        <span class="text-cyan-400">Orders</span>
+                    </li>
+                </ol>
+            </nav>
+
+            <!-- Header -->
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-gray-100 text-3xl font-medium">Order Management</h3>
+            </div>
+
+            <!-- Orders Table Container -->
+            <div class="glass-effect rounded-xl overflow-hidden shadow-xl">
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-700">
+                        <thead class="bg-gray-800/50">
+                            <tr>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                                    Order ID
+                                </th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                                    Customer
+                                </th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                                    Date
+                                </th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                                    Total
+                                </th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                                    Status
+                                </th>
+                                <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-300 uppercase tracking-wider">
+                                    Actions
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-700 bg-opacity-50">
+                            <!-- Example Order Rows -->
+                            <tr class="hover:bg-gray-800/30 transition-colors">
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-100">#1001</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-100">John Doe</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-100">2023-10-15</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-100">$199.99</td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-500/20 text-yellow-400">
+                                        Pending
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                    <div class="flex justify-end space-x-3">
+                                        <button onclick="viewOrderDetails('1001')"
+                                                class="text-cyan-400 hover:text-cyan-300 transition-colors duration-300">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                        <button onclick="updateOrderStatus('1001')"
+                                                class="text-green-400 hover:text-green-300 transition-colors duration-300">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button onclick="deleteOrder('1001')"
+                                                class="text-red-400 hover:text-red-300 transition-colors duration-300">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr class="hover:bg-gray-800/30 transition-colors">
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-100">#1002</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-100">Jane Smith</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-100">2023-10-14</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-100">$299.99</td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-500/20 text-green-400">
+                                        Shipped
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                    <div class="flex justify-end space-x-3">
+                                        <button onclick="viewOrderDetails('1002')"
+                                                class="text-cyan-400 hover:text-cyan-300 transition-colors duration-300">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                        <button onclick="updateOrderStatus('1002')"
+                                                class="text-green-400 hover:text-green-300 transition-colors duration-300">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button onclick="deleteOrder('1002')"
+                                                class="text-red-400 hover:text-red-300 transition-colors duration-300">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <!-- Add more rows dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Pagination -->
+            <div class="flex items-center justify-between mt-8">
+                <div class="text-sm text-gray-400">
+                    Showing <span class="font-medium">1</span> to 
+                    <span class="font-medium">10</span> of 
+                    <span class="font-medium">100</span> results
+                </div>
+                <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+                    <a href="#" class="relative inline-flex items-center px-4 py-2 rounded-l-md glass-effect text-sm text-gray-200 hover:bg-gray-700/50 transition-all duration-300">
+                        <i class="fas fa-chevron-left mr-1"></i>
+                        Previous
+                    </a>
+                    <a href="#" class="relative inline-flex items-center px-4 py-2 glass-effect text-sm text-gray-200 hover:bg-gray-700/50 transition-all duration-300">
+                        1
+                    </a>
+                    <a href="#" class="relative inline-flex items-center px-4 py-2 glass-effect text-sm text-gray-200 hover:bg-gray-700/50 transition-all duration-300">
+                        2
+                    </a>
+                    <a href="#" class="relative inline-flex items-center px-4 py-2 rounded-r-md glass-effect text-sm text-gray-200 hover:bg-gray-700/50 transition-all duration-300">
+                        Next
+                        <i class="fas fa-chevron-right ml-1"></i>
+                    </a>
+                </nav>
+            </div>
+        </div>
+    </main>
+</div>
+
+<!-- Include Footer -->
+<%- include('./partials/adminFooter.ejs') %>
+
+<!-- Order Management Scripts -->
+<script>
+    // View Order Details
+    function viewOrderDetails(orderId) {
+        Swal.fire({
+            title: `Order #${orderId} Details`,
+            html: `
+                <div class="text-left">
+                    <p><strong>Customer:</strong> John Doe</p>
+                    <p><strong>Date:</strong> 2023-10-15</p>
+                    <p><strong>Total:</strong> $199.99</p>
+                    <p><strong>Status:</strong> Pending</p>
+                    <p><strong>Items:</strong></p>
+                    <ul class="list-disc pl-5">
+                        <li>Product A - $99.99</li>
+                        <li>Product B - $100.00</li>
+                    </ul>
+                </div>
+            `,
+            icon: 'info',
+            confirmButtonText: 'Close',
+            background: '#1f2937',
+            color: '#fff'
+        });
+    }
+
+    // Update Order Status
+    function updateOrderStatus(orderId) {
+        Swal.fire({
+            title: 'Update Order Status',
+            input: 'select',
+            inputOptions: {
+                'pending': 'Pending',
+                'shipped': 'Shipped',
+                'delivered': 'Delivered',
+                'cancelled': 'Cancelled'
+            },
+            inputPlaceholder: 'Select status',
+            showCancelButton: true,
+            confirmButtonText: 'Update',
+            background: '#1f2937',
+            color: '#fff',
+            preConfirm: (status) => {
+                if (!status) {
+                    Swal.showValidationMessage('Please select a status');
+                }
+                return status;
+            }
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Send update request to the server
+                fetch(`/admin/updateOrderStatus/${orderId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ status: result.value })
+                }).then(response => response.json())
+                  .then(data => {
+                      if (data.success) {
+                          Swal.fire({
+                              title: 'Success!',
+                              text: 'Order status updated.',
+                              icon: 'success',
+                              background: '#1f2937',
+                              color: '#fff'
+                          }).then(() => {
+                              window.location.reload();
+                          });
+                      } else {
+                          Swal.fire({
+                              title: 'Error!',
+                              text: 'Failed to update order status.',
+                              icon: 'error',
+                              background: '#1f2937',
+                              color: '#fff'
+                          });
+                      }
+                  });
+            }
+        });
+    }
+
+    // Delete Order
+    function deleteOrder(orderId) {
+        Swal.fire({
+            title: 'Are you sure?',
+            text: "This order will be deleted. This action cannot be undone.",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Yes, delete it!',
+            background: '#1f2937',
+            color: '#fff'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Send delete request to the server
+                fetch(`/admin/deleteOrder/${orderId}`, {
+                    method: 'POST'
+                }).then(response => response.json())
+                  .then(data => {
+                      if (data.success) {
+                          Swal.fire({
+                              title: 'Deleted!',
+                              text: 'Order has been deleted.',
+                              icon: 'success',
+                              background: '#1f2937',
+                              color: '#fff'
+                          }).then(() => {
+                              window.location.reload();
+                          });
+                      } else {
+                          Swal.fire({
+                              title: 'Error!',
+                              text: 'Failed to delete order.',
+                              icon: 'error',
+                              background: '#1f2937',
+                              color: '#fff'
+                          });
+                      }
+                  });
+            }
+        });
+    }
+</script

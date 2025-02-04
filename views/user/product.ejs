@@ -1,4 +1,31 @@
 <%- include('../partials/header') %>
+<style>
+    #magnifiedContainer {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    pointer-events: none;
+    background: white;
+    z-index: 10;
+}
+
+#magnifiedImage {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    position: absolute;
+    top: 0;
+    left: 0;
+    transform-origin: 0 0;
+    transition: transform 0.1s ease-out;
+}
+#magnifiedImage {
+    transition: transform 0.1s ease-out;
+}
+</style>
 
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@8/swiper-bundle.min.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
@@ -19,33 +46,33 @@
         <!-- Product Images Section -->
         <div class="space-y-6">
             <!-- Main Image with Zoom -->
-            <div class="relative overflow-hidden rounded-lg bg-white mb-8 h- w-240 border-8 p-2 h-[350px] flex justify-center items-center shadow-lg"
-                 id="mainImageContainer">
-                <img 
-                    src="<%= product.images[0] %>" 
-                    alt="<%= product.name %>"
-                    id="mainImage"
-                    class="w-full h-auto object-contain transition-transform duration-200 cursor-zoom-in"
-                >
-                <!-- Magnified image container -->
-                <div id="magnifiedContainer" class="hidden absolute top-0 left-0 pointer-events-none bg-white" 
-                     style="width: 100%; height: 100%; z-index: 10;">
-                    <img 
-                        src="<%= product.images[0] %>" 
-                        alt="<%= product.name %>"
-                        id="magnifiedImage"
-                        class="w-full h-full object-contain absolute top-0 left-0"
-                        style="transform-origin: 0 0;"
-                    >
-                </div>
-            </div>
+            <div class="relative overflow-hidden rounded-lg bg-white mb-8 h-[350px] w-full border-8 p-2 flex justify-center items-center shadow-lg"
+            id="mainImageContainer">
+           <img 
+               src="<%= product.images[0] %>" 
+               alt="<%= product.name %>"
+               id="mainImage"
+               class="w-1/2 object-contain transition-transform duration-200 cursor-zoom-in"
+           >
+           <!-- Magnified image container -->
+           <div id="magnifiedContainer" class="hidden absolute top-0 left-0 w-full h-full pointer-events-none bg-white" 
+                style="z-index: 10;">
+               <img 
+                   src="<%= product.images[0] %>" 
+                   alt="<%= product.name %>"
+                   id="magnifiedImage"
+                   class="w-full h-full object-contain absolute top-0 left-0"
+                   style="transform-origin: 0 0;"
+               >
+           </div>
+       </div>
 
             <!-- Thumbnail Swiper -->
-            <div class="swiper thumbSwiper" style="height: 100px;">
+            <div class="swiper thumbSwiper" >
                 <div class="swiper-wrapper">
                     <% product.images.forEach(function(image) { %>
-                        <div class="swiper-slide">
-                            <img src="<%= image %>" alt="Thumbnail" class="w-full h-full object-contain cursor-pointer hover:opacity-75 transition-opacity duration-200"
+                        <div class="swiper-slide" style="height: 100px;">
+                            <img src="<%= image %>" alt="Thumbnail" class="object-contain cursor-pointer hover:opacity-75 transition-opacity duration-200"
                                  onclick="changeMainImage('<%= image %>')">
                         </div>
                     <% }); %>
@@ -159,47 +186,53 @@
     </div>
 
     <!-- Similar Products Section -->
-    <div class="mt-16">
-        <h2 class="text-2xl font-bold text-gray-800 mb-6">Similar Products</h2>
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
-            <% if (recommendedProducts && recommendedProducts.length > 0) { %>
-                <% recommendedProducts.forEach(function(relatedProduct) { %>
-                    <div class="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300">
-                        <a href="/products/<%= relatedProduct._id %>" class="block">
-                            <img 
-                                src="<%= relatedProduct.images[0] %>" 
-                                alt="<%= relatedProduct.name %>"
-                                class="w-full h-48 object-contain p-4"
-                            >
-                            <div class="p-4">
-                                <h3 class="text-lg font-semibold text-gray-800 mb-2 hover:text-purple-600">
-                                    <%= relatedProduct.name %>
-                                </h3>
-                                <div>
-                                    <% if (relatedProduct.discountPercentage) { %>
-                                        <p class="text-gray-500 line-through text-sm">
-                                            ₹<%= relatedProduct.price.toLocaleString('en-IN') %>
-                                        </p>
-                                        <p class="text-xl font-bold text-purple-600">
-                                            ₹<%= (relatedProduct.price - (relatedProduct.price * relatedProduct.discountPercentage / 100)).toLocaleString('en-IN') %>
-                                        </p>
-                                    <% } else { %>
-                                        <p class="text-xl font-bold text-purple-600">
-                                            ₹<%= relatedProduct.price.toLocaleString('en-IN') %>
-                                        </p>
-                                    <% } %>
-                                </div>
+    <section class="py-16 bg-white">
+        <div class="max-w-7xl mx-auto px-4 sm:px-9 lg:px-9">
+            <h2 class="text-3xl font-bold text-center mb-12">Featured Products</h2>
+            <div class="grid grid-cols-4 gap-8">
+                    <% if (recommendedProducts && recommendedProducts.length > 0) { %>
+                        <% recommendedProducts.forEach(function(relatedProduct) { %>
+                            <div class="bg-white rounded-lg shadow-lg overflow-hidden transition-transform duration-300 hover:scale-105">
+                                <a href="/products/<%= relatedProduct._id %>">
+                                    <img 
+                                        src="<%= relatedProduct.images && relatedProduct.images.length > 0 ? relatedProduct.images[0] : '/default-image.jpg' %>" 
+                                        alt="<%= relatedProduct.name || 'Product Image' %>"
+                                        class="w-full h-48 object-cover"
+                                    >
+                                    <div class="p-4">
+                                        <h3 class="text-lg font-semibold mb-2"><%= relatedProduct.name %></h3>
+                                        <div class="flex items-center justify-between">
+                                            <div>
+                                                <% if (relatedProduct.discountPercentage && relatedProduct.discountPercentage > 0) { %>
+                                                    <span class="text-gray-500 line-through">
+                                                        ₹<%= relatedProduct.price.toLocaleString('en-IN') %>
+                                                    </span>
+                                                    <span class="text-xl font-bold text-primary ml-2">
+                                                        ₹<%= (relatedProduct.price - (relatedProduct.price * relatedProduct.discountPercentage / 100)).toLocaleString('en-IN') %>
+                                                    </span>
+                                                    <span class="bg-red-100 text-red-800 text-sm font-semibold px-2.5 py-0.5 rounded ml-2">
+                                                        <%= relatedProduct.discountPercentage %>% OFF
+                                                    </span>
+                                                <% } else { %>
+                                                    <span class="text-xl font-bold text-primary">
+                                                        ₹<%= relatedProduct.price.toLocaleString('en-IN') %>
+                                                    </span>
+                                                <% } %>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </a>
                             </div>
-                        </a>
-                    </div>
-                <% }); %>
-            <% } else { %>
-                <div class="col-span-4 text-center text-gray-500">
-                    No similar products available.
+                        <% }); %>
+                    <% } else { %>
+                        <div class="col-span-4 text-center text-gray-500">
+                            No similar products available.
+                        </div>
+                    <% } %>
                 </div>
-            <% } %>
-        </div>
-    </div>
+            </div>
+        </section>
+
 </main>
 
 <script src="https://cdn.jsdelivr.net/npm/swiper@8/swiper-bundle.min.js"></script>
@@ -212,23 +245,33 @@ var thumbsSwiper = new Swiper(".thumbSwiper", {
     watchSlidesProgress: true,
 });
 
-// Zoom functionality for the main image
 const mainImage = document.getElementById('mainImage');
 const magnifiedContainer = document.getElementById('magnifiedContainer');
 const magnifiedImage = document.getElementById('magnifiedImage');
 
 mainImage.addEventListener('mousemove', (e) => {
     const { left, top, width, height } = mainImage.getBoundingClientRect();
-    const x = ((e.pageX - left) / width) * 100;
-    const y = ((e.pageY - top) / height) * 100;
+    const x = ((e.clientX - left) / width) * 100;
+    const y = ((e.clientY - top) / height) * 100;
 
+    // Show the magnified container
     magnifiedContainer.style.display = 'block';
-    magnifiedImage.style.transform = `scale(2) translate(-${x}%, -${y}%)`;
+
+    // Adjust the magnified image position and scale
+    magnifiedImage.style.transform = `scale(2) translate(-₹{x}%, -₹{y}%)`;
+    magnifiedImage.style.transformOrigin = `₹{x}% ₹{y}%`;
 });
 
 mainImage.addEventListener('mouseleave', () => {
+    // Hide the magnified container when the mouse leaves
     magnifiedContainer.style.display = 'none';
 });
+
+// Change main image when thumbnail is clicked
+function changeMainImage(imageUrl) {
+    mainImage.src = imageUrl;
+    magnifiedImage.src = imageUrl;
+}
 
 // Change main image when thumbnail is clicked
 function changeMainImage(imageUrl) {

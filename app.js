@@ -7,7 +7,6 @@ const userRouter = require('./routes/userRouter');
 const adminRouter = require('./routes/adminRouter');
 const passport = require('./config/passport');
 const flash = require('connect-flash');
-const { checkBlockedStatus, userAuth } = require('./middleware/auth');
 const { errorHandler } = require('./middleware/errorHandler');
 const { handleMulterError } = require('./config/multer');
 
@@ -135,15 +134,13 @@ app.locals.calculateDiscountedPrice = (price, discountPercentage) => {
     return price - (price * discountPercentage / 100);
 };
 
-// Check blocked status before all routes
-app.use(checkBlockedStatus);
 
 // Add Multer error handler before routes
 app.use(handleMulterError);
 
 // Routes that require authentication
-app.use('/dashboard', userAuth, userRouter);
-app.use('/profile', userAuth, userRouter);
+app.use('/dashboard', userRouter);
+app.use('/profile', userRouter);
 // ... other protected routes
 
 // Public routes
