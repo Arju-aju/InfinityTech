@@ -196,9 +196,9 @@
 
                   <!-- Dropdown Menu -->
                   <div class="glass-effect absolute right-0 mt-2 w-48 rounded-lg py-2 hidden" id="profileMenu">
-                      <a href="/profile" class="block px-4 py-2 text-gray-300 hover:text-white hover:bg-white/10">
-                          <i class="fas fa-user mr-2"></i> Profile
-                      </a>
+                    <a href="/profile" class="block px-4 py-2 text-gray-300 hover:text-white hover:bg-white/10">
+                      <i class="fas fa-user mr-2"></i> Profile
+                  </a>
                       <a href="/settings" class="block px-4 py-2 text-gray-300 hover:text-white hover:bg-white/10">
                           <i class="fas fa-cog mr-2"></i> Settings
                       </a>
@@ -223,21 +223,29 @@
     <script src="https://unpkg.com/swiper/swiper-bundle.min.js"></script>
     <script>
       // Profile Dropdown Toggle
+
+     
       const profileDropdown = document.getElementById('profileDropdown');
-      const profileMenu = document.getElementById('profileMenu');
+    const profileMenu = document.getElementById('profileMenu');
 
-      if (profileDropdown && profileMenu) {
-          profileDropdown.addEventListener('click', () => {
-              profileMenu.classList.toggle('hidden');
-          });
+    if (profileDropdown && profileMenu) {
+        profileDropdown.addEventListener('click', () => {
+            profileMenu.classList.toggle('hidden');
+        });
 
-          // Close dropdown when clicking outside
-          document.addEventListener('click', (e) => {
-              if (!profileDropdown.contains(e.target) && !profileMenu.contains(e.target)) {
-                  profileMenu.classList.add('hidden');
-              }
-          });
-      }
+        document.addEventListener('click', (e) => {
+            if (!profileDropdown.contains(e.target) && !profileMenu.contains(e.target)) {
+                profileMenu.classList.add('hidden');
+            }
+        });
+
+        // Close menu when clicking a menu link
+        profileMenu.querySelectorAll('a').forEach(link => {
+            link.addEventListener('click', () => {
+                profileMenu.classList.add('hidden');
+            });
+        });
+    }
   </script>
   </body>
 </html>

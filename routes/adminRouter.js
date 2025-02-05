@@ -44,6 +44,32 @@ router.delete('/softDeleteProduct/:id', productController.softDelete);
 
 
 //Order Management
+
+router.get('/orderDetails/:orderId', async (req, res) => {
+    try {
+        const orderId = req.params.orderId;
+        const order = await Order.findById(orderId).populate("user").populate("products.productId");
+
+        if (!order) {
+            return res.status(404).json({
+                success: false,
+                message: 'Order not found'
+            });
+        }
+
+        res.json({
+            success: true,
+            order: order
+        });
+    } catch (error) {
+        console.log(`Error fetching order details: ${error}`);
+        res.status(500).json({
+            success: false,
+            message: 'Server Error'
+        });
+    }
+});
+
 router.get('/orders', async(req,res)=>{
     try {
         const orders = await Order.find().populate("user").populate("products.productId");
@@ -63,17 +89,60 @@ router.post('/orders',async (req,res) =>{
         console.error(err);
         res.status(500).send("Server Error");
       }
-    });
+});
     
     // Delete an order
-    router.post("/orders/delete/:id", async (req, res) => {
-      try {
-        await Order.findByIdAndDelete(req.params.id);
-        res.redirect("/admin/orders");
-      } catch (err) {
-        console.error(err);
-        res.status(500).send("Server Error");
-      }
+    router.delete('/deleteOrder/:id', async (req, res) => {
+        try {
+            const orderId = req.params.id;
+            await Order.findByIdAndDelete(orderId);
+            res.json({ success: true, message: 'Order deleted successfully' });
+        } catch (err) {
+            console.error(err);
+            res.status(500).json({ success: false, message: 'Server Error' });
+        }
     });
+
+    router.post('/updateOrderStatus/:orderId', async (req, res) => {
+        try {
+            const { orderId } = req.params;
+            const { status } = req.body;
+    
+            const validStatuses = ['pending', 'shipped', 'delivered', 'cancelled'];
+            if (!validStatuses.includes(status)) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Invalid Status'
+                });
+            }
+    
+            const updatedOrder = await Order.findByIdAndUpdate(
+                orderId,
+                { status: status },
+                { new: true } // Returns the updated document
+            );
+    
+            if (!updatedOrder) {
+                return res.status(404).json({
+                    success: false,
+                    message: 'Order not found'
+                });
+            }
+    
+            res.json({
+                success: true,
+                message: 'Order status updated successfully',
+                status: updatedOrder.status
+            });
+        } catch (error) {
+            console.error(`Error updating order status: ${error}`);
+            res.status(500).json({
+                success: false,
+                message: 'Server Error'
+            });
+        }
+    });
+    
+
 
 module.exports = router;

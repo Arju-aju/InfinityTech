@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Addresses</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .gradient-bg {
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            background-size: 400% 400%;
+            animation: gradient 15s ease infinite;
+        }
+        @keyframes gradient {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+    </style>
+</head>
+<body class="gradient-bg min-h-screen flex">
+    <!-- Sidebar -->
+    <div class="w-64 bg-white/10 text-white p-6 overflow-y-auto">
+        <div class="mb-10 text-center">
+            <img id="sidebar-profile-image" src="images/default-avatar.svg" alt="Profile" class="w-24 h-24 rounded-full mx-auto mb-4 object-cover">
+            <h2 id="sidebar-profile-name" class="text-xl font-semibold">Admin User</h2>
+            <p id="sidebar-profile-email" class="text-white/70">admin@gmail.com</p>
+        </div>
+        <nav>
+            <ul class="space-y-2">
+                <li class="bg-white/20 rounded">
+                    <a href="#" class="block p-3 hover:bg-white/30">
+                        <i class="fas fa-user mr-3"></i>Profile
+                    </a>
+                </li>
+                <li>
+                    <a href="#" class="block p-3 hover:bg-white/20">
+                        <i class="fas fa-address-book mr-3"></i>Address Book
+                    </a>
+                </li>
+                <li>
+                    <a href="#" class="block p-3 hover:bg-white/20">
+                        <i class="fas fa-shopping-cart mr-3"></i>Orders
+                    </a>
+                </li>
+                <li>
+                    <a href="#" class="block p-3 hover:bg-white/20">
+                        <i class="fas fa-wallet mr-3"></i>Wallet
+                    </a>
+                </li>
+                <li>
+                    <a href="#" class="block p-3 hover:bg-white/20">
+                        <i class="fas fa-key mr-3"></i>Password
+                    </a>
+                </li>
+                <li>
+                    <a href="/logout" class="block p-3 hover:bg-white/20">
+                        <i class="fas fa-sign-out-alt mr-3"></i>Logout
+                    </a>
+                </li>
+            </ul>
+        </nav>
+    </div>
+
+    <!-- Main Content -->
+    <div class="flex-1 p-8">
+        <h2 class="text-2xl font-bold text-white mb-6">Manage Addresses</h2>
+
+        <!-- Address Form -->
+        <div class="glass-card p-6 rounded-lg text-white shadow-lg max-w-lg mx-auto">
+            <h3 class="text-xl font-semibold mb-4">Add New Address</h3>
+            <form action="/add-address" method="POST" class="space-y-4">
+                <div>
+                    <label class="block font-semibold mb-1">Address Type</label>
+                    <select name="addressType" class="w-full p-2 rounded bg-white/20 text-white">
+                        <option value="Home">Home</option>
+                        <option value="Work">Work</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block font-semibold mb-1">Full Name</label>
+                    <input type="text" name="name" required class="w-full p-2 rounded bg-white/20 text-white">
+                </div>
+
+                <div>
+                    <label class="block font-semibold mb-1">City</label>
+                    <input type="text" name="city" required class="w-full p-2 rounded bg-white/20 text-white">
+                </div>
+
+                <div>
+                    <label class="block font-semibold mb-1">Landmark</label>
+                    <input type="text" name="landmark" required class="w-full p-2 rounded bg-white/20 text-white">
+                </div>
+
+                <div>
+                    <label class="block font-semibold mb-1">State</label>
+                    <input type="text" name="state" required class="w-full p-2 rounded bg-white/20 text-white">
+                </div>
+
+                <div>
+                    <label class="block font-semibold mb-1">Pincode</label>
+                    <input type="number" name="pincode" required class="w-full p-2 rounded bg-white/20 text-white">
+                </div>
+
+                <div>
+                    <label class="block font-semibold mb-1">Phone</label>
+                    <input type="text" name="phone" required class="w-full p-2 rounded bg-white/20 text-white">
+                </div>
+
+                <div>
+                    <label class="block font-semibold mb-1">Alternate Phone</label>
+                    <input type="text" name="altPhone" class="w-full p-2 rounded bg-white/20 text-white">
+                </div>
+
+                <button type="submit" class="bg-indigo-500 hover:bg-indigo-600 px-4 py-2 rounded-lg w-full">
+                    Save Address
+                </button>
+            </form>
+        </div>
+
+        <!-- Saved Addresses -->
+        <div class="mt-8">
+            <h3 class="text-xl font-bold text-white mb-4">Saved Addresses</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Loop through user addresses -->
+                <% userAddresses.forEach(address => { %>
+                    <div class="glass-card p-4 rounded-lg text-white shadow-lg relative">
+                        <h4 class="font-semibold text-lg"><%= address.addressType %> Address</h4>
+                        <p class="text-gray-300"><%= address.name %></p>
+                        <p class="text-gray-300"><%= address.city %>, <%= address.state %></p>
+                        <p class="text-gray-300">Pincode: <%= address.pincode %></p>
+                        <p class="text-gray-300">Phone: <%= address.phone %></p>
+                        <p class="text-gray-300">Alt Phone: <%= address.altPhone %></p>
+
+                        <!-- Edit Button -->
+                        <button onclick="openEditForm('<%= address._id %>')" 
+                                class="bg-yellow-500 hover:bg-yellow-600 px-3 py-1 rounded text-sm mt-2">
+                            Edit
+                        </button>
+
+                        <!-- Delete Button -->
+                        <a href="/delete-address/<%= address._id %>" 
+                           class="bg-red-500 hover:bg-red-600 px-3 py-1 rounded text-sm mt-2">
+                            Delete
+                        </a>
+                    </div>
+                <% }) %>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript for Edit Form -->
+    <script>
+        function openEditForm(addressId) {
+            window.location.href = "/edit-address/" + addressId;
+        }
+    </script>
+</body>
+</html>

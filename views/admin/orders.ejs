@@ -76,7 +76,16 @@
                                             <i class="fas fa-trash"></i>
                                         </button>
                                     </div>
+                                </td><td class="px-6 py-4 whitespace-nowrap">
+                                    <span id="order-status-<%= order._id %>" class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full 
+                                        <%= order.status === 'pending' ? 'bg-yellow-500/20 text-yellow-400' :
+                                            order.status === 'shipped' ? 'bg-blue-500/20 text-blue-400' :
+                                            order.status === 'delivered' ? 'bg-green-500/20 text-green-400' :
+                                            'bg-red-500/20 text-red-400' %>">
+                                        <%= order.status.charAt(0).toUpperCase() + order.status.slice(1) %>
+                                    </span>
                                 </td>
+                                
                             </tr>
                             <tr class="hover:bg-gray-800/30 transition-colors">
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-100">#1002</td>
@@ -144,88 +153,134 @@
 
 <!-- Order Management Scripts -->
 <script>
-    // View Order Details
+    // Ensure functions are defined in the global scope
     function viewOrderDetails(orderId) {
-        Swal.fire({
-            title: `Order #${orderId} Details`,
-            html: `
-                <div class="text-left">
-                    <p><strong>Customer:</strong> John Doe</p>
-                    <p><strong>Date:</strong> 2023-10-15</p>
-                    <p><strong>Total:</strong> $199.99</p>
-                    <p><strong>Status:</strong> Pending</p>
-                    <p><strong>Items:</strong></p>
-                    <ul class="list-disc pl-5">
-                        <li>Product A - $99.99</li>
-                        <li>Product B - $100.00</li>
-                    </ul>
-                </div>
-            `,
-            icon: 'info',
-            confirmButtonText: 'Close',
-            background: '#1f2937',
-            color: '#fff'
-        });
-    }
-
-    // Update Order Status
-    function updateOrderStatus(orderId) {
-        Swal.fire({
-            title: 'Update Order Status',
-            input: 'select',
-            inputOptions: {
-                'pending': 'Pending',
-                'shipped': 'Shipped',
-                'delivered': 'Delivered',
-                'cancelled': 'Cancelled'
-            },
-            inputPlaceholder: 'Select status',
-            showCancelButton: true,
-            confirmButtonText: 'Update',
-            background: '#1f2937',
-            color: '#fff',
-            preConfirm: (status) => {
-                if (!status) {
-                    Swal.showValidationMessage('Please select a status');
+        fetch(`/admin/orderDetails/${orderId}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const order = data.order;
+                    Swal.fire({
+                        title: `Order #${orderId} Details`,
+                        html: `
+                            <div class="text-left">
+                                <p><strong>Customer:</strong> ${order.customer || 'N/A'}</p>
+                                <p><strong>Date:</strong> ${order.date ? new Date(order.date).toLocaleDateString() : 'N/A'}</p>
+                                <p><strong>Total:</strong> $${order.total ? order.total.toFixed(2) : '0.00'}</p>
+                                <p><strong>Status:</strong> ${order.status || 'Unknown'}</p>
+                                <p><strong>Items:</strong></p>
+                                <ul class="list-disc pl-5">
+                                    ${order.items && order.items.length > 0 
+                                        ? order.items.map(item => 
+                                            `<li>${item.name || 'Unknown Product'} - $${item.price || '0.00'} x ${item.quantity || '1'}</li>`
+                                        ).join('') 
+                                        : '<li>No items found</li>'}
+                                </ul>
+                            </div>
+                        `,
+                        icon: 'info',
+                        confirmButtonText: 'Close',
+                        background: '#1f2937',
+                        color: '#fff'
+                    });
+                } else {
+                    Swal.fire({
+                        title: 'Error!',
+                        text: data.message || 'Failed to fetch order details',
+                        icon: 'error',
+                        background: '#1f2937',
+                        color: '#fff'
+                    });
                 }
-                return status;
-            }
-        }).then((result) => {
-            if (result.isConfirmed) {
-                // Send update request to the server
-                fetch(`/admin/updateOrderStatus/${orderId}`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ status: result.value })
-                }).then(response => response.json())
-                  .then(data => {
-                      if (data.success) {
-                          Swal.fire({
-                              title: 'Success!',
-                              text: 'Order status updated.',
-                              icon: 'success',
-                              background: '#1f2937',
-                              color: '#fff'
-                          }).then(() => {
-                              window.location.reload();
-                          });
-                      } else {
-                          Swal.fire({
-                              title: 'Error!',
-                              text: 'Failed to update order status.',
-                              icon: 'error',
-                              background: '#1f2937',
-                              color: '#fff'
-                          });
-                      }
-                  });
-            }
-        });
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                Swal.fire({
+                    title: 'Error!',
+                    text: 'Failed to fetch order details',
+                    icon: 'error',
+                    background: '#1f2937',
+                    color: '#fff'
+                });
+            });
     }
 
-    // Delete Order
+    function updateOrderStatus(orderId) {
+    Swal.fire({
+        title: 'Update Order Status',
+        input: 'select',
+        inputOptions: {
+            'pending': 'Pending',
+            'shipped': 'Shipped',
+            'delivered': 'Delivered',
+            'cancelled': 'Cancelled'
+        },
+        inputPlaceholder: 'Select status',
+        showCancelButton: true,
+        confirmButtonText: 'Update',
+        background: '#1f2937',
+        color: '#fff',
+        preConfirm: (status) => {
+            if (!status) {
+                Swal.showValidationMessage('Please select a status');
+            }
+            return status;
+        }
+    }).then((result) => {
+        if (result.isConfirmed) {
+            fetch(`/admin/updateOrderStatus/${orderId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ status: result.value })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    Swal.fire({
+                        title: 'Success!',
+                        text: 'Order status updated.',
+                        icon: 'success',
+                        background: '#1f2937',
+                        color: '#fff'
+                    });
+
+                    // Update status in the table dynamically
+                    const statusElement = document.querySelector(`#order-status-${orderId}`);
+                    if (statusElement) {
+                        statusElement.textContent = result.value.charAt(0).toUpperCase() + result.value.slice(1);
+                        statusElement.className = `px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                            result.value === 'pending' ? 'bg-yellow-500/20 text-yellow-400' :
+                            result.value === 'shipped' ? 'bg-blue-500/20 text-blue-400' :
+                            result.value === 'delivered' ? 'bg-green-500/20 text-green-400' :
+                            'bg-red-500/20 text-red-400'
+                        }`;
+                    }
+                } else {
+                    Swal.fire({
+                        title: 'Error!',
+                        text: data.message || 'Failed to update order status',
+                        icon: 'error',
+                        background: '#1f2937',
+                        color: '#fff'
+                    });
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                Swal.fire({
+                    title: 'Error!',
+                    text: 'Failed to update order status',
+                    icon: 'error',
+                    background: '#1f2937',
+                    color: '#fff'
+                });
+            });
+        }
+    });
+}
+
     function deleteOrder(orderId) {
         Swal.fire({
             title: 'Are you sure?',
@@ -239,32 +294,31 @@
             color: '#fff'
         }).then((result) => {
             if (result.isConfirmed) {
-                // Send delete request to the server
                 fetch(`/admin/deleteOrder/${orderId}`, {
-                    method: 'POST'
-                }).then(response => response.json())
-                  .then(data => {
-                      if (data.success) {
-                          Swal.fire({
-                              title: 'Deleted!',
-                              text: 'Order has been deleted.',
-                              icon: 'success',
-                              background: '#1f2937',
-                              color: '#fff'
-                          }).then(() => {
-                              window.location.reload();
-                          });
-                      } else {
-                          Swal.fire({
-                              title: 'Error!',
-                              text: 'Failed to delete order.',
-                              icon: 'error',
-                              background: '#1f2937',
-                              color: '#fff'
-                          });
-                      }
-                  });
+    method: 'DELETE',
+    headers: {
+        'Content-Type': 'application/json'
+    }
+})
+.then(response => response.json())
+.then(data => {
+    if (data.success) {
+        console.log('Order deleted successfully');
+    } else {
+        console.error('Failed to delete order');
+    }
+})
+                .catch(error => {
+                    console.error('Error:', error);
+                    Swal.fire({
+                        title: 'Error!',
+                        text: 'Failed to delete order',
+                        icon: 'error',
+                        background: '#1f2937',
+                        color: '#fff'
+                    });
+                });
             }
         });
     }
-</script
+</script>

@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Dashboard - Profile</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .gradient-bg {
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            background-size: 400% 400%;
+            animation: gradient 15s ease infinite;
+        }
+        @keyframes gradient {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+    </style>
+</head>
+<body class="gradient-bg min-h-screen flex">
+    <!-- Sidebar -->
+    <div class="w-64 bg-white/10 text-white p-6 overflow-y-auto">
+        <div class="mb-10 text-center">
+            <img id="sidebar-profile-image" src="images/default-avatar.svg" 
+                 alt="Profile" class="w-24 h-24 rounded-full mx-auto mb-4 object-cover">
+            <h2 id="sidebar-profile-name" class="text-xl font-semibold">Admin User</h2>
+            <p id="sidebar-profile-email" class="text-white/70">admin@gmail.com</p>
+        </div>
+        <nav>
+            <ul class="space-y-2">
+                <li class="bg-white/20 rounded">
+                    <a href="#" class="block p-3 hover:bg-white/30">
+                        <i class="fas fa-user mr-3"></i>Profile
+                    </a>
+                </li>
+                <li>
+                    <a href="#" class="block p-3 hover:bg-white/20">
+                        <i class="fas fa-address-book mr-3"></i>Address Book
+                    </a>
+                </li>
+                <li>
+                    <a href="#" class="block p-3 hover:bg-white/20">
+                        <i class="fas fa-shopping-cart mr-3"></i>Orders
+                    </a>
+                </li>
+                <li>
+                    <a href="#" class="block p-3 hover:bg-white/20">
+                        <i class="fas fa-wallet mr-3"></i>Wallet
+                    </a>
+                </li>
+                <li>
+                    <a href="#" class="block p-3 hover:bg-white/20">
+                        <i class="fas fa-key mr-3"></i>Password
+                    </a>
+                </li>
+                <li>
+                    <a href="/logout" class="block p-3 hover:bg-white/20">
+                        <i class="fas fa-sign-out-alt mr-3"></i>Logout
+
+                    </a>
+                </li>
+            </ul>
+        </nav>
+    </div>
+
+    <!-- Main Content -->
+    <div class="flex-1 p-8">
+        <div id="error-container" class="hidden mb-4">
+            <div class="bg-red-500 text-white p-4 rounded-lg flex items-center">
+                <i class="fas fa-exclamation-triangle mr-3"></i>
+                <span id="error-message">Failed to load profile. Please try again later.</span>
+                <button onclick="retryProfileLoad()" class="ml-4 bg-white/20 hover:bg-white/30 px-3 py-1 rounded">
+                    Retry
+                </button>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <!-- Profile Card -->
+            <div class="bg-white/10 backdrop-blur-lg p-6 rounded-lg text-white shadow-lg w-full max-w-md mx-auto">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-2xl font-bold">Profile Details</h2>
+                    <button class="bg-indigo-500 hover:bg-indigo-600 px-4 py-2 rounded-lg transition duration-300">
+                        Edit Profile
+                    </button>
+                </div>
+            
+                <div id="profile-details" class="space-y-4">
+                    <!-- Name -->
+                    <div class="flex items-center gap-2">
+                        <span class="font-semibold">Name:</span>
+                        <span class="text-gray-300"><%= userProfile.name %></span>
+                    </div>
+            
+                    <!-- Email -->
+                    <div class="flex items-center gap-2">
+                        <span class="font-semibold">Email:</span>
+                        <span class="text-gray-300"><%= userProfile.email %></span>
+                    </div>
+            
+                    <!-- Mobile -->
+                    <div class="flex items-center gap-2">
+                        <span class="font-semibold">Mobile:</span>
+                        <span class="text-gray-300"><%= userProfile.phone %></span>
+                    </div>
+            
+                    <!-- Status -->
+                    <div class="flex items-center gap-2">
+                        <span class="font-semibold">Status:</span>
+                        <span class="px-3 py-1 rounded-lg text-sm font-medium 
+                            <%= userProfile.status === 'Active' ? 'bg-green-500' : 'bg-red-500' %>">
+                            <%= userProfile.status %>
+                        </span>
+                    </div>
+            
+                    <!-- Member Since -->
+                    <div class="flex items-center gap-2">
+                        <span class="font-semibold">Member Since:</span>
+                        <span class="text-gray-300"><%= userProfile.memberSince %></span>
+                    </div>
+                </div>
+            </div>
+            
+
+            <!-- Recent Orders Card -->
+            <div class="glass-card p-6 rounded-lg text-white">
+                <h2 class="text-2xl font-bold mb-4">Recent Orders</h2>
+                <div id="recent-activity">
+                    <div class="animate-pulse">
+                        <div class="h-4 bg-white/20 rounded w-full mb-2"></div>
+                        <div class="h-4 bg-white/20 rounded w-3/4 mb-2"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Wallet History -->
+        <div class="glass-card p-6 rounded-lg text-white mt-6">
+            <h2 class="text-2xl font-bold mb-4">Wallet History</h2>
+            <div id="wallet-history">
+                <div class="animate-pulse">
+                    <div class="h-4 bg-white/20 rounded w-full mb-2"></div>
+                    <div class="h-4 bg-white/20 rounded w-3/4 mb-2"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

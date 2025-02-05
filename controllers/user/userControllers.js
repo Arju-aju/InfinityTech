@@ -55,8 +55,10 @@ const loadLogin = async (req, res) => {
         res.render('user/login', {
             message: {
                 type: req.flash('error').length ? 'error' : 'success',
-                content: req.flash('error')[0] || req.flash('success')[0]
-            }
+                content: req.flash('error')[0] || req.flash('success')[0],
+                
+            },
+            name: req.session.name,
         });
     } catch (error) {
         console.error('Error loading login page:', error);
@@ -82,7 +84,6 @@ const loadSignup = async (req, res) => {
 // Handle Signup Submit
 const signup = async (req, res) => {
     try {
-        console.log('Signup detail  :======',req.body);
         const { name, email, phone, password, confirmPassword } = req.body;
 
         // Validate required fields
@@ -147,7 +148,6 @@ const signup = async (req, res) => {
 
         // Generate OTP
         const otp = generateOtp();
-        console.log(otp);
         const otpExpiry = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes expiry
 
         // Hash password
@@ -166,10 +166,8 @@ const signup = async (req, res) => {
         };
 
         // Send verification email
-        try {
-            await sendVerificationEmail(email, otp);
-        } catch (emailError) {
-            console.error('Error sending verification email:', emailError);
+        const emailSent = await sendVerificationEmail(email, otp);
+        if (!emailSent) {
             return res.status(500).json({
                 success: false,
                 message: 'Failed to send verification email. Please try again.'
@@ -190,7 +188,6 @@ const signup = async (req, res) => {
         });
     }
 };
-
 // Handle Login Submit
 const login = async (req, res) => {
     try {
@@ -260,7 +257,6 @@ const login = async (req, res) => {
         });
     }
 };
-
 // Load Verify OTP Page
 const loadverifyOtp = async(req, res) => {
     try {
@@ -415,7 +411,6 @@ const loadHomePage = async (req, res) => {
         const sevenDaysAgo = new Date();
         sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
-        console.log('Debug: Fetching products...');
 
         // Log database connection status
         console.log('MongoDB Connection State:', mongoose.connection.readyState);
@@ -438,10 +433,7 @@ const loadHomePage = async (req, res) => {
         .limit(8);
 
         // Log query conditions and results
-        console.log('Featured Products Query:', {
-            isDeleted: false,
-            discountPercentage: { $gt: 55 }
-        });
+
         
 
         // Fetch top-selling products
@@ -459,14 +451,8 @@ const loadHomePage = async (req, res) => {
         .sort({ discountPercentage: -1 })
         .limit(8);
 
-        console.log('New aariival Products Found:', JSON.stringify(newArrivals, null, 2));
+
         // Log all product counts
-        console.log('Product Counts:', {
-            newArrivals: newArrivals.length,
-            featured: featuredProducts.length,
-            topSelling: topSellingProducts.length,
-            deals: dealProducts.length
-        });
 
         // Render the page with products
         console.log('Debug: Rendering home page...');
@@ -517,6 +503,8 @@ const loadContactPage = async (req, res) => {
     }
 };
 
+
+
 module.exports = {
     pageNotFound,
     loadLogin,
@@ -525,9 +513,9 @@ module.exports = {
     login,
     logout,
     loadverifyOtp,
-    verifyOtp,
+    verifyOtp,  
     resendOtp,
     loadAboutPage,
     loadContactPage,
-    loadHomePage
+    loadHomePage,
 };
