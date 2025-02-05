@@ -4,6 +4,7 @@ const router = express.Router();
 const userController = require('../controllers/user/userControllers');
 const profileController = require('../controllers/user/userProfileController');
 const productController = require('../controllers/user/productController');
+const addressController = require('../controllers/user/addressController')
 const { isAuthenticated, isNotAuthenticated, auth } = require('../middleware/auth');
 const passport = require('passport');
 const User = require('../models/userSchema');
@@ -48,5 +49,11 @@ router.get('/contact', userController.loadContactPage);
 
 // Profile management
 router.get('/profile', auth, profileController.loadProfile);
+
+
+//Address Mangament
+
+router.get('/address',addressController.getAddress)
+router.post('/add-address',addressController.addAddress)
 
 module.exports = router;

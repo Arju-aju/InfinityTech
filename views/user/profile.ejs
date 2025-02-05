@@ -26,49 +26,8 @@
 </head>
 <body class="gradient-bg min-h-screen flex">
     <!-- Sidebar -->
-    <div class="w-64 bg-white/10 text-white p-6 overflow-y-auto">
-        <div class="mb-10 text-center">
-            <img id="sidebar-profile-image" src="images/default-avatar.svg" 
-                 alt="Profile" class="w-24 h-24 rounded-full mx-auto mb-4 object-cover">
-            <h2 id="sidebar-profile-name" class="text-xl font-semibold">Admin User</h2>
-            <p id="sidebar-profile-email" class="text-white/70">admin@gmail.com</p>
-        </div>
-        <nav>
-            <ul class="space-y-2">
-                <li class="bg-white/20 rounded">
-                    <a href="#" class="block p-3 hover:bg-white/30">
-                        <i class="fas fa-user mr-3"></i>Profile
-                    </a>
-                </li>
-                <li>
-                    <a href="#" class="block p-3 hover:bg-white/20">
-                        <i class="fas fa-address-book mr-3"></i>Address Book
-                    </a>
-                </li>
-                <li>
-                    <a href="#" class="block p-3 hover:bg-white/20">
-                        <i class="fas fa-shopping-cart mr-3"></i>Orders
-                    </a>
-                </li>
-                <li>
-                    <a href="#" class="block p-3 hover:bg-white/20">
-                        <i class="fas fa-wallet mr-3"></i>Wallet
-                    </a>
-                </li>
-                <li>
-                    <a href="#" class="block p-3 hover:bg-white/20">
-                        <i class="fas fa-key mr-3"></i>Password
-                    </a>
-                </li>
-                <li>
-                    <a href="/logout" class="block p-3 hover:bg-white/20">
-                        <i class="fas fa-sign-out-alt mr-3"></i>Logout
 
-                    </a>
-                </li>
-            </ul>
-        </nav>
-    </div>
+    <%- include('../partials/profileSideBar') %>
 
     <!-- Main Content -->
     <div class="flex-1 p-8">
