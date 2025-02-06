@@ -24,6 +24,10 @@ router.get('/auth/google/callback', passport.authenticate('google', { failureRed
     res.redirect('/');
 });
 
+router.get('/changePassword', userController.loadPassword)
+router.post("/send-password-otp", userController.sendOTPForPasswordChange)
+router.post('/change-password', userController.changePassword);
+
 // Product routes
 router.get('/', userController.loadHomePage);
 router.get('/shop', productController.loadShop);

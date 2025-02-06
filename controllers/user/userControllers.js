@@ -504,6 +504,150 @@ const loadContactPage = async (req, res) => {
     }
 };
 
+const loadPassword = async (req, res) => {
+    try {
+        res.render('user/changePassword', {
+            message: req.flash('message') || null
+        });
+    } catch (error) {
+        console.error('Error loading change password page:', error);
+        res.redirect('/pageNotFound');
+    }
+};
+
+const sendOTPForPasswordChange = async (req, res) => {
+    try {
+        const { email } = req.body;
+        const user = await User.findOne({ email });
+
+        if (!user) {
+            return res.status(404).json({ 
+                success: false, 
+                message: 'User not found with this email' 
+            });
+        }
+
+        // Generate 6-digit OTP
+        const otp = Math.floor(100000 + Math.random() * 900000).toString();
+        
+        // Store OTP with expiration
+        user.resetPasswordOTP = {
+            code: otp,
+            expiresAt: Date.now() + 10 * 60 * 1000 // 10 minutes
+        };
+        await user.save();
+
+        // Send OTP via email
+        await sendOTPEmail(email, otp);
+
+        res.status(200).json({ 
+            success: true, 
+            message: 'OTP sent to your registered email' 
+        });
+
+    } catch (error) {
+        console.error('Error sending OTP:', error);
+        res.status(500).json({ 
+            success: false, 
+            message: 'Server error. Please try again later.' 
+        });
+    }
+};
+
+const sendOTPEmail = async (email, otp) => {
+    try {
+        const mailOptions = {
+            from: process.env.EMAIL_USER,
+            to: email,
+            subject: 'Password Reset OTP',
+            html: `
+                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                    <h2>Password Reset Verification</h2>
+                    <p>Your One-Time Password (OTP) for password reset is:</p>
+                    <h3 style="background-color: #f0f0f0; padding: 10px; text-align: center; letter-spacing: 5px;">
+                        ${otp}
+                    </h3>
+                    <p>This OTP is valid for 10 minutes. Do not share this with anyone.</p>
+                    <small>If you did not request this, please ignore this email.</small>
+                </div>
+            `
+        };
+
+        await transporter.sendMail(mailOptions);
+    } catch (error) {
+        console.error('Email sending error:', error);
+        throw new Error('Failed to send OTP email');
+    }
+};
+
+const changePassword = async (req, res) => {
+    try {
+        const { email, otp, newPassword } = req.body;
+        
+        // Validate input
+        if (!email || !otp || !newPassword) {
+            return res.status(400).json({ 
+                success: false, 
+                message: 'All fields are required' 
+            });
+        }
+
+        const user = await User.findOne({ email });
+
+        if (!user) {
+            return res.status(404).json({ 
+                success: false, 
+                message: 'User not found' 
+            });
+        }
+
+        // Validate OTP
+        if (!user.resetPasswordOTP || 
+            user.resetPasswordOTP.code !== otp || 
+            user.resetPasswordOTP.expiresAt < Date.now()) {
+            return res.status(400).json({ 
+                success: false, 
+                message: 'Invalid or expired OTP' 
+            });
+        }
+
+        // Password strength validation
+        const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+        if (!passwordRegex.test(newPassword)) {
+            return res.status(400).json({ 
+                success: false, 
+                message: 'Password does not meet complexity requirements' 
+            });
+        }
+
+        // Hash new password
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
+        
+        // Update password and clear OTP
+        user.password = hashedPassword;
+        user.resetPasswordOTP = undefined;
+        
+        await user.save();
+
+        // Optional: Logout from all devices
+        // Implement this if you want to force re-login after password change
+
+        req.flash('message', 'Password changed successfully');
+
+        res.status(200).json({ 
+            success: true, 
+            message: 'Password changed successfully' 
+        });
+
+    } catch (error) {
+        console.error('Error changing password:', error);
+        res.status(500).json({ 
+            success: false, 
+            message: 'Server error. Please try again later.' 
+        });
+    }
+};
+
 
 
 module.exports = {
@@ -519,4 +663,6 @@ module.exports = {
     loadAboutPage,
     loadContactPage,
     loadHomePage,
+    loadPassword,sendOTPForPasswordChange,
+    changePassword
 };

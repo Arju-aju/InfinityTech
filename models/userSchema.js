@@ -66,6 +66,16 @@ const userSchema = new Schema({
         type: Schema.Types.ObjectId,
         ref: 'User'
     }],
+    resetPasswordOTP: {
+        code: {
+            type: String,
+            default: null
+        },
+        expiresAt: {
+            type: Date,
+            default: null
+        }
+    },
     searchHistory: [{
         category: {
             type: Schema.Types.ObjectId,
