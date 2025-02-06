@@ -32,7 +32,6 @@ app.use(express.urlencoded({ extended: true }));
 
 // Add middleware to handle AJAX requests
 app.use((req, res, next) => {
-    // Check if request is AJAX
     if (req.xhr || req.headers.accept?.includes('json')) {
         res.error = (status, message) => {
             return res.status(status).json({
@@ -71,6 +70,7 @@ app.use((req, res, next) => {
     res.locals.user = req.session.user || null;
     res.locals.success_msg = req.flash('success_msg');
     res.locals.error_msg = req.flash('error_msg');
+    res.locals.success = req.flash('success');
     res.locals.error = req.flash('error');
     next();
 });

@@ -1,98 +1,292 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Manage Addresses</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+    />
     <style>
-        .gradient-bg {
-            background: linear-gradient(135deg, #6366f1, #8b5cf6);
-            background-size: 400% 400%;
-            animation: gradient 15s ease infinite;
+      .gradient-bg {
+        background: linear-gradient(135deg, #6366f1, #8b5cf6);
+        background-size: 400% 400%;
+        animation: gradient 15s ease infinite;
+      }
+      .glass-card {
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+      }
+      .hidden {
+        display: none;
+      }
+      #editModal,
+      #addAddressModal {
+        z-index: 1000; /* Ensure it's on top of other elements */
+      }
+      @keyframes gradient {
+        0% {
+          background-position: 0% 50%;
         }
-        @keyframes gradient {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
+        50% {
+          background-position: 100% 50%;
         }
-        .glass-card {
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
+        100% {
+          background-position: 0% 50%;
         }
+      }
     </style>
-</head>
-<body class="gradient-bg min-h-screen flex">
-    <!-- Sidebar -->
-
-        <%- include('../partials/profileSideBar') %>
-    <!-- Main Content -->
+  </head>
+  <body class="gradient-bg min-h-screen flex">
+    <%- include('../partials/profileSideBar') %>
     <div class="flex-1 p-8">
-        <h2 class="text-2xl font-bold text-white mb-6">Manage Addresses</h2>
-
-        <!-- Address Form -->
-        <div class="glass-card p-6 rounded-lg text-white shadow-lg max-w-lg mx-auto">
-            <h3 class="text-xl font-semibold mb-4">Add New Address</h3>
-            <form action="/add-address" method="POST" class="space-y-4">
-                <div>
-                    <label class="block font-semibold mb-1">Address Type</label>
-                    <select name="addressType" class="w-full p-2 rounded bg-white/20 text-white">
-                        <option value="Home">Home</option>
-                        <option value="Work">Work</option>
-                    </select>
-                </div>
-
-                <div>
-                    <label class="block font-semibold mb-1">Full Name</label>
-                    <input type="text" name="name" required class="w-full p-2 rounded bg-white/20 text-white">
-                </div>
-
-                <div>
-                    <label class="block font-semibold mb-1">City</label>
-                    <input type="text" name="city" required class="w-full p-2 rounded bg-white/20 text-white">
-                </div>
-
-                <div>
-                    <label class="block font-semibold mb-1">Landmark</label>
-                    <input type="text" name="landmark" required class="w-full p-2 rounded bg-white/20 text-white">
-                </div>
-
-                <div>
-                    <label class="block font-semibold mb-1">State</label>
-                    <input type="text" name="state" required class="w-full p-2 rounded bg-white/20 text-white">
-                </div>
-
-                <div>
-                    <label class="block font-semibold mb-1">Pincode</label>
-                    <input type="number" name="pincode" required class="w-full p-2 rounded bg-white/20 text-white">
-                </div>
-
-                <div>
-                    <label class="block font-semibold mb-1">Phone</label>
-                    <input type="text" name="phone" required class="w-full p-2 rounded bg-white/20 text-white">
-                </div>
-
-                <div>
-                    <label class="block font-semibold mb-1">Alternate Phone</label>
-                    <input type="text" name="altPhone" class="w-full p-2 rounded bg-white/20 text-white">
-                </div>
-
-                <button type="submit" class="bg-indigo-500 hover:bg-indigo-600 px-4 py-2 rounded-lg w-full">
-                    Save Address
-                </button>
-            </form>
+      <!-- Button to toggle address form -->
+      <button
+        onclick="openAddAddressForm()"
+        class="bg-green-500 hover:bg-green-600 px-4 py-2 rounded-lg text-white mb-6"
+      >
+        Create New Address
+      </button>
+      <!-- Add Address Modal -->
+      <div
+        id="addAddressModal"
+        class="hidden fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center"
+      >
+        <div
+          class="glass-card p-6 rounded-lg text-white shadow-lg max-w-lg w-full relative"
+        >
+          <button
+            onclick="closeAddAddressForm()"
+            class="absolute top-2 right-2 text-white text-xl"
+          >
+            &times;
+          </button>
+          <h3 class="text-xl font-semibold mb-4">Add New Address</h3>
+          <form action="/add-address" method="POST" class="space-y-4">
+            <div>
+              <label class="block font-semibold mb-1">Address Type</label>
+              <select
+                name="addressType"
+                class="w-full p-2 rounded bg-white/20 text-white"
+              >
+                <option value="Home">Home</option>
+                <option value="Work">Work</option>
+              </select>
+            </div>
+            <div>
+              <label class="block font-semibold mb-1">Full Name</label>
+              <input
+                type="text"
+                name="name"
+                required
+                class="w-full p-2 rounded bg-white/20 text-white"
+              />
+            </div>
+            <div>
+              <label class="block font-semibold mb-1">Address</label>
+              <input
+                type="text"
+                name="address"
+                required
+                class="w-full p-2 rounded bg-white/20 text-white"
+              />
+            </div>
+            <div>
+              <label class="block font-semibold mb-1">City</label>
+              <input
+                type="text"
+                name="city"
+                required
+                class="w-full p-2 rounded bg-white/20 text-white"
+              />
+            </div>
+            <div>
+              <label class="block font-semibold mb-1">Landmark</label>
+              <input
+                type="text"
+                name="landmark"
+                required
+                class="w-full p-2 rounded bg-white/20 text-white"
+              />
+            </div>
+            <div>
+              <label class="block font-semibold mb-1">State</label>
+              <input
+                type="text"
+                name="state"
+                required
+                class="w-full p-2 rounded bg-white/20 text-white"
+              />
+            </div>
+            <div>
+              <label class="block font-semibold mb-1">Pincode</label>
+              <input
+                type="number"
+                name="pincode"
+                required
+                class="w-full p-2 rounded bg-white/20 text-white"
+              />
+            </div>
+            <div>
+              <label class="block font-semibold mb-1">Phone</label>
+              <input
+                type="text"
+                name="phone"
+                required
+                class="w-full p-2 rounded bg-white/20 text-white"
+              />
+            </div>
+            <button
+              type="submit"
+              class="bg-green-500 hover:bg-green-600 px-4 py-2 rounded-lg w-full"
+            >
+              Add Address
+            </button>
+          </form>
         </div>
+      </div>
 
-        <!-- Saved Addresses -->
-      
+      <!-- Edit Address Modal (Hidden by Default) -->
+      <div
+        id="editModal"
+        class="hidden fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center"
+      >
+        <div
+          class="glass-card p-6 rounded-lg text-white shadow-lg max-w-lg w-full relative"
+        >
+          <button
+            onclick="closeEditForm()"
+            class="absolute top-2 right-2 text-white text-xl"
+          >
+            &times;
+          </button>
+          <h3 class="text-xl font-semibold mb-4">Edit Address</h3>
+          <form id="editAddressForm" 
+      action="/edit-address/"  // This will be dynamically set in the JS
+      method="POST" 
+      class="space-y-4">
+    <input type="hidden" name="id" id="editId" />
+    <div>
+      <label class="block font-semibold mb-1">Address Type</label>
+      <select name="addressType" class="w-full p-2 rounded bg-white/20 text-white">
+        <option value="Home">Home</option>
+        <option value="Work">Work</option>
+      </select>
+    </div>
+    <div>
+      <label class="block font-semibold mb-1">Full Name</label>
+      <input type="text" name="name" id="editName" required class="w-full p-2 rounded bg-white/20 text-white" />
+    </div>
+    <div>
+      <label class="block font-semibold mb-1">Address</label>
+      <input type="text" name="address" id="editAddress" required class="w-full p-2 rounded bg-white/20 text-white" />
+    </div>
+    <div>
+      <label class="block font-semibold mb-1">Landmark</label>
+      <input type="text" name="landmark" id="editLandmark" required class="w-full p-2 rounded bg-white/20 text-white" />
+    </div>
+    <div>
+      <label class="block font-semibold mb-1">City</label>
+      <input type="text" name="city" id="editCity" required class="w-full p-2 rounded bg-white/20 text-white" />
+    </div>
+    <div>
+      <label class="block font-semibold mb-1">State</label>
+      <input type="text" name="state" id="editState" required class="w-full p-2 rounded bg-white/20 text-white" />
+    </div>
+    <div>
+      <label class="block font-semibold mb-1">Pincode</label>
+      <input type="number" name="pincode" id="editPincode" required class="w-full p-2 rounded bg-white/20 text-white" />
+    </div>
+    <div>
+      <label class="block font-semibold mb-1">Phone</label>
+      <input type="text" name="phone" id="editPhone" required class="w-full p-2 rounded bg-white/20 text-white" />
+    </div>
+    <button type="submit" class="bg-indigo-500 hover:bg-indigo-600 px-4 py-2 rounded-lg w-full">
+      Save Changes
+    </button>
+</form>
+        </div>
+      </div>
 
-    <!-- JavaScript for Edit Form -->
+      <!-- Display Saved Addresses -->
+      <div class="mt-8">
+        <h3 class="text-xl font-bold text-white mb-4">Saved Addresses</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <% userAddresses.forEach(address => { %>
+          <div class="glass-card p-4 rounded-lg text-white shadow-lg">
+            <h4 class="font-semibold text-lg">
+              <%= address.addressType %> Address
+            </h4>
+            <p class="text-gray-300"><%= address.name %></p>
+            <p class="text-gray-300"><%= address.address %></p>
+            <p class="text-gray-300"><%= address.landmark %></p>
+            <p class="text-gray-300">
+              <%= address.city %>, <%= address.state %>
+            </p>
+            <p class="text-gray-300">Pincode: <%= address.pincode %></p>
+            <p class="text-gray-300">Phone: <%= address.phone %></p>
+            <button
+              onclick="openEditForm('<%= address._id %>', '<%= address.name %>', '<%= address.address %>', '<%= address.landmark %>'     ,'<%= address.city %>', '<%= address.state %>', '<%= address.pincode %>', '<%= address.phone %>')"
+              class="bg-yellow-500 hover:bg-yellow-600 px-3 py-1 rounded text-sm mt-2"
+            >
+              Edit
+            </button>
+            <a
+              href="/delete-address/<%= address._id %>"
+              class="bg-red-500 hover:bg-red-600 px-3 py-1 rounded text-sm mt-2"
+            >
+              Delete
+            </a>
+          </div>
+          <% }) %>
+        </div>
+      </div>
+    </div>
+
     <script>
-        function openEditForm(addressId) {
-            window.location.href = "/edit-address/" + addressId;
+        function openAddAddressForm() {
+            document.getElementById("addAddressModal").classList.remove("hidden");
         }
+    
+        function closeAddAddressForm() {
+            document.getElementById("addAddressModal").classList.add("hidden");
+        }
+    
+        function toggleAddressForm() {
+            const form = document.getElementById("addressForm");
+            if (form) {
+                form.classList.toggle("hidden");
+            } else {
+                console.error("Address form element not found");
+            }
+        }
+    
+        // Fixed openEditForm function
+        function openEditForm(id, name, address, landmark, city, state, pincode, phone) {
+        console.log("Address ID:", id);
+        // Set form data
+        document.getElementById("editId").value = id;
+        document.getElementById("editName").value = name;
+        document.getElementById("editAddress").value = address;
+        document.getElementById("editLandmark").value = landmark;
+        document.getElementById("editCity").value = city;
+        document.getElementById("editState").value = state;
+        document.getElementById("editPincode").value = pincode;
+        document.getElementById("editPhone").value = phone;
+
+        // Set the correct form action URL with the address ID
+        document.getElementById("editAddressForm").action = `/edit-address/${id}`;
+
+        // Show the modal
+        document.getElementById("editModal").classList.remove("hidden");
+    }
+
+    function closeEditForm() {
+        document.getElementById("editModal").classList.add("hidden");
+    }
     </script>
-</body>
+  </body>
 </html>

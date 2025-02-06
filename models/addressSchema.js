@@ -1,52 +1,49 @@
-const mongoose = require('mongoose')
-const {Schema} = mongoose
-
+const mongoose = require('mongoose');
+const { Schema } = mongoose;
 
 const addressSchema = new Schema({
-    userID:{
-        type:Schema.Types.ObjectId,
-        ref:"User",
-        required:true
+    userID: {
+        type: Schema.Types.ObjectId,
+        ref: "User",
+        required: [true, "User ID is required"]
     },
-    address:[{
-        addressType:{
-            type:String,
-            required:true
+    address: [{
+        addressType: {
+            type: String,
+            required: [true, "Address Type is required"]
         },
-        name:{
-            type:String,
-            required:true
+        name: {
+            type: String,
+            required: [true, "Name is required"]
         },
-        city:{
-            type:String,
-            required:true
+        address: {
+            type: String,
+            required: [true, "Address is required"]
         },
-        landmark:{
-            type:String,
-            required:true
+        city: {
+            type: String,
+            required: [true, "City is required"]
         },
-        state:{
-            type:String,
-            required:true
+        landmark: {
+            type: String,
+            required: [true, "Landmark is required"]
         },
-        pincode:{
-            type:Number,
-            required:true
+        state: {
+            type: String,
+            required: [true, "State is required"]
         },
-        phone:{
-            type:String,
-            required:true
+        pincode: {
+            type: Number,
+            required: [true, "Pincode is required"]
         },
-        altPhone:{
-            type:String,
-            required:true
-        }
+        phone: {
+            type: String,
+            required: [true, "Phone number is required"],
+            match: [/^\d{10}$/, "Phone number must be 10 digits"]
+        },
     }]
-})
+});
 
+const Address = mongoose.model("Address", addressSchema);
 
-
-const Address = mongoose.model("Address",addressSchema)
-
-module.exports = Address
-
+module.exports = Address;
