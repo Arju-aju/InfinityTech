@@ -39,9 +39,10 @@ const sendVerificationEmail = async (email, otp) => {
         subject: 'Email Verification OTP',
         text: `Your OTP for email verification is: ${otp}`
     };
-
     try {
         await transporter.sendMail(mailOptions);
+
+        console.log('mail send chayithu itha otp:   ',otp);
         return true;
     } catch (error) {
         console.error('Error sending email:', error);
@@ -148,7 +149,7 @@ const signup = async (req, res) => {
 
         // Generate OTP
         const otp = generateOtp();
-        const otpExpiry = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes expiry
+        const otpExpiry = new Date(Date.now() + 1 * 60 * 1000); 
 
         // Hash password
         const hashedPassword = await bcrypt.hash(password, 10);

@@ -166,3 +166,91 @@ exports.updateAddress = async (req, res) => {
         res.status(500).json({ error: 'Server Error' });
     }
 };
+
+
+//set default address
+
+exports.setDefaultAddress = async (req, res) => {
+    try {
+        const addressId = req.params.id;
+        const userID = req.session?.user?._id;
+
+        if (!userID) {
+            return res.status(401).json({ success: false, message: 'User not authenticated' });
+        }
+
+        // Find the user's address document
+        let userAddress = await Address.findOne({ userID });
+
+        if (!userAddress) {
+            return res.status(404).json({ success: false, message: 'User address not found' });
+        }
+
+        // Reset all addresses to non-default
+        userAddress.address = userAddress.address.map(addr => ({
+            ...addr,
+            isDefault: false
+        }));
+
+        // Find and set the specific address as default
+        const addressIndex = userAddress.address.findIndex(addr => addr._id.toString() === addressId);
+
+        if (addressIndex === -1) {
+            return res.status(404).json({ success: false, message: 'Specific address not found' });
+        }
+
+        // Set the selected address as default
+        userAddress.address[addressIndex].isDefault = true;
+
+        // Save the updated document
+        await userAddress.save();
+
+        req.flash('success', 'Default address updated successfully');
+
+        res.json({ success: true, message: 'Default address updated!' });
+
+    } catch (error) {
+        console.error('Error setting default address:', error);
+        res.status(500).json({ success: false, message: 'Server Error' });
+    }
+};
+
+
+exports.deleteAddress = async (req, res) => {
+    try {
+        const addressId = req.params.id;
+        const userID = req.session?.user?._id;
+
+        if (!userID) {
+            return res.status(401).json({ success: false, message: 'User not authenticated' });
+        }
+
+        // Find the user's address document
+        let userAddress = await Address.findOne({ userID });
+
+        if (!userAddress) {
+            return res.status(404).json({ success: false, message: 'User address document not found' });
+        }
+
+        // Find the index of the address to delete
+        const addressIndex = userAddress.address.findIndex(addr => addr._id.toString() === addressId);
+
+        if (addressIndex === -1) {
+            return res.status(404).json({ success: false, message: 'Address not found' });
+        }
+
+        // Remove the specific address from the array
+        userAddress.address.splice(addressIndex, 1);
+
+        // Save the updated document
+        await userAddress.save();
+
+        req.flash('success', 'Address deleted successfully');
+
+        res.redirect('/address');
+
+    } catch (error) {
+        console.error('Error deleting address:', error);
+        res.status(500).json({ success: false, message: "Server Error" });
+    }
+};

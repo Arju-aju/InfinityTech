@@ -1,3 +1,4 @@
+const { boolean } = require('joi');
 const mongoose = require('mongoose');
 const { Schema } = mongoose;
 
@@ -41,7 +42,13 @@ const addressSchema = new Schema({
             required: [true, "Phone number is required"],
             match: [/^\d{10}$/, "Phone number must be 10 digits"]
         },
-    }]
+        isDefault: {
+            type: Boolean,
+            default: false
+        },
+        
+    }],
+
 });
 
 const Address = mongoose.model("Address", addressSchema);

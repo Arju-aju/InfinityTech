@@ -219,6 +219,9 @@
           <div class="glass-card p-4 rounded-lg text-white shadow-lg">
             <h4 class="font-semibold text-lg">
               <%= address.addressType %> Address
+              <% if (address.isDefault) { %>
+                <span class="text-green-400 text-sm">Default</span>
+              <% } %>
             </h4>
             <p class="text-gray-300"><%= address.name %></p>
             <p class="text-gray-300"><%= address.address %></p>
@@ -228,12 +231,25 @@
             </p>
             <p class="text-gray-300">Pincode: <%= address.pincode %></p>
             <p class="text-gray-300">Phone: <%= address.phone %></p>
+      
+            <!-- Toggle default address button -->
+            <% if (!address.isDefault) { %>
+              <button
+                onclick="toggleDefaultAddress('<%= address._id %>')"
+                class="bg-blue-500 hover:bg-blue-600 px-3 py-1 rounded text-sm mt-2"
+              >
+                Set as Default
+              </button>
+            <% } %>
+      
+            <!-- Edit Button -->
             <button
-              onclick="openEditForm('<%= address._id %>', '<%= address.name %>', '<%= address.address %>', '<%= address.landmark %>'     ,'<%= address.city %>', '<%= address.state %>', '<%= address.pincode %>', '<%= address.phone %>')"
+              onclick="openEditForm('<%= address._id %>', '<%= address.name %>', '<%= address.address %>', '<%= address.landmark %>', '<%= address.city %>', '<%= address.state %>', '<%= address.pincode %>', '<%= address.phone %>')"
               class="bg-yellow-500 hover:bg-yellow-600 px-3 py-1 rounded text-sm mt-2"
             >
               Edit
             </button>
+            <!-- Delete Button -->
             <a
               href="/delete-address/<%= address._id %>"
               class="bg-red-500 hover:bg-red-600 px-3 py-1 rounded text-sm mt-2"
@@ -244,7 +260,6 @@
           <% }) %>
         </div>
       </div>
-    </div>
 
     <script>
         function openAddAddressForm() {
@@ -287,6 +302,21 @@
     function closeEditForm() {
         document.getElementById("editModal").classList.add("hidden");
     }
+
+    function toggleDefaultAddress(addressId) {
+  fetch(`/set-default-address/${addressId}`, {
+    method: 'POST',
+  })
+  .then(response => response.json())
+  .then(data => {
+    if (data.success) {
+      alert("Default address updated!");
+      location.reload(); // Reload page to reflect the change
+    } else {
+      alert("Failed to update default address.");
+    }
+  });
+}
     </script>
   </body>
 </html>
