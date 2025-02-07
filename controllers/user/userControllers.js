@@ -1,10 +1,7 @@
 const User = require('../../models/userSchema')
 const bcrypt = require("bcrypt")
-const { ClientSession } = require('mongodb')
 const nodemailer = require('nodemailer')
 const env = require('dotenv').config()
-const { userValidationRules, validate } = require('../../utils/validation')
-const { validationResult } = require('express-validator')
 const Product = require('../../models/productSchema')
 const mongoose = require('mongoose')
 
@@ -54,18 +51,50 @@ const sendVerificationEmail = async (email, otp) => {
 const loadLogin = async (req, res) => {
     try {
         res.render('user/login', {
-            message: {
-                type: req.flash('error').length ? 'error' : 'success',
-                content: req.flash('error')[0] || req.flash('success')[0],
-                
-            },
-            name: req.session.name,
+            messages: req.flash() || { error: [], success: [] }
         });
     } catch (error) {
         console.error('Error loading login page:', error);
         res.redirect('/pageNotFound');
     }
 };
+
+const login = async (req, res) => {
+    try {
+        const { email, password } = req.body;
+
+        if (!email || !password) {
+            return res.status(400).render("user/login", { error: "All fields are required." });
+        }
+
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            return res.status(400).render("user/login", { error: "Invalid email format." });
+        }
+
+        const user = await User.findOne({ email });
+        if (!user) {
+            return res.status(401).render("user/login", { error: "Invalid email or password" });
+        }
+
+        if (user.isBlocked) {
+            return res.status(403).render("user/login", { error: "You have been blocked. Please contact support." });
+        }
+
+        const isPasswordMatch = await bcrypt.compare(password, user.password);
+        if (!isPasswordMatch) {
+            return res.status(401).render("user/login", { error: "Invalid email or password" });
+        }
+
+        req.session.user = user;
+        res.redirect("/home");
+    } catch (error) {
+        console.error(`Login error for email ${req.body.email}:, error.message`);
+        res.status(500).render("user/login", { error: "Internal Server Error" });
+    }
+};
+
+
 
 // Load Signup Page
 const loadSignup = async (req, res) => {
@@ -189,75 +218,7 @@ const signup = async (req, res) => {
         });
     }
 };
-// Handle Login Submit
-const login = async (req, res) => {
-    try {
-        const { email, password } = req.body;
 
-        // Validate required fields
-        if (!email || !password) {
-            return res.status(400).json({
-                success: false,
-                message: 'Email and password are required'
-            });
-        }
-
-        // Find user
-        const user = await User.findOne({ email: email.toLowerCase() });
-        if (!user) {
-            return res.status(401).json({
-                success: false,
-                message: 'Invalid email or password'
-            });
-        }
-
-        // Check if user is blocked
-        if (user.isBlocked) {
-            return res.status(403).json({
-                success: false,
-                message: 'Your account has been blocked. Please contact support.'
-            });
-        }
-
-        // Check if user is verified
-        if (!user.isVerified) {
-            return res.status(403).json({
-                success: false,
-                message: 'Please verify your email before logging in.'
-            });
-        }
-
-        // Check password
-        const isPasswordValid = await bcrypt.compare(password, user.password);
-        if (!isPasswordValid) {
-            return res.status(401).json({
-                success: false,
-                message: 'Invalid email or password'
-            });
-        }
-
-        // Set user session
-        req.session.user = {
-            _id: user._id,
-            name: user.name,
-            email: user.email,
-            isVerified: user.isVerified
-        };
-
-        return res.status(200).json({
-            success: true,
-            message: 'Login successful!',
-            redirect: '/'
-        });
-
-    } catch (error) {
-        console.error('Login error:', error);
-        return res.status(500).json({
-            success: false,
-            message: 'An error occurred during login. Please try again.'
-        });
-    }
-};
 // Load Verify OTP Page
 const loadverifyOtp = async(req, res) => {
     try {
@@ -433,9 +394,6 @@ const loadHomePage = async (req, res) => {
         .sort({ discountPercentage: -1 })
         .limit(8);
 
-        // Log query conditions and results
-
-        
 
         // Fetch top-selling products
         const topSellingProducts = await Product.find({ 
@@ -452,10 +410,6 @@ const loadHomePage = async (req, res) => {
         .sort({ discountPercentage: -1 })
         .limit(8);
 
-
-        // Log all product counts
-
-        // Render the page with products
         console.log('Debug: Rendering home page...');
         res.render('user/home', {
             newArrivals,
@@ -629,8 +583,7 @@ const changePassword = async (req, res) => {
         
         await user.save();
 
-        // Optional: Logout from all devices
-        // Implement this if you want to force re-login after password change
+
 
         req.flash('message', 'Password changed successfully');
 

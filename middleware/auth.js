@@ -20,23 +20,24 @@ exports.isNotAuthenticated = (req, res, next) => {
 
 
 
-exports.authMiddleware = async (req, res, next) => {
-    try {
-        const token = req.headers.authorization?.split(" ")[1];
-        if (!token) {
-            return res.status(401).json({ message: "No token, authorization denied" });
-        }
+exports.authMiddleware = (req, res, next) => {
+    if (!req.session.user) {
+        return res.status(401).json({
+            success: false,
+            message: "Unauthorized. Please log in.",
+        });
+    }
 
-        const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        req.user = await User.findById(decoded.id).select("-password");
-        if (!req.user) {
-            return res.status(404).json({ message: "User not found" });
-        }
-
+    // Check if the user is blocked
+    if (req.session.user.isBlocked) {
+        req.session.destroy(() => {
+            return res.status(403).json({
+                success: false,
+                message: "Your account has been blocked. Please contact support.",
+            });
+        });
+    } else {
         next();
-    } catch (error) {
-        console.error("Auth error:", error);
-        res.status(401).json({ message: "Token is not valid" });
     }
 };
 

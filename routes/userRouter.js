@@ -5,7 +5,7 @@ const userController = require('../controllers/user/userControllers');
 const profileController = require('../controllers/user/userProfileController');
 const productController = require('../controllers/user/productController');
 const addressController = require('../controllers/user/addressController')
-const { isAuthenticated, isNotAuthenticated, auth } = require('../middleware/auth');
+const { isAuthenticated, isNotAuthenticated, auth ,authMiddleware} = require('../middleware/auth');
 const passport = require('passport');
 const User = require('../models/userSchema');
 

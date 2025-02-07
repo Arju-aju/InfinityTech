@@ -39,7 +39,6 @@ router.post('/editProduct/:id',   upload.array('images', 5), validationMiddlewar
 router.delete('/deleteProduct/:id',   productController.deleteProduct);
 router.delete('/deleteProductImage/:productId/:imagePath',   productController.deleteProductImage);
 router.patch('/products/:id/toggle-list',   productController.toggleListStatus)
-// router.patch('/products/:id/soft-delete',   productController.softDelete);
 router.delete('/softDeleteProduct/:id', productController.softDelete);
 
 

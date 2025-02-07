@@ -58,6 +58,7 @@ const loadAddProduct = async (req, res) => {
     }
 };
 
+
 // Add New Product
 const addProduct = async (req, res) => {
     try {
