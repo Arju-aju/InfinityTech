@@ -1,6 +1,20 @@
-exports.preventBack = (req, res, next) => {
-    if (req.session.admin) {
-        res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+exports.isAdmin = (req,res,next)=>{
+    try {
+        if(req.session.admin){
+            next()
+        }else{
+            res.redirect('/admin/login')
+        }
+    } catch (error) {
+        console.log(error)
     }
-    next();
-};
+}
+
+exports.isLogout = (req,res,next)=>{
+        if(req.session.admin){
+            res.redirect('/admin/dashboard')
+        }else{
+            next
+        }
+
+}
