@@ -12,6 +12,9 @@
         <main class="max-w-7xl mx-auto pt-8 pb-16 px-4 sm:px-6 lg:px-8">
             <div class="max-w-3xl mx-auto">
                 <div class="bg-white shadow overflow-hidden sm:rounded-lg">
+                    <% if (successMessage.length > 0) { %>
+                        <script>alert("<%= successMessage[0] %>");</script>
+                    <% } %>
                     <!-- Order Header -->
                     <div class="px-4 py-5 sm:px-6 border-b border-gray-200">
                         <h3 class="text-2xl font-bold leading-6 text-gray-900">Order #<%= order._id %></h3>
@@ -124,4 +127,11 @@
         </main>
     </div>
 </body>
+<script>
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('success')) {
+        alert('Order placed successfully!');
+    }
+</script>
+
 </html>

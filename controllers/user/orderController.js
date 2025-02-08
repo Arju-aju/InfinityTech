@@ -13,7 +13,8 @@ exports.getOrderDetails =  async (req, res) => {
             });
         }
 
-        res.render('orderPage', { order });
+        res.render('order', { order, successMessage: req.flash('success') || [] });
+
 
     } catch (error) {
         console.error('Get order details error:', error);

@@ -1,6 +1,6 @@
 const express = require('express');
 const adminControllers = require('../controllers/Admin/adminController');
-const {preventBack} = require('../middleware/adminAuth')
+const admin = require('../middleware/adminAuth')
 const customerController = require('../controllers/Admin/customerController');
 const categoryController = require('../controllers/Admin/categoryController')
 const productController = require('../controllers/Admin/productController')
@@ -12,9 +12,9 @@ const validationMiddleware = require('../middleware/validation');
 
 // Admin Authentication Routes
 router.get('/pageerror', adminControllers.pageerror);
-router.get('/login', preventBack, adminControllers.loadLogin);
+router.get('/login', admin.isAdmin, adminControllers.loadLogin);
 router.post('/login',  adminControllers.login);
-router.get('/dashboard',preventBack, adminControllers.loadDashboard);
+router.get('/dashboard',admin.isLogout, adminControllers.loadDashboard);
 router.get('/logout', adminControllers.logout);
 
 // User Management Routes

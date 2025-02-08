@@ -85,12 +85,8 @@ exports.placeOrder = async (req, res) => {
         await Cart.findByIdAndDelete(cart._id);
 
         // Redirect based on payment method
-        if (paymentMethod === 'cod') {
-            res.redirect(`/orders/${order._id}/success`);
-        } else {
-            // Handle other payment methods (can be implemented later)
-            res.redirect(`/payment/${order._id}`);
-        }
+        res.redirect(`/orders/${order._id}?success=true`);
+
 
     } catch (error) {
         console.error('Order placement error:', error);

@@ -7,6 +7,7 @@ const productController = require('../controllers/user/productController');
 const addressController = require('../controllers/user/addressController')
 const cartController = require('../controllers/user/cartController')
 const checkoutController = require('../controllers/user/checkOutController')
+const orderController = require('../controllers/user/orderController')
 const { isAuthenticated, isNotAuthenticated, auth ,authMiddleware} = require('../middleware/auth');
 const passport = require('passport');
 const User = require('../models/userSchema');
@@ -47,7 +48,15 @@ router.delete('/cart/remove/:productId', cartController.removeFromCart);
 // checkout routes
 
 router.get('/checkout',checkoutController.getCheckout)
+router.post('/checkout/place-order', checkoutController.placeOrder);
 
+
+//order route
+router.get('/order',orderController.getOrderDetails)
+router.get('/orders/:id', orderController.getOrderDetails);
+router.get('/orders/:id', orderController.getOrderDetails);
+
+router.post('/order/:id/cancel', orderController.cancelOrder);
 
 // Static pages
 router.get('/about', userController.loadAboutPage);
