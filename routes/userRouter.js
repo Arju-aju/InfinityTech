@@ -5,6 +5,8 @@ const userController = require('../controllers/user/userControllers');
 const profileController = require('../controllers/user/userProfileController');
 const productController = require('../controllers/user/productController');
 const addressController = require('../controllers/user/addressController')
+const cartController = require('../controllers/user/cartController')
+const checkoutController = require('../controllers/user/checkOutController')
 const { isAuthenticated, isNotAuthenticated, auth ,authMiddleware} = require('../middleware/auth');
 const passport = require('passport');
 const User = require('../models/userSchema');
@@ -37,15 +39,15 @@ router.get('/category/:id', productController.getCategoryProducts);
 router.get('/search', productController.searchProducts);
 
 // Cart routes
-router.get('/cart', productController.getCart);
-router.post('/cart/add', productController.addToCart);
-router.delete('/cart/remove/:productId', productController.removeFromCart);
-router.put('/cart/update/:productId', productController.updateCartQuantity);
+router.get('/cart',cartController.getCart);
+router.post('/cart/add', cartController.addToCart);
+router.put('/cart/update/:productId', cartController.updateCartQuantity);
+router.delete('/cart/remove/:productId', cartController.removeFromCart);
 
-// Wishlist routes
-router.get('/wishlist', productController.getWishlist);
-router.post('/wishlist/add', productController.addToWishlist);
-router.delete('/wishlist/remove/:productId', productController.removeFromWishlist);
+// checkout routes
+
+router.get('/checkout',checkoutController.getCheckout)
+
 
 // Static pages
 router.get('/about', userController.loadAboutPage);

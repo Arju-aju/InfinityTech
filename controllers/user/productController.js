@@ -1,6 +1,8 @@
 const Product = require('../../models/productSchema');
 const LaptopCategory = require('../../models/categorySchema');
-const User = require('../../models/userSchema'); // Add this line
+const User = require('../../models/userSchema'); 
+const Cart = require('../../models/cartSchema');
+const { default: mongoose } = require('mongoose');
 
 // Get Home Page Products
 const getHomePageProducts = async (req, res) => {
@@ -277,57 +279,6 @@ const searchProducts = async (req, res) => {
     }
 };
 
-// Cart and Wishlist Functions
-const addToCart = async (req, res) => {
-    try {
-        const { productId, quantity = 1 } = req.body;
-        const userId = req.session.user._id;
-
-        const product = await Product.findOne({ 
-            _id: productId,
-            isListed: true,
-            isDeleted: false
-        });
-
-        if (!product) {
-            return res.status(404).json({
-                success: false,
-                message: 'Product not found or unavailable'
-            });
-        }
-
-        const price = product.price;
-        const discountedPrice = price - (price * (product.discountPercentage / 100));
-
-        const user = await User.findById(userId);
-        const existingCartItem = user.cart.find(item => 
-            item.product.toString() === productId
-        );
-
-        if (existingCartItem) {
-            existingCartItem.quantity += parseInt(quantity);
-        } else {
-            user.cart.push({
-                product: productId,
-                quantity: parseInt(quantity),
-                price: discountedPrice
-            });
-        }
-
-        await user.save();
-        res.json({
-            success: true,
-            message: 'Product added to cart successfully'
-        });
-    } catch (error) {
-        console.error('Error in addToCart:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Error adding product to cart'
-        });
-    }
-};
-
 const addToWishlist = async (req, res) => {
     try {
         const { productId } = req.body;
@@ -367,45 +318,9 @@ const addToWishlist = async (req, res) => {
     }
 };
 
-const getCart = async (req, res) => {
-    try {
-        const userId = req.session.user._id;
-        const user = await User.findById(userId)
-            .populate({
-                path: 'cart.product',
-                select: 'name images price discountPercentage'
-            });
 
-        const cartItems = user.cart.map(item => {
-            const product = item.product;
-            const price = product.price;
-            const discountedPrice = price - (price * (product.discountPercentage / 100));
-            return {
-                ...item.toObject(),
-                product,
-                discountedPrice,
-                total: discountedPrice * item.quantity
-            };
-        });
 
-        const cartTotal = cartItems.reduce((total, item) => total + item.total, 0);
-
-        res.render('user/cart', {
-            cartItems,
-            cartTotal,
-            message: {
-                type: req.flash('error').length ? 'error' : 'success',
-                content: req.flash('error')[0] || req.flash('success')[0]
-            }
-        });
-    } catch (error) {
-        console.error('Error in getCart:', error);
-        req.flash('error', 'Error loading cart');
-        res.redirect('/');
-    }
-};
-
-const getWishlist = async (req, res) => {
+const getWishlst = async (req, res) => {
     try {
         const userId = req.session.user._id;
         const user = await User.findById(userId)
@@ -438,29 +353,6 @@ const getWishlist = async (req, res) => {
     }
 };
 
-const removeFromCart = async (req, res) => {
-    try {
-        const { productId } = req.params;
-        const userId = req.session.user._id;
-
-        const user = await User.findById(userId);
-        user.cart = user.cart.filter(item => 
-            item.product.toString() !== productId
-        );
-        await user.save();
-
-        res.json({
-            success: true,
-            message: 'Product removed from cart successfully'
-        });
-    } catch (error) {
-        console.error('Error in removeFromCart:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Error removing product from cart'
-        });
-    }
-};
 
 const removeFromWishlist = async (req, res) => {
     try {
@@ -486,39 +378,6 @@ const removeFromWishlist = async (req, res) => {
     }
 };
 
-const updateCartQuantity = async (req, res) => {
-    try {
-        const { productId } = req.params;
-        const { quantity } = req.body;
-        const userId = req.session.user._id;
-
-        const user = await User.findById(userId);
-        const cartItem = user.cart.find(item => 
-            item.product.toString() === productId
-        );
-
-        if (!cartItem) {
-            return res.status(404).json({
-                success: false,
-                message: 'Product not found in cart'
-            });
-        }
-
-        cartItem.quantity = parseInt(quantity);
-        await user.save();
-
-        res.json({
-            success: true,
-            message: 'Cart quantity updated successfully'
-        });
-    } catch (error) {
-        console.error('Error in updateCartQuantity:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Error updating cart quantity'
-        });
-    }
-};
 
 module.exports = {
     getHomePageProducts,
@@ -527,11 +386,6 @@ module.exports = {
     getCategoryProducts,
     loadShop,
     searchProducts,
-    addToCart,
     addToWishlist,
-    getCart,
-    getWishlist,
-    removeFromCart,
     removeFromWishlist,
-    updateCartQuantity
 };

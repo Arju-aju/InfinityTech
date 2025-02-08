@@ -1,40 +1,36 @@
 const mongoose = require('mongoose');
-const { Schema } = mongoose;
 
-const cartSchema = new mongoose.Schema({
-    userId: {
-        type: Schema.Types.ObjectId,
+const CartSchema = new mongoose.Schema({
+    user: {
+        type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
+        required: true
     },
-    item: [
-        {
-            productId: {
-                type: Schema.Types.ObjectId,
-                ref: 'Product',
-                required: true,
-            },
-            quantity: {
-                type: Number,
-                required: true,
-            },
-            price: {
-                type: Number,
-                required: true,
-            },
-            stock: {
-                type: Number,
-                required: true,
-            },
-            total: {
-                type: Number,
-                required: true,
-            },
+    items: [{
+        product: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Product',
+            required: true
         },
-    ],
-    cartTotal:{
-        type:Number,
-        required:true
+        quantity: {
+            type: Number,
+            required: true,
+            default: 1,
+            min: 1
+        },
+        price: {
+            type: Number,
+            required: true
+        }
+    }],
+    createdAt: {
+        type: Date,
+        default: Date.now
     }
-},{timestamps:true});
+});
 
-module.exports = mongoose.model('Cart', cartSchema)
+CartSchema.methods.calculateTotal = function() {
+    return this.items.reduce((total, item) => total + (item.price * item.quantity), 0);
+};
+
+module.exports = mongoose.model('Cart', CartSchema);

@@ -1,0 +1,122 @@
+<!-- views/checkout.ejs -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Checkout | Your Store</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50">
+    <div class="min-h-screen">
+        <main class="max-w-7xl mx-auto pt-16 pb-24 px-4 sm:px-6 lg:px-8">
+            <div class="max-w-2xl mx-auto lg:max-w-none lg:grid lg:grid-cols-2 lg:gap-x-12">
+                <div class="mt-10 lg:mt-0">
+                    <h2 class="text-2xl font-extrabold tracking-tight text-gray-900 mb-6">Order Summary</h2>
+                    <div class="bg-white shadow overflow-hidden sm:rounded-lg mb-6">
+                        <div class="border-t border-gray-200 px-4 py-5 sm:p-0">
+                            <dl class="sm:divide-y sm:divide-gray-200">
+                                <% cart.items.forEach(item => { %>
+                                    <div class="py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                                        <dt class="text-sm font-medium text-gray-500">
+                                            <img src="<%= item.product.images[0] %>" alt="<%= item.product.name %>" class="w-20 h-20 object-cover rounded">
+                                        </dt>
+                                        <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+                                            <div class="font-medium"><%= item.product.name %></div>
+                                            <div class="text-gray-500">Qty: <%= item.quantity %></div>
+                                            <div class="text-gray-900">₹<%= (item.price * item.quantity).toFixed(2) %></div>
+                                        </dd>
+                                    </div>
+                                <% }); %>
+                            </dl>
+                        </div>
+                        <div class="border-t border-gray-200 px-4 py-5 sm:px-6">
+                            <div class="flex justify-between text-base font-medium text-gray-900">
+                                <p>Subtotal</p>
+                                <p>₹<%= cart.calculateTotal().toFixed(2) %></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="lg:col-start-2">
+                    <h2 class="text-2xl font-extrabold tracking-tight text-gray-900 mb-6">Shipping Information</h2>
+                    <form action="/checkout/place-order" method="POST" class="space-y-6">
+                        <div class="bg-white shadow overflow-hidden sm:rounded-lg">
+                            <div class="px-4 py-5 sm:p-6">
+                                <h3 class="text-lg font-medium text-gray-900 mb-4">Select Delivery Address</h3>
+                                <div class="space-y-4">
+                                    <% addresses.forEach((address, index) => { %>
+                                        <div class="relative flex items-start">
+                                            <div class="flex items-center h-5">
+                                                <input 
+                                                    id="address_<%= index %>" 
+                                                    name="addressId" 
+                                                    type="radio" 
+                                                    value="<%= address._id %>"
+                                                    required
+                                                    class="h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
+                                                >
+                                            </div>
+                                            <div class="ml-3 text-sm">
+                                                <label for="address_<%= index %>" class="font-medium text-gray-700">
+                                                    <%= address.fullName %>
+                                                </label>
+                                                <p class="text-gray-500">
+                                                    <%= address.street %>, <%= address.city %><br>
+                                                    <%= address.state %> <%= address.pincode %><br>
+                                                    Phone: <%= address.phone %>
+                                                </p>
+                                            </div>
+                                        </div>
+                                    <% }); %>
+                                </div>
+
+                                <div class="mt-6">
+                                    <a href="/address/add" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-indigo-700 bg-indigo-100 hover:bg-indigo-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                                        + Add New Address
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bg-white shadow sm:rounded-lg">
+                            <div class="px-4 py-5 sm:p-6">
+                                <h3 class="text-lg font-medium text-gray-900 mb-4">Payment Method</h3>
+                                <div class="space-y-4">
+                                    <div class="relative flex items-start">
+                                        <div class="flex items-center h-5">
+                                            <input 
+                                                id="cod" 
+                                                name="paymentMethod" 
+                                                type="radio" 
+                                                value="cod"
+                                                required
+                                                checked
+                                                class="h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
+                                            >
+                                        </div>
+                                        <div class="ml-3">
+                                            <label for="cod" class="font-medium text-gray-700">Cash on Delivery</label>
+                                            <p class="text-gray-500">Pay when you receive your order</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mt-6">
+                            <button 
+                                type="submit"
+                                class="w-full bg-indigo-600 border border-transparent rounded-md shadow-sm py-3 px-4 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-50 focus:ring-indigo-500"
+                            >
+                                Place Order
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </main>
+    </div>
+</body>
+</html>

@@ -41,199 +41,201 @@
             <li class="text-purple-600"><%= product.name %></li>
         </ol>
     </nav>
-
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-12 mb-16">
-        <!-- Product Images Section -->
-        <div class="space-y-6">
-            <!-- Main Image with Zoom -->
-            <div class="relative overflow-hidden rounded-lg bg-white mb-8 h-[350px] w-full border-8 p-2 flex justify-center items-center shadow-lg"
-            id="mainImageContainer">
-           <img 
-               src="<%= product.images[0] %>" 
-               alt="<%= product.name %>"
-               id="mainImage"
-               class="w-1/2 object-contain transition-transform duration-200 cursor-zoom-in"
-           >
-           <!-- Magnified image container -->
-           <div id="magnifiedContainer" class="hidden absolute top-0 left-0 w-full h-full pointer-events-none bg-white" 
-                style="z-index: 10;">
-               <img 
-                   src="<%= product.images[0] %>" 
-                   alt="<%= product.name %>"
-                   id="magnifiedImage"
-                   class="w-full h-full object-contain absolute top-0 left-0"
-                   style="transform-origin: 0 0;"
-               >
-           </div>
-       </div>
-
-            <!-- Thumbnail Swiper -->
-            <div class="swiper thumbSwiper" >
-                <div class="swiper-wrapper">
-                    <% product.images.forEach(function(image) { %>
-                        <div class="swiper-slide" style="height: 100px;">
-                            <img src="<%= image %>" alt="Thumbnail" class="object-contain cursor-pointer hover:opacity-75 transition-opacity duration-200"
-                                 onclick="changeMainImage('<%= image %>')">
-                        </div>
-                    <% }); %>
-                </div>
-            </div>
-        </div>
-
-        <!-- Product Details Section -->
-        <div class="space-y-8">
-            <div>
-                <h1 class="text-4xl font-bold text-gray-800 mb-2"><%= product.name %></h1>
-                <div class="flex items-center space-x-4">
-                    <span class="inline-block px-3 py-1 bg-gray-100 text-gray-800 rounded-full text-sm">
-                        <%= product.brand %>
-                    </span>
-                    <span class="text-green-600">
-                        <% if (product.stock > 0) { %>
-                            In Stock (<%= product.stock %> units)
-                        <% } else { %>
-                            Out of Stock
-                        <% } %>
-                    </span>
-                </div>
-            </div>
-
-            <!-- Rating Section -->
-            <div class="flex items-center space-x-2">
-                <div class="flex text-yellow-400">
-                    <% for (let i = 0; i < 5; i++) { %>
-                        <i class="fas fa-star"></i>
-                    <% } %>
-                </div>
-                <span class="text-gray-600">(4.5/5 based on 120 reviews)</span>
-            </div>
-
-            <!-- Price Section -->
-            <div class="space-y-2">
-                <% if (product.discountPercentage) { %>
-                    <p class="text-gray-500 line-through text-xl">
-                        ₹<%= product.price.toLocaleString('en-IN') %>
-                    </p>
-                    <p class="text-4xl font-bold text-purple-600">
-                        ₹<%= (product.price - (product.price * product.discountPercentage / 100)).toLocaleString('en-IN') %>
-                        <span class="text-green-600 text-lg">
-                            (<%= product.discountPercentage %>% off)
-                        </span>
-                    </p>
-                <% } else { %>
-                    <p class="text-4xl font-bold text-purple-600">
-                        ₹<%= product.price.toLocaleString('en-IN') %>
-                    </p>
-                <% } %>
-            </div>
-
-            <!-- Specifications -->
-            <div class="space-y-4">
-                <h3 class="text-xl font-semibold text-gray-800">Key Features</h3>
-                <div class="grid grid-cols-2 gap-4 bg-gray-50 p-6 rounded-lg shadow-sm">
-                    <div class="space-y-3">
-                        <p class="text-gray-600">
-                            <span class="font-medium">Processor:</span><br>
-                            <%= product.specifications?.processor || 'Not specified' %>
-                        </p>
-                        <p class="text-gray-600">
-                            <span class="font-medium">RAM:</span><br>
-                            <%= product.specifications?.ram || 'Not specified' %>
-                        </p>
-                    </div>
-                    <div class="space-y-3">
-                        <p class="text-gray-600">
-                            <span class="font-medium">Storage:</span><br>
-                            <%= product.specifications?.storage || 'Not specified' %>
-                        </p>
-                        <p class="text-gray-600">
-                            <span class="font-medium">Graphics:</span><br>
-                            <%= product.specifications?.graphics || 'Not specified' %>
-                        </p>
+    <div class="container mx-auto px-4 py-8">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-12 mb-16">
+            <!-- Product Images Section -->
+            <div class="space-y-6">
+                <!-- Main Image with Zoom -->
+                <div class="relative overflow-hidden rounded-lg bg-white mb-8 h-[350px] w-full border-8 p-2 flex justify-center items-center shadow-lg" id="mainImageContainer">
+                    <img 
+                        src="<%= product.images[0] %>" 
+                        alt="<%= product.name %>"
+                        id="mainImage"
+                        class="w-1/2 object-contain transition-transform duration-200 cursor-zoom-in"
+                    >
+                    <!-- Magnified image container -->
+                    <div id="magnifiedContainer" class="hidden absolute top-0 left-0 w-full h-full pointer-events-none bg-white" style="z-index: 10;">
+                        <img 
+                            src="<%= product.images[0] %>" 
+                            alt="<%= product.name %>"
+                            id="magnifiedImage"
+                            class="w-full h-full object-contain absolute top-0 left-0"
+                            style="transform-origin: 0 0;"
+                        >
                     </div>
                 </div>
-            </div>
 
-            <!-- Description -->
-            <div>
-                <h3 class="text-xl font-semibold text-gray-800 mb-2">Description</h3>
-                <p class="text-gray-600 leading-relaxed"><%= product.description %></p>
-            </div>
-
-            <!-- Add to Cart Section -->
-            <div class="flex items-center space-x-4 pt-4">
-                <div class="flex items-center border rounded-lg">
-                    <button onclick="updateQuantity(-1)" class="px-4 py-2 text-gray-600 hover:text-purple-600">-</button>
-                    <input type="number" id="quantity" value="1" min="1" max="<%= product.stock %>"
-                           class="w-16 text-center border-x focus:outline-none focus:ring-2 focus:ring-purple-500">
-                    <button onclick="updateQuantity(1)" class="px-4 py-2 text-gray-600 hover:text-purple-600">+</button>
-                </div>
-                <button onclick="addToCart('<%= product._id %>')" 
-                        class="flex-1 bg-purple-600 text-white py-3 rounded-lg hover:bg-purple-700 transition-colors duration-200 <%= !product.stock ? 'opacity-50 cursor-not-allowed' : '' %>"
-                        <%= !product.stock ? 'disabled' : '' %>>
-                    <%= product.stock ? 'Add to Cart' : 'Out of Stock' %>
-                </button>
-            </div>
-
-            <!-- Wishlist Button -->
-            <div class="mt-4">
-                <button onclick="addToWishlist('<%= product._id %>')" 
-                        class="w-full bg-white text-purple-600 border-2 border-purple-600 py-3 rounded-lg hover:bg-purple-600 hover:text-white transition-colors duration-200">
-                    Add to Wishlist
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Similar Products Section -->
-    <section class="py-16 bg-white">
-        <div class="max-w-7xl mx-auto px-4 sm:px-9 lg:px-9">
-            <h2 class="text-3xl font-bold text-center mb-12">Featured Products</h2>
-            <div class="grid grid-cols-4 gap-8">
-                    <% if (recommendedProducts && recommendedProducts.length > 0) { %>
-                        <% recommendedProducts.forEach(function(relatedProduct) { %>
-                            <div class="bg-white rounded-lg shadow-lg overflow-hidden transition-transform duration-300 hover:scale-105">
-                                <a href="/products/<%= relatedProduct._id %>">
-                                    <img 
-                                        src="<%= relatedProduct.images && relatedProduct.images.length > 0 ? relatedProduct.images[0] : '/default-image.jpg' %>" 
-                                        alt="<%= relatedProduct.name || 'Product Image' %>"
-                                        class="w-full h-48 object-cover"
-                                    >
-                                    <div class="p-4">
-                                        <h3 class="text-lg font-semibold mb-2"><%= relatedProduct.name %></h3>
-                                        <div class="flex items-center justify-between">
-                                            <div>
-                                                <% if (relatedProduct.discountPercentage && relatedProduct.discountPercentage > 0) { %>
-                                                    <span class="text-gray-500 line-through">
-                                                        ₹<%= relatedProduct.price.toLocaleString('en-IN') %>
-                                                    </span>
-                                                    <span class="text-xl font-bold text-primary ml-2">
-                                                        ₹<%= (relatedProduct.price - (relatedProduct.price * relatedProduct.discountPercentage / 100)).toLocaleString('en-IN') %>
-                                                    </span>
-                                                    <span class="bg-red-100 text-red-800 text-sm font-semibold px-2.5 py-0.5 rounded ml-2">
-                                                        <%= relatedProduct.discountPercentage %>% OFF
-                                                    </span>
-                                                <% } else { %>
-                                                    <span class="text-xl font-bold text-primary">
-                                                        ₹<%= relatedProduct.price.toLocaleString('en-IN') %>
-                                                    </span>
-                                                <% } %>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </a>
+                <!-- Thumbnail Swiper -->
+                <div class="swiper thumbSwiper">
+                    <div class="swiper-wrapper flex space-x-4">
+                        <% product.images.forEach(function(image) { %>
+                            <div class="swiper-slide" style="height: 100px;">
+                                <img 
+                                    src="<%= image %>" 
+                                    alt="Thumbnail" 
+                                    class="object-contain cursor-pointer hover:opacity-75 transition-opacity duration-200"
+                                    onclick="changeMainImage('<%= image %>')"
+                                >
                             </div>
                         <% }); %>
-                    <% } else { %>
-                        <div class="col-span-4 text-center text-gray-500">
-                            No similar products available.
-                        </div>
-                    <% } %>
+                    </div>
                 </div>
             </div>
-        </section>
 
-</main>
+            <!-- Product Details Section -->
+            <div class="space-y-8">
+                <div>
+                    <h1 class="text-4xl font-bold text-gray-800 mb-2"><%= product.name %></h1>
+                    <div class="flex items-center space-x-4">
+                        <span class="inline-block px-3 py-1 bg-gray-100 text-gray-800 rounded-full text-sm">
+                            <%= product.brand %>
+                        </span>
+                        <span class="text-green-600">
+                            <% if (product.stock > 0) { %>
+                                In Stock (<%= product.stock %> units)
+                            <% } else { %>
+                                Out of Stock
+                            <% } %>
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Rating Section -->
+                <div class="flex items-center space-x-2">
+                    <div class="flex text-yellow-400">
+                        <% for (let i = 0; i < 5; i++) { %>
+                            <i class="fas fa-star"></i>
+                        <% } %>
+                    </div>
+                    <span class="text-gray-600">(4.5/5 based on 120 reviews)</span>
+                </div>
+
+                <!-- Price Section -->
+                <div class="space-y-2">
+                    <% if (product.discountPercentage) { %>
+                        <p class="text-gray-500 line-through text-xl">
+                            ₹<%= product.price.toLocaleString('en-IN') %>
+                        </p>
+                        <p class="text-4xl font-bold text-purple-600">
+                            ₹<%= (product.price - (product.price * product.discountPercentage / 100)).toLocaleString('en-IN') %>
+                            <span class="text-green-600 text-lg">
+                                (<%= product.discountPercentage %>% off)
+                            </span>
+                        </p>
+                    <% } else { %>
+                        <p class="text-4xl font-bold text-purple-600">
+                            ₹<%= product.price.toLocaleString('en-IN') %>
+                        </p>
+                    <% } %>
+                </div>
+
+                <!-- Specifications -->
+                <div class="space-y-4">
+                    <h3 class="text-xl font-semibold text-gray-800">Key Features</h3>
+                    <div class="grid grid-cols-2 gap-4 bg-gray-50 p-6 rounded-lg shadow-sm">
+                        <div class="space-y-3">
+                            <p class="text-gray-600">
+                                <span class="font-medium">Processor:</span><br>
+                                <%= product.specifications?.processor || 'Not specified' %>
+                            </p>
+                            <p class="text-gray-600">
+                                <span class="font-medium">RAM:</span><br>
+                                <%= product.specifications?.ram || 'Not specified' %>
+                            </p>
+                        </div>
+                        <div class="space-y-3">
+                            <p class="text-gray-600">
+                                <span class="font-medium">Storage:</span><br>
+                                <%= product.specifications?.storage || 'Not specified' %>
+                            </p>
+                            <p class="text-gray-600">
+                                <span class="font-medium">Graphics:</span><br>
+                                <%= product.specifications?.graphics || 'Not specified' %>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Description -->
+                <div>
+                    <h3 class="text-xl font-semibold text-gray-800 mb-2">Description</h3>
+                    <p class="text-gray-600 leading-relaxed"><%= product.description %></p>
+                </div>
+
+                <!-- Add to Cart Section -->
+                <div class="flex items-center space-x-4 pt-4">
+                    <div class="flex items-center border rounded-lg">
+                        <button onclick="updateQuantity(-1)" class="px-4 py-2 text-gray-600 hover:text-purple-600">-</button>
+                        <input type="number" id="quantity" value="1" min="1" max="<%= product.stock %>"
+                               class="w-16 text-center border-x focus:outline-none focus:ring-2 focus:ring-purple-500">
+                        <button onclick="updateQuantity(1)" class="px-4 py-2 text-gray-600 hover:text-purple-600">+</button>
+                    </div>
+                    <button onclick="addToCart('<%= product._id %>')" 
+                            class="flex-1 text-purple-600 border-2 border-purple-600 py-3 rounded-lg hover:bg-purple-600 hover:text-white transition-colors duration-200 <%= !product.stock ? 'opacity-50 cursor-not-allowed' : '' %>"
+                            <%= !product.stock ? 'disabled' : '' %>>
+                        <%= product.stock ? 'Add to Cart' : 'Out of Stock' %>
+                    </button>
+                </div>
+
+                <!-- Wishlist Button -->
+                <div class="mt-4">
+                    <button onclick="addToWishlist('<%= product._id %>')" 
+                            class="w-full bg-white text-purple-600 border-2 border-purple-600 py-3 rounded-lg hover:bg-purple-600 hover:text-white transition-colors duration-200">
+                        Add to Wishlist
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Similar Products Section -->
+        <section class="py-16 bg-white">
+            <div class="max-w-7xl mx-auto px-4 sm:px-9 lg:px-9">
+                <h2 class="text-3xl font-bold text-center mb-12">Featured Products</h2>
+                <div class="grid grid-cols-4 gap-8">
+                        <% if (recommendedProducts && recommendedProducts.length > 0) { %>
+                            <% recommendedProducts.forEach(function(relatedProduct) { %>
+                                <div class="bg-white rounded-lg shadow-lg overflow-hidden transition-transform duration-300 hover:scale-105">
+                                    <a href="/products/<%= relatedProduct._id %>">
+                                        <img 
+                                            src="<%= relatedProduct.images && relatedProduct.images.length > 0 ? relatedProduct.images[0] : '/default-image.jpg' %>" 
+                                            alt="<%= relatedProduct.name || 'Product Image' %>"
+                                            class="w-full h-48 object-cover"
+                                        >
+                                        <div class="p-4">
+                                            <h3 class="text-lg font-semibold mb-2"><%= relatedProduct.name %></h3>
+                                            <div class="flex items-center justify-between">
+                                                <div>
+                                                    <% if (relatedProduct.discountPercentage && relatedProduct.discountPercentage > 0) { %>
+                                                        <span class="text-gray-500 line-through">
+                                                            ₹<%= relatedProduct.price.toLocaleString('en-IN') %>
+                                                        </span>
+                                                        <span class="text-xl font-bold text-primary ml-2">
+                                                            ₹<%= (relatedProduct.price - (relatedProduct.price * relatedProduct.discountPercentage / 100)).toLocaleString('en-IN') %>
+                                                        </span>
+                                                        <span class="bg-red-100 text-red-800 text-sm font-semibold px-2.5 py-0.5 rounded ml-2">
+                                                            <%= relatedProduct.discountPercentage %>% OFF
+                                                        </span>
+                                                    <% } else { %>
+                                                        <span class="text-xl font-bold text-primary">
+                                                            ₹<%= relatedProduct.price.toLocaleString('en-IN') %>
+                                                        </span>
+                                                    <% } %>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </a>
+                                </div>
+                            <% }); %>
+                        <% } else { %>
+                            <div class="col-span-4 text-center text-gray-500">
+                                No similar products available.
+                            </div>
+                        <% } %>
+                    </div>
+                </div>
+            </section>
+    
+    </div>
 
 <script src="https://cdn.jsdelivr.net/npm/swiper@8/swiper-bundle.min.js"></script>
 <script>
