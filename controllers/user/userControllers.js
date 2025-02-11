@@ -87,7 +87,7 @@ const login = async (req, res) => {
         }
 
         req.session.user = user;
-        res.redirect("/home");
+        res.redirect('/');
     } catch (error) {
         console.error(`Login error for email ${req.body.email}:, error.message`);
         res.status(500).render("user/login", { error: "Internal Server Error" });
@@ -369,65 +369,70 @@ const logout = async (req, res) => {
 // Load Home Page
 const loadHomePage = async (req, res) => {
     try {
-        // Calculate date 7 days ago for new arrivals
+        // Check if user is logged in
+        if (req.session.user) {
+            const user = await User.findById(req.session.user._id);
+
+            if (!user) {
+                req.session.destroy(() => res.redirect('/login?error=session_expired'));
+                return;
+            }
+
+            // If user is blocked, destroy session & redirect to login
+            if (user.isBlocked) {
+                req.session.destroy(() => res.redirect('/login?error=blocked'));
+                return;
+            }
+
+            // Update session user data in case user details changed
+            req.session.user = user;
+        }
+
+        // Fetch new arrivals (products added in last 7 days)
         const sevenDaysAgo = new Date();
         sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
-
-        // Log database connection status
-        console.log('MongoDB Connection State:', mongoose.connection.readyState);
-
-        // Fetch new arrivals (products added in last 7 days)
-        const newArrivals = await Product.find({ 
-            isListed:true,
+        const newArrivals = await Product.find({
+            isListed: true,
             isDeleted: false,
             createdAt: { $gte: sevenDaysAgo }
-        })
-        .sort({ createdAt: -1 })
-        .limit(8);
+        }).sort({ createdAt: -1 }).limit(8);
 
         // Fetch featured products (products with discount > 55%)
-        const featuredProducts = await Product.find({ 
+        const featuredProducts = await Product.find({
             isDeleted: false,
             discountPercentage: { $gt: 55 }
-        })
-        .sort({ discountPercentage: -1 })
-        .limit(8);
-
+        }).sort({ discountPercentage: -1 }).limit(8);
 
         // Fetch top-selling products
-        const topSellingProducts = await Product.find({ 
+        const topSellingProducts = await Product.find({
             isDeleted: false
-        })
-        .sort({ salesCount: -1 })
-        .limit(8);
+        }).sort({ salesCount: -1 }).limit(8);
 
-        // Fetch products with discounts
-        const dealProducts = await Product.find({ 
+        // Fetch discounted products
+        const dealProducts = await Product.find({
             isDeleted: false,
             discountPercentage: { $gt: 0 }
-        })
-        .sort({ discountPercentage: -1 })
-        .limit(8);
+        }).sort({ discountPercentage: -1 }).limit(8);
 
-        console.log('Debug: Rendering home page...');
-        res.render('user/home', {
+        res.render("user/home", {
+            user: req.session.user || null,
             newArrivals,
             featuredProducts,
             topSellingProducts,
             dealProducts,
             message: {
-                type: req.flash('error').length ? 'error' : 'success',
-                content: req.flash('error')[0] || req.flash('success')[0]
+                type: req.flash("error").length ? "error" : "success",
+                content: req.flash("error")[0] || req.flash("success")[0]
             }
         });
-        console.log('Debug: Home page rendered successfully');
     } catch (error) {
-        console.error('Error in loadHomePage:', error);
-        req.flash('error', 'Error loading home page');
-        res.redirect('/');
+        console.error("Error in loadHomePage:", error);
+        req.flash("error", "Error loading home page");
+        res.redirect("/");
     }
 };
+
 
 // Static Pages
 const loadAboutPage = async (req, res) => {

@@ -16,7 +16,7 @@ const User = require('../models/userSchema');
 router.get('/signup', isAuthenticated, userController.loadSignup);
 router.post('/signup', userController.signup);
 router.get('/login', isAuthenticated, userController.loadLogin);
-router.post('/login', userController.login);
+router.post('/login',isAuthenticated, userController.login);
 router.get('/verifyOtp', userController.loadverifyOtp);
 router.post('/verifyOtp', userController.verifyOtp);
 router.post('/resendOtp', userController.resendOtp);
@@ -32,7 +32,7 @@ router.post("/send-password-otp", userController.sendOTPForPasswordChange)
 router.post('/change-password', userController.changePassword);
 
 // Product routes
-router.get('/', userController.loadHomePage);
+router.get('/',userController.loadHomePage);
 router.get('/shop', productController.loadShop);
 router.get('/products/:id', productController.getSingleProduct);
 router.get('/categories', productController.getAllCategories);
@@ -52,9 +52,9 @@ router.post('/checkout/place-order', checkoutController.placeOrder);
 
 
 //order route
-router.get('/order',orderController.getOrderDetails)
-router.get('/orders/:id', orderController.getOrderDetails);
-router.get('/orders/:id', orderController.getOrderDetails);
+router.get('/orders',orderController.getOrdersList)
+router.get('/orders/:id', orderController.getOrdersList);
+router.get('/orders/:id', orderController.getOrdersList);
 
 router.post('/order/:id/cancel', orderController.cancelOrder);
 

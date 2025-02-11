@@ -67,11 +67,10 @@ const getCart = async (req, res) => {
 const addToCart = async (req, res) => {
     try {
         const { productId, quantity = 1 } = req.body;
-     
-        console.log('product id vanoo>>>>',productId);
+
         const userId = req.session.user?._id;
         
-        console.log('user vanitt indo=====>>>',userId);
+
         // Ensure productId is a valid ObjectId
         if (!mongoose.Types.ObjectId.isValid(productId)) {
             return res.status(400).json({ success: false, message: 'Invalid product ID' });
@@ -97,7 +96,6 @@ const addToCart = async (req, res) => {
         // Find or create cart for the user
         let cart = await Cart.findOne({ user: new mongoose.Types.ObjectId(userId) });
 
-        console.log('cartil indo>>>>>',cart);
         if (!cart) {
             cart = new Cart({ user: userId, items: [] });
         }

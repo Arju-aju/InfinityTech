@@ -12,14 +12,14 @@ const validationMiddleware = require('../middleware/validation');
 
 // Admin Authentication Routes
 router.get('/pageerror', adminControllers.pageerror);
-router.get('/login', admin.isAdmin, adminControllers.loadLogin);
+router.get('/login', adminControllers.loadLogin);
 router.post('/login',  adminControllers.login);
-router.get('/dashboard',admin.isLogout, adminControllers.loadDashboard);
+router.get('/dashboard', adminControllers.loadDashboard);
 router.get('/logout', adminControllers.logout);
 
 // User Management Routes
 router.get('/users', customerController.customerInfo); 
-router.post('/users/block/:id',  customerController.blockUser);
+router.put('/users/block/:id',  customerController.blockUser);
 
 // Category Management Routes
 router.get('/categories', categoryController.categoryInfo);

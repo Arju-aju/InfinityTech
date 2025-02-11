@@ -1,66 +1,52 @@
-const Order = require('../../models/orderSchema')
+const Order = require('../../models/orderSchema');
 
-exports.getOrderDetails =  async (req, res) => {
+exports.getOrdersList = async (req, res) => {
     try {
-        const order = await Order.findOne({
-            _id: req.params.id,
-            user: req.user._id
-        }).populate('products.productId');
+        // Fetch all orders from the database for admin
+        const orders = await Order.find().populate('products.productId');
 
-        if (!order) {
-            return res.status(404).render('error', {
-                message: 'Order not found'
-            });
-        }
-
-        res.render('order', { order, successMessage: req.flash('success') || [] });
-
-
+        // Ensure the orders array is passed properly
+        res.render('user/orders', { orders });
     } catch (error) {
-        console.error('Get order details error:', error);
+        console.error('Get orders list error:', error);
         res.status(500).render('error', {
-            message: 'Error retrieving order details'
+            message: 'Error retrieving orders list'
         });
     }
-}
+};
 
-exports.cancelOrder = async (req,res) => {
+exports.getAdminOrdersList = async (req, res) => {
     try {
-        const order = await Order.findOne({
-            _id: req.params.id,
-            user: req.user._id
-        });
+        const orders = await Order.find().populate('products.productId');
+
+        res.render('user/orders', { orders: orders || [], message: orders.length ? null : 'No orders found.' });
+    } catch (error) {
+        console.error('Get admin orders list error:', error);
+        res.status(500).render('error', { message: 'Error retrieving orders list' });
+    }
+};
+
+exports.cancelOrder = async (req, res) => {
+    try {
+        const order = await Order.findOne({ _id: req.params.id, user: req.user._id });
 
         if (!order) {
-            return res.status(404).json({
-                success: false,
-                message: 'Order not found'
-            });
+            return res.status(404).json({ success: false, message: 'Order not found' });
         }
 
-        // Check if order can be cancelled (only pending orders)
         if (order.products[0].status !== 'Pending') {
-            return res.status(400).json({
-                success: false,
-                message: 'Only pending orders can be cancelled'
-            });
+            return res.status(400).json({ success: false, message: 'Only pending orders can be cancelled' });
         }
 
-        // Update all products in the order to cancelled status
         order.products.forEach(product => {
             product.status = 'Cancelled';
         });
 
         await order.save();
 
-        // Redirect back to order details with success message
-        res.redirect(`/orders/${order._id}?message=Order cancelled successfully`);
-
+        res.redirect(`/orders?message=Order cancelled successfully`);
     } catch (error) {
         console.error('Cancel order error:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Error cancelling order'
-        });
+        res.status(500).json({ success: false, message: 'Error cancelling order' });
     }
-}
+};

@@ -5,7 +5,7 @@ const User = require("../models/userSchema");
 
 exports.isAuthenticated = (req, res, next) => {
     if (req.session.user) {
-        return res.redirect('/'); // Prevent logged-in users from accessing login/signup
+        return res.redirect("/dashboard"); // Redirect logged-in users away from login/signup
     }
     next();
 };
@@ -20,24 +20,35 @@ exports.isNotAuthenticated = (req, res, next) => {
 
 
 
-exports.authMiddleware = (req, res, next) => {
-    if (!req.session.user) {
-        return res.status(401).json({
-            success: false,
-            message: "Unauthorized. Please log in.",
-        });
-    }
+exports.authMiddleware = async (req, res, next) => {
+    // if (!req.session.user) {
+    //     return res.redirect('/'); // Redirect to home page if not logged in
+    // }
 
-    // Check if the user is blocked
-    if (req.session.user.isBlocked) {
-        req.session.destroy(() => {
-            return res.status(403).json({
-                success: false,
-                message: "Your account has been blocked. Please contact support.",
-            });
-        });
-    } else {
+    try {
+        const userID = req.session?.user?._id;
+        if (!userID) {
+            req.session.destroy(() => res.redirect('/login'));
+            return;
+        }
+
+        const user = await User.findById(userID);
+        if (!user) {
+            req.session.destroy(() => res.redirect('/login'));
+            return;
+        }
+
+        // If user is blocked, destroy session & redirect to login
+        if (user.isBlocked) {
+            req.session.destroy(() => res.redirect('/login?error=blocked'));
+            return;
+        }
+
+        req.user = user; // Attach user to request for later use
         next();
+    } catch (error) {
+        console.error("Auth middleware error:", error);
+        res.status(500).json({ message: "Internal server error" });
     }
 };
 

@@ -1,170 +1,143 @@
+
 <%- include('./partials/adminHeader.ejs') %>
 
-<div class="flex h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-violet-900">
+<div class="flex min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-violet-900">
     <%- include('./partials/adminSidebar.ejs') %>
+    <div class="container p-4 lg:p-8">
+        <!-- Flash Messages with updated styling -->
+        <% if (messages && messages.success && messages.success.length > 0) { %>
+        <div class="bg-green-500 bg-opacity-20 border border-green-500 text-green-100 px-4 py-3 rounded-lg mb-4">
+            <%= messages.success %>
+            <button type="button" class="float-right" data-bs-dismiss="alert" aria-label="Close">
+                <span class="text-green-100">&times;</span>
+            </button>
+        </div>
+        <% } %>
+        
+        <% if (messages && messages.error && messages.error.length > 0) { %>
+        <div class="bg-red-500 bg-opacity-20 border border-red-500 text-red-100 px-4 py-3 rounded-lg mb-4">
+            <%= messages.error %>
+            <button type="button" class="float-right" data-bs-dismiss="alert" aria-label="Close">
+                <span class="text-red-100">&times;</span>
+            </button>
+        </div>
+        <% } %>
 
+        <!-- Breadcrumbs with updated styling -->
+        <nav class="mb-4">
+            <ol class="flex space-x-2 text-gray-300">
+                <% breadcrumbs.forEach((crumb, index) => { %>
+                    <li class="flex items-center">
+                        <% if(index > 0) { %>
+                            <span class="mx-2 text-gray-500">/</span>
+                        <% } %>
+                        <a href="<%= crumb.url %>" class="hover:text-purple-300 transition-colors"><%= crumb.name %></a>
+                    </li>
+                <% }) %>
+            </ol>
+        </nav>
 
-            <!-- Main Content -->
-            <main class="flex-1 overflow-x-hidden overflow-y-auto bg-gray-100">
-                <div class="container mx-auto px-6 py-8">
-                    <div class="flex justify-between items-center mb-6">
-                        <h3 class="text-gray-700 text-3xl font-medium">Customers</h3>
-                        <div class="flex space-x-4">
-                            <div class="relative">
-                                <input type="text" 
-                                       id="searchInput" 
-                                       placeholder="Search customers..." 
-                                       class="w-64 pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:border-blue-500">
-                                <div class="absolute left-3 top-2.5 text-gray-400">
-                                    <i class="fas fa-search"></i>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+        <!-- Glass-effect card -->
+        <div class="backdrop-blur-md bg-white bg-opacity-10 rounded-xl shadow-xl border border-gray-200 border-opacity-20">
+            <div class="p-6">
+                <table class="w-full">
+                    <thead>
+                        <tr class="text-gray-200 border-b border-gray-700">
+                            <th class="px-6 py-3 text-left">Name</th>
+                            <th class="px-6 py-3 text-left">Email</th>
+                            <th class="px-6 py-3 text-left">Phone</th>
+                            <th class="px-6 py-3 text-left">Status</th>
+                            <th class="px-6 py-3 text-left">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-700">
+                        <% customers.forEach(customer => { %>
+                        <tr class="text-gray-300 hover:bg-white hover:bg-opacity-5 transition-colors">
+                            <td class="px-6 py-4"><%= customer.name %></td>
+                            <td class="px-6 py-4"><%= customer.email %></td>
+                            <td class="px-6 py-4"><%= customer.phone %></td>
+                            <td class="px-6 py-4">
+                                <span class="px-3 py-1 rounded-full text-sm <%= customer.isBlocked ? 'bg-red-500 bg-opacity-20 text-red-300 border border-red-500' : 'bg-green-500 bg-opacity-20 text-green-300 border border-green-500' %>">
+                                    <%= customer.isBlocked ? 'Blocked' : 'Active' %>
+                                </span>
+                            </td>
+                            <td class="px-6 py-4">
+                                <button
+                                    onclick="handleBlockUser('<%= customer._id %>', <%= customer.isBlocked %>)"
+                                    class="px-4 py-2 rounded-lg text-sm font-medium <%= customer.isBlocked ? 'bg-green-500 bg-opacity-20 hover:bg-opacity-30 text-green-300 border border-green-500' : 'bg-red-500 bg-opacity-20 hover:bg-opacity-30 text-red-300 border border-red-500' %> transition-all"
+                                >
+                                    <%= customer.isBlocked ? 'Unblock' : 'Block' %>
+                                </button>
+                            </td>
+                        </tr>
+                        <% }) %>
+                    </tbody>
+                </table>
 
-                    <!-- Customers Table -->
-                    <div class="bg-white shadow rounded-lg overflow-hidden">
-                        <table class="min-w-full divide-y divide-gray-200">
-                            <thead class="bg-gray-50">
-                                <tr>
-                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Customer
-                                    </th>
-                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Email
-                                    </th>
-                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Phone
-                                    </th>
-                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Status
-                                    </th>
-                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Actions
-                                    </th>
-                                </tr>
-                            </thead>
-                            <tbody class="bg-white divide-y divide-gray-200">
-                                <% customers.forEach(customer => { %>
-                                    <tr>
-                                        <td class="px-6 py-4 whitespace-nowrap">
-                                            <div class="flex items-center">
-                                                <div class="flex-shrink-0 h-10 w-10">
-                                                    <% if (customer.profileImage) { %>
-                                                        <img class="h-10 w-10 rounded-full" src="<%= customer.profileImage %>" alt="">
-                                                    <% } else { %>
-                                                        <div class="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center">
-                                                            <i class="fas fa-user text-gray-400"></i>
-                                                        </div>
-                                                    <% } %>
-                                                </div>
-                                                <div class="ml-4">
-                                                    <div class="text-sm font-medium text-gray-900">
-                                                        <%= customer.name %>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap">
-                                            <div class="text-sm text-gray-900"><%= customer.email %></div>
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap">
-                                            <div class="text-sm text-gray-900"><%= customer.phone %></div>
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap">
-                                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full <%= customer.isBlocked ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800' %>">
-                                                <%= customer.isBlocked ? 'Blocked' : 'Active' %>
-                                            </span>
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                            <button onclick="toggleUserStatus('<%= customer._id %>', <%= customer.isBlocked %>)" 
-                                                    class="text-<%= customer.isBlocked ? 'green' : 'red' %>-600 hover:text-<%= customer.isBlocked ? 'green' : 'red' %>-900">
-                                                <%= customer.isBlocked ? 'Unblock' : 'Block' %>
-                                            </button>
-                                        </td>
-                                    </tr>
-                                <% }); %>
-                            </tbody>
-                        </table>
-                    </div>
-
-                    <!-- Pagination -->
-                    <% if (pagination.totalPages > 1) { %>
-                        <div class="flex justify-center mt-8">
-                            <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
-                                <% if (pagination.currentPage > 1) { %>
-                                    <a href="/admin/users?page=<%= pagination.currentPage - 1 %>" 
-                                       class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
-                                        <i class="fas fa-chevron-left"></i>
-                                    </a>
-                                <% } %>
-
-                                <% for(let i = pagination.startPage; i <= pagination.endPage; i++) { %>
-                                    <a href="/admin/users?page=<%= i %>" 
-                                       class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium <%= i === pagination.currentPage ? 'text-blue-600 bg-blue-50' : 'text-gray-700 hover:bg-gray-50' %>">
-                                        <%= i %>
-                                    </a>
-                                <% } %>
-
-                                <% if (pagination.currentPage < pagination.totalPages) { %>
-                                    <a href="/admin/users?page=<%= pagination.currentPage + 1 %>" 
-                                       class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
-                                        <i class="fas fa-chevron-right"></i>
-                                    </a>
-                                <% } %>
-                            </nav>
-                        </div>
-                    <% } %>
-                </div>
-            </main>
+                <!-- Pagination with updated styling -->
+                <% if (pagination.totalPages > 1) { %>
+                <nav class="mt-6 flex justify-center">
+                    <ul class="flex space-x-2">
+                        <% for(let i = pagination.startPage; i <= pagination.endPage; i++) { %>
+                        <li>
+                            <a href="?page=<%= i %>" 
+                               class="px-3 py-2 rounded-lg <%= i === pagination.currentPage ? 'bg-purple-500 text-white' : 'text-gray-300 hover:bg-white hover:bg-opacity-10' %> transition-colors">
+                                <%= i %>
+                            </a>
+                        </li>
+                        <% } %>
+                    </ul>
+                </nav>
+                <% } %>
+            </div>
         </div>
     </div>
+</div>
+
+    <!-- Scripts -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <script>
-        // Mobile menu toggle
-        document.querySelector('button').addEventListener('click', () => {
-            document.querySelector('.bg-gray-900').classList.toggle('-translate-x-full');
-        });
+        const handleBlockUser = async (userId, currentStatus) => {
+        try {
+            const result = await Swal.fire({
+                title: 'Are you sure?',
+                text: `Do you want to ${currentStatus ? 'unblock' : 'block'} this user?`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Yes, proceed!'
+            });
 
-        // Toggle user status (block/unblock)
-        function toggleUserStatus(userId, currentStatus) {
-            if (confirm(`Are you sure you want to ${currentStatus ? 'unblock' : 'block'} this user?`)) {
-                fetch(`/admin/users/block/${userId}`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    }
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        window.location.reload();
-                    } else {
-                        alert(data.message || 'Failed to update user status');
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    alert('An error occurred while updating user status');
+            if (result.isConfirmed) {
+                const response = await fetch(`/admin/users/block/${userId}`, {  // Updated URL
+                    method: 'PUT',  // Changed to PUT
+                    headers: { 'Content-Type': 'application/json' }
                 });
-            }
-        }
 
-        // Search functionality
-        const searchInput = document.getElementById('searchInput');
-        let timeoutId;
+                const data = await response.json();
 
-        searchInput.addEventListener('input', (e) => {
-            clearTimeout(timeoutId);
-            timeoutId = setTimeout(() => {
-                const searchTerm = e.target.value.trim();
-                if (searchTerm) {
-                    window.location.href = `/admin/users?search=${encodeURIComponent(searchTerm)}`;
+                if (data.success) {
+                    Swal.fire({
+                        title: 'Success!',
+                        text: data.message,
+                        icon: 'success',
+                        timer: 1500
+                    }).then(() => {
+                        location.reload();
+                    });
                 } else {
-                    window.location.href = '/admin/users';
+                    Swal.fire('Error!', data.message, 'error');
                 }
-            }, 500);
-        });
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            Swal.fire('Error!', 'Something went wrong!', 'error');
+        }
+    };
     </script>
 </body>
 </html>
