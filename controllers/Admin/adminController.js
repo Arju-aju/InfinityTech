@@ -63,7 +63,12 @@ const loadDashboard = async (req, res) => {
         if (!req.session.admin) {
             return res.redirect('/admin/login');
         }
-        res.render('adminDashboard');
+
+        // Fetch user count from the database
+        const userCount = await User.countDocuments();
+
+        // Pass userCount to the view
+        res.render('adminDashboard', { userCount });
     } catch (error) {
         console.error("Dashboard error", error);
         res.redirect('/admin/login');

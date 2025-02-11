@@ -1,46 +1,27 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Manage Addresses</title>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your Orders</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
-    />
+    <!-- Add Flowbite CSS and JS -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/flowbite/2.2.1/flowbite.min.css" rel="stylesheet" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/flowbite/2.2.1/flowbite.min.js"></script>
     <style>
-      .gradient-bg {
-        background: linear-gradient(135deg, #6366f1, #8b5cf6);
-        background-size: 400% 400%;
-        animation: gradient 15s ease infinite;
-      }
-      .glass-card {
-        background: rgba(255, 255, 255, 0.1);
-        backdrop-filter: blur(10px);
-        border: 1px solid rgba(255, 255, 255, 0.2);
-      }
-      .hidden {
-        display: none;
-      }
-      #editModal,
-      #addAddressModal {
-        z-index: 1000; /* Ensure it's on top of other elements */
-      }
-      @keyframes gradient {
-        0% {
-          background-position: 0% 50%;
+        .gradient-bg {
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            background-size: 400% 400%;
+            animation: gradient 15s ease infinite;
         }
-        50% {
-          background-position: 100% 50%;
+        @keyframes gradient {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
         }
-        100% {
-          background-position: 0% 50%;
-        }
-      }
     </style>
-  </head>
-  <body class="gradient-bg min-h-screen flex">
+</head>
+<body class="gradient-bg min-h-screen flex">
     <%- include('../partials/profileSideBar') %>
 
     <div class="container mx-auto px-4 py-8">
@@ -60,6 +41,15 @@
                     <!-- Order Card -->
                     <div class="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow duration-300">
                         <div class="p-6">
+                            <!-- Product Image -->
+                            <div class="mb-4">
+                                <img 
+                                    src="<%= order.products[0].productId.image %>" 
+                                    alt="<%= order.products[0].productId.name %>"
+                                    class="w-full h-48 object-cover rounded-lg"
+                                >
+                            </div>
+                            
                             <!-- Order Header -->
                             <div class="flex justify-between items-start mb-4">
                                 <div>
@@ -93,14 +83,27 @@
                                 </div>
                             </div>
                             
-                            <!-- View Details Button -->
-                            <button 
-                                data-modal-target="orderModal-<%= order._id %>" 
-                                data-modal-toggle="orderModal-<%= order._id %>"
-                                class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-md transition-colors duration-200 font-medium text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-                            >
-                                View Details
-                            </button>
+                            <!-- Action Buttons -->
+                            <div class="space-y-2">
+                                <button 
+                                    type="button"
+                                    data-modal-target="orderModal-<%= order._id %>" 
+                                    data-modal-toggle="orderModal-<%= order._id %>"
+                                    class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-md transition-colors duration-200 font-medium text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                                >
+                                    View Details
+                                </button>
+                                
+                                <% if (order.products[0].status === 'Pending') { %>
+                                    <form action="/orders/<%= order._id %>/cancel" method="POST" class="w-full">
+                                        <button type="submit" 
+                                            class="w-full bg-red-600 hover:bg-red-700 text-white py-2 px-4 rounded-md transition-colors duration-200 font-medium text-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
+                                        >
+                                            Cancel Order
+                                        </button>
+                                    </form>
+                                <% } %>
+                            </div>
                         </div>
                     </div>
 
@@ -160,6 +163,19 @@
                                         </p>
                                     </div>
                                 </div>
+                                <!-- Modal Footer -->
+                                <div class="flex items-center justify-end p-6 space-x-2 border-t">
+                                    <% if (order.products[0].status === 'Pending') { %>
+                                        <form action="/orders/<%= order._id %>/cancel" method="POST">
+                                            <button type="submit" class="text-white bg-red-600 hover:bg-red-700 focus:ring-4 focus:ring-red-300 font-medium rounded-lg text-sm px-5 py-2.5 focus:outline-none">
+                                                Cancel Order
+                                            </button>
+                                        </form>
+                                    <% } %>
+                                    <button type="button" class="text-gray-500 bg-white hover:bg-gray-100 focus:ring-4 focus:ring-gray-200 rounded-lg border border-gray-200 text-sm font-medium px-5 py-2.5 hover:text-gray-900 focus:outline-none" data-modal-hide="orderModal-<%= order._id %>">
+                                        Close
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -167,5 +183,34 @@
             </div>
         <% } %>
     </div>
+
+    <!-- Initialize Flowbite -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize all modals
+            const modalButtons = document.querySelectorAll('[data-modal-toggle]');
+            modalButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const modalId = this.getAttribute('data-modal-target');
+                    const modal = document.getElementById(modalId);
+                    if (modal) {
+                        modal.classList.remove('hidden');
+                    }
+                });
+            });
+
+            // Close modal buttons
+            const closeButtons = document.querySelectorAll('[data-modal-hide]');
+            closeButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const modalId = this.getAttribute('data-modal-hide');
+                    const modal = document.getElementById(modalId);
+                    if (modal) {
+                        modal.classList.add('hidden');
+                    }
+                });
+            });
+        });
+    </script>
 </body>
 </html>

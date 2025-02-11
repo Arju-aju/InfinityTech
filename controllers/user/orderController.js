@@ -28,6 +28,7 @@ exports.getAdminOrdersList = async (req, res) => {
 
 exports.cancelOrder = async (req, res) => {
     try {
+        const { reason } = req.body;
         const order = await Order.findOne({ _id: req.params.id, user: req.user._id });
 
         if (!order) {
@@ -42,6 +43,7 @@ exports.cancelOrder = async (req, res) => {
             product.status = 'Cancelled';
         });
 
+        order.cancellationReason = reason;
         await order.save();
 
         res.redirect(`/orders?message=Order cancelled successfully`);
