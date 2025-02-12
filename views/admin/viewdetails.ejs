@@ -1,0 +1,124 @@
+<!-- views/orderDetails.ejs -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order Details</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body class="bg-gray-950 text-gray-200 min-h-screen flex">
+    <!-- Sidebar Placeholder - Include your sidebar partial here -->
+    <%- include('./partials/adminSidebar.ejs') %>
+
+    <main class="flex-1 p-6 md:ml-68">
+        <div class="bg-gray-900 rounded-xl p-6 space-y-6">
+            <div class="flex justify-between items-center mb-6">
+                <h1 class="text-2xl font-bold">Order Details</h1>
+                <a href="/admin/orders" class="text-blue-400 hover:text-blue-300">
+                    <i class="fas fa-arrow-left"></i> Back to Orders
+                </a>
+            </div>
+
+            <!-- Top Information Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <!-- Order Information -->
+                <div class="bg-gray-800 rounded-lg p-4">
+                    <h2 class="text-lg font-semibold mb-4">Order Information</h2>
+                    <div class="space-y-2">
+                        <div class="flex justify-between">
+                            <span class="text-gray-400">Order ID</span>
+                            <span><%= order._id %></span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-400">Date</span>
+                            <span><%= order.formattedDate %></span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-400">Status</span>
+                            <span class="px-2 py-1 rounded text-sm <%= order.status === 'Pending' ? 'bg-yellow-500/20 text-yellow-500' : order.status === 'Delivered' ? 'bg-green-500/20 text-green-500' : 'bg-blue-500/20 text-blue-500' %>">
+                                <%= order.status %>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Customer Information -->
+                <div class="bg-gray-800 rounded-lg p-4">
+                    <h2 class="text-lg font-semibold mb-4">Customer Information</h2>
+                    <div class="space-y-2">
+                        <div class="flex justify-between">
+                            <span class="text-gray-400">Name</span>
+                            <span><%= order.user.name %></span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-400">Email</span>
+                            <span class="text-sm"><%= order.user.email %></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Shipping Address -->
+                <div class="bg-gray-800 rounded-lg p-4">
+                    <h2 class="text-lg font-semibold mb-4">Shipping Address</h2>
+                    <p class="text-sm text-gray-300">
+                        <%= order.deliveryAddress.address %>,
+                        <%= order.deliveryAddress.street %>,
+                        <%= order.deliveryAddress.city %>,
+                        <%= order.deliveryAddress.state %> - 
+                        <%= order.deliveryAddress.pincode %>
+                    </p>
+                </div>
+            </div>
+
+            <!-- Order Items -->
+            <div class="bg-gray-800 rounded-lg p-4">
+                <h2 class="text-lg font-semibold mb-4">Order Items</h2>
+                <div class="space-y-4">
+                    <% order.products.forEach(product => { %>
+                        <div class="flex items-center justify-between bg-gray-700 p-4 rounded-lg">
+                            <div class="flex items-center space-x-4">
+                                <img src="<%= product.productId.image %>" 
+                                     alt="<%= product.productId.name %>" 
+                                     class="w-16 h-16 object-cover rounded-lg"/>
+                                <div>
+                                    <h3 class="font-medium"><%= product.productId.name %></h3>
+                                    <p class="text-sm text-gray-400">Quantity: <%= product.quantity %></p>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <p class="font-medium">₹<%= product.productId.price %></p>
+                                <p class="text-sm text-gray-400">
+                                    Total: ₹<%= (product.productId.price * product.quantity).toFixed(2) %>
+                                </p>
+                            </div>
+                        </div>
+                    <% }); %>
+                </div>
+            </div>
+
+            <!-- Order Summary -->
+            <div class="flex justify-end">
+                <div class="bg-gray-800 rounded-lg p-4 w-full md:w-72">
+                    <h2 class="text-lg font-semibold mb-4">Order Summary</h2>
+                    <div class="space-y-2">
+                        <div class="flex justify-between">
+                            <span class="text-gray-400">Subtotal</span>
+                            <span>₹<%= order.subtotal %></span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-400">Shipping</span>
+                            <span>₹<%= order.shippingCost %></span>
+                        </div>
+                        <div class="border-t border-gray-700 my-2 pt-2 flex justify-between font-semibold">
+                            <span>Total</span>
+                            <span>₹<%= order.orderAmount %></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+</body>
+</html>

@@ -3,651 +3,234 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>InfinityTech Admin - Orders</title>
-    
-    <!-- Styles -->
+    <title>Orders Management</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    
-    <!-- SweetAlert2 -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
-    <style>
-        .gradient-bg {
-            background: linear-gradient(-45deg, #1a1a1a, #2d3748, #1a365d, #162454);
-            background-size: 400% 400%;
-            animation: gradient 15s ease infinite;
-        }
-
-        .glass-effect {
-            background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .glass-effect-dark {
-            background: rgba(0, 0, 0, 0.2);
-            backdrop-filter: blur(10px);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        @keyframes gradient {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
-        }
-    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
-<body class="gradient-bg min-h-screen">
-    <!-- Header -->
-    <header class="glass-effect-dark shadow-lg fixed top-0 w-full z-50">
-        <div class="flex justify-between items-center py-4 px-6">
-            <div class="flex items-center">
-                <button class="text-gray-300 hover:text-white md:hidden" id="sidebarToggle">
-                    <i class="fas fa-bars text-xl"></i>
-                </button>
-                <nav class="hidden md:flex ml-4" aria-label="Breadcrumb">
-                    <ol class="inline-flex items-center space-x-1 md:space-x-3">
-                        <li class="inline-flex items-center">
-                            <a href="/admin/dashboard" class="text-gray-300 hover:text-white">
-                                <i class="fas fa-home mr-2"></i>
-                                Dashboard
-                            </a>
-                        </li>
-                        <li>
-                            <div class="flex items-center">
-                                <svg class="w-6 h-6 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
-                                </svg>
-                                <span class="ml-1 text-gray-300 md:ml-2">Orders</span>
-                            </div>
-                        </li>
-                    </ol>
-                </nav>
-            </div>
+<body class="bg-gray-950 text-gray-200 min-h-screen flex">
+    
+    <%- include('./partials/adminSidebar.ejs') %>
 
-            <div class="flex items-center space-x-4">
-                <button class="text-gray-300 hover:text-white relative">
-                    <i class="fas fa-bell text-xl"></i>
-                    <span class="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">
-                        3
-                    </span>
-                </button>
-
-                <div class="relative">
-                    <button class="flex items-center text-gray-300 hover:text-white focus:outline-none" id="profileDropdown">
-                        <img class="h-8 w-8 rounded-full object-cover" src="https://ui-avatars.com/api/?name=Admin&background=6366f1&color=fff" alt="Admin">
-                        <span class="ml-2 hidden md:block">Admin</span>
-                        <i class="fas fa-chevron-down ml-2"></i>
-                    </button>
-
-                    <div class="glass-effect absolute right-0 mt-2 w-48 rounded-lg py-2 hidden" id="profileMenu">
-                        <a href="/admin/profile" class="block px-4 py-2 text-gray-300 hover:text-white hover:bg-white/10">
-                            <i class="fas fa-user mr-2"></i> Profile
-                        </a>
-                        <a href="/admin/settings" class="block px-4 py-2 text-gray-300 hover:text-white hover:bg-white/10">
-                            <i class="fas fa-cog mr-2"></i> Settings
-                        </a>
-                        <div class="border-t border-gray-700 my-2"></div>
-                        <a href="/admin/logout" class="block px-4 py-2 text-red-400 hover:text-red-300 hover:bg-white/10">
-                            <i class="fas fa-sign-out-alt mr-2"></i> Logout
-                        </a>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </header>
-
-    <div class="flex h-screen pt-16">
-        <!-- Sidebar -->
-        <div class="bg-gray-900 text-white w-64 space-y-6 py-7 px-2 absolute inset-y-0 left-0 transform -translate-x-full md:relative md:translate-x-0 transition duration-200 ease-in-out z-20" id="sidebar">
-            <div class="flex items-center space-x-2 px-4">
-                <span class="text-2xl font-extrabold">InfinityTech</span>
-            </div>
+    <main class="flex-1 p-6 md:ml-68">
+        <div class="bg-gray-900 p-6 rounded-xl shadow-lg">
+            <h1 class="text-4xl font-extrabold mb-6 text-center">Orders Management</h1>
             
-            <nav class="space-y-2">
-                <a href="/admin/dashboard" class="block py-2.5 px-4 rounded transition duration-200 text-gray-400 hover:bg-gray-800 hover:text-white">
-                    <i class="fas fa-home w-6"></i>
-                    <span>Dashboard</span>
-                </a>
-                <a href="/admin/products" class="block py-2.5 px-4 rounded transition duration-200 text-gray-400 hover:bg-gray-800 hover:text-white">
-                    <i class="fas fa-laptop w-6"></i>
-                    <span>Products</span>
-                </a>
-                <a href="/admin/categories" class="block py-2.5 px-4 rounded transition duration-200 text-gray-400 hover:bg-gray-800 hover:text-white">
-                    <i class="fas fa-tags w-6"></i>
-                    <span>Categories</span>
-                </a>
-                <a href="/admin/users" class="block py-2.5 px-4 rounded transition duration-200 text-gray-400 hover:bg-gray-800 hover:text-white">
-                    <i class="fas fa-users w-6"></i>
-                    <span>Customers</span>
-                </a>
-                <a href="/admin/orders" class="block py-2.5 px-4 rounded transition duration-200 bg-gray-800 text-white">
-                    <i class="fas fa-shopping-cart w-6"></i>
-                    <span>Orders</span>
-                </a>
-            </nav>
-        </div>
-
-        <!-- Main Content -->
-        <div class="flex-1 overflow-x-hidden overflow-y-auto">
-            <div class="container mx-auto px-6 py-8">
-                <!-- Header -->
-                <div class="mb-8">
-                    <h1 class="text-2xl font-bold text-white">Order Management</h1>
-                    <p class="text-gray-400">Manage and track all orders</p>
-                </div>
-
-                <!-- Filters Section -->
-                <div class="glass-effect p-6 rounded-lg shadow-sm mb-6">
-                    <form action="/admin/orders" method="GET" class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                        <!-- Search -->
-                        <div class="col-span-1">
-                            <label class="block text-sm font-medium text-gray-300 mb-2">Search Orders</label>
-                            <input type="text" 
-                                   name="search"
-                                   value="<%= searchQuery %>"
-                                   placeholder="Search by customer name or email" 
-                                   class="w-full px-4 py-2 bg-white/10 border border-gray-600 rounded-md focus:ring-blue-500 focus:border-blue-500 text-white placeholder-gray-400">
-                        </div>
-
-                        <!-- Date Range -->
-                        <div class="col-span-2 grid grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-sm font-medium text-gray-300 mb-2">From Date</label>
-                                <input type="date" 
-                                       name="fromDate"
-                                       value="<%= fromDate %>"
-                                       class="w-full px-4 py-2 bg-white/10 border border-gray-600 rounded-md focus:ring-blue-500 focus:border-blue-500 text-white">
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-gray-300 mb-2">To Date</label>
-                                <input type="date"
-                                       name="toDate"
-                                       value="<%= toDate %>"
-                                       class="w-full px-4 py-2 bg-white/10 border border-gray-600 rounded-md focus:ring-blue-500 focus:border-blue-500 text-white">
-                            </div>
-                        </div>
-
-                        <!-- Status Filter -->
-                        <div class="col-span-1">
-                            <label class="block text-sm font-medium text-gray-300 mb-2">Order Status</label>
-                            <select name="status" class="w-full px-4 py-2 bg-white/10 border border-gray-600 rounded-md focus:ring-blue-500 focus:border-blue-500 text-white">
-                                <option value="">All Status</option>
-                                <% ['Pending', 'Processing', 'Shipped', 'Delivered', 'Cancelled'].forEach(function(stat) { %>
-                                    <option value="<%= stat %>" <%= status === stat ? 'selected' : '' %>><%= stat %></option>
-                                <% }); %>
-                            </select>
-                        </div>
-                    </form>
-                </div>
-
-                <!-- Orders Table -->
-                <div class="glass-effect rounded-lg shadow-sm overflow-hidden">
-                    <div class="overflow-x-auto">
-                        <table class="min-w-full divide-y divide-gray-700">
-                            <thead class="bg-white/5">
-                                <tr>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Sl No</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Order Date</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Customer Details</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Order Amount</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Payment Method</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Status</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody class="divide-y divide-gray-700">
-                                <% orders.forEach((order, index) => { %>
-                                    <tr class="hover:bg-white/5">
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
-                                            <%= (currentPage - 1) * limit + index + 1 %>
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
-                                            <%= new Date(order.date).toLocaleDateString() %>
-                                        </td>
-                                        <td class="px-6 py-4">
-                                            <div class="text-sm font-medium text-gray-100"><%= order.user.name %></div>
-                                            <div class="text-sm text-gray-400"><%= order.user.email %></div>
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-100">
-                                            $<%= order.orderAmount.toFixed(2) %>
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
-                                            <%= order.paymentMethod %>
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap">
-                                            <% const orderStatus = order.products[0].status; %>
-                                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
-                                                <%= orderStatus === 'Delivered' ? 'bg-green-100 text-green-800' : 
-                                                    orderStatus === 'Pending' ? 'bg-yellow-100 text-yellow-800' :
-                                                    orderStatus === 'Cancelled' ? 'bg-red-100 text-red-800' :
-                                                    'bg-blue-100 text-blue-800' %>">
-                                                <%= orderStatus %>
-                                            </span>
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                            <a href="/admin/orders/<%= order._id %>" class="text-blue-400 hover:text-blue-300">View Details</a>
-                                        </td>
-                                    </tr>
-                                <% }); %>
-                            </tbody>
-                        </table>
-                    </div>
-
-  <!-- Pagination -->
-  <div class="bg-white/5 px-4 py-3 border-t border-gray-700 sm:px-6">
-    <div class="flex items-center justify-between">
-        <div class="flex-1 flex justify-between sm:hidden">
-            <% if (currentPage > 1) { %>
-                <a href="?page=<%= currentPage - 1 %>&<%= queryString %>" 
-                   class="relative inline-flex items-center px-4 py-2 border border-gray-600 text-sm font-medium rounded-md text-gray-300 bg-white/5 hover:bg-white/10">
-                    Previous
-                </a>
-            <% } %>
-            <% if (currentPage < totalPages) { %>
-                <a href="?page=<%= currentPage + 1 %>&<%= queryString %>" 
-                   class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-600 text-sm font-medium rounded-md text-gray-300 bg-white/5 hover:bg-white/10">
-                    Next
-                </a>
-            <% } %>
-        </div>
-        <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
-            <div>
-                <p class="text-sm text-gray-300">
-                    Showing <span class="font-medium"><%= (currentPage - 1) * limit + 1 %></span> to 
-                    <span class="font-medium"><%= Math.min(currentPage * limit, totalItems) %></span> of 
-                    <span class="font-medium"><%= totalItems %></span> results
-                </p>
-            </div>
-            <div>
-                <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
-                    <% if (currentPage > 1) { %>
-                        <a href="?page=<%= currentPage - 1 %>&<%= queryString %>" 
-                           class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-600 bg-white/5 text-sm font-medium text-gray-300 hover:bg-white/10">
-                            <span class="sr-only">Previous</span>
-                            <i class="fas fa-chevron-left w-5 h-5"></i>
-                        </a>
-                    <% } %>
-                    
-                    <% 
-                    let startPage = Math.max(1, currentPage - 2);
-                    let endPage = Math.min(totalPages, startPage + 4);
-                    if (endPage - startPage < 4) {
-                        startPage = Math.max(1, endPage - 4);
-                    }
-                    %>
-                    
-                    <% if (startPage > 1) { %>
-                        <a href="?page=1&<%= queryString %>" 
-                           class="relative inline-flex items-center px-4 py-2 border border-gray-600 bg-white/5 text-sm font-medium text-gray-300 hover:bg-white/10">
-                            1
-                        </a>
-                        <% if (startPage > 2) { %>
-                            <span class="relative inline-flex items-center px-4 py-2 border border-gray-600 bg-white/5 text-sm font-medium text-gray-500">
-                                ...
-                            </span>
-                        <% } %>
-                    <% } %>
-
-                    <% for(let i = startPage; i <= endPage; i++) { %>
-                        <a href="?page=<%= i %>&<%= queryString %>" 
-                           class="relative inline-flex items-center px-4 py-2 border border-gray-600 text-sm font-medium
-                                  <%= currentPage === i ? 'z-10 bg-blue-600 text-white border-blue-600' : 'bg-white/5 text-gray-300 hover:bg-white/10' %>">
-                            <%= i %>
-                        </a>
-                    <% } %>
-
-                    <% if (endPage < totalPages) { %>
-                        <% if (endPage < totalPages - 1) { %>
-                            <span class="relative inline-flex items-center px-4 py-2 border border-gray-600 bg-white/5 text-sm font-medium text-gray-500">
-                                ...
-                            </span>
-                        <% } %>
-                        <a href="?page=<%= totalPages %>&<%= queryString %>" 
-                           class="relative inline-flex items-center px-4 py-2 border border-gray-600 bg-white/5 text-sm font-medium text-gray-300 hover:bg-white/10">
-                            <%= totalPages %>
-                        </a>
-                    <% } %>
-                    
-                    <% if (currentPage < totalPages) { %>
-                        <a href="?page=<%= currentPage + 1 %>&<%= queryString %>" 
-                           class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-600 bg-white/5 text-sm font-medium text-gray-300 hover:bg-white/10">
-                            <span class="sr-only">Next</span>
-                            <i class="fas fa-chevron-right w-5 h-5"></i>
-                        </a>
-                    <% } %>
-                </nav>
-            </div>
-        </div>
-    </div>
-</div>
-</div>
-</div>
-</div>
-</div>
-<!-- Add this right before the closing body tag -->
-
-<!-- Order Details Modal -->
-<div id="orderModal" class="fixed inset-0 z-50 hidden overflow-y-auto">
-    <div class="flex items-center justify-center min-h-screen p-4">
-        <!-- Backdrop -->
-        <div class="fixed inset-0 bg-black opacity-50"></div>
-        
-        <!-- Modal Content -->
-        <div class="glass-effect relative w-full max-w-4xl rounded-lg shadow-xl">
-            <div class="p-6">
-                <div class="flex justify-between items-center mb-4">
-                    <h2 class="text-xl font-bold text-white">Order Details</h2>
-                    <button onclick="closeModal()" class="text-gray-400 hover:text-white">
-                        <i class="fas fa-times text-xl"></i>
-                    </button>
+            <form id="filterForm" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 bg-gray-800 p-4 rounded-lg shadow">
+                <input type="text" name="search" placeholder="Search by Order ID or Customer"
+                    value="<%= filters?.search || '' %>"
+                    class="bg-gray-700 text-white rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500">
+                
+                <select name="status" class="bg-gray-700 text-white rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500">
+                    <option value="All">All Status</option>
+                    <option value="Pending" <%= filters?.status === 'Pending' ? 'selected' : '' %>>Pending</option>
+                    <option value="Processing" <%= filters?.status === 'Processing' ? 'selected' : '' %>>Processing</option>
+                    <option value="Shipped" <%= filters?.status === 'Shipped' ? 'selected' : '' %>>Shipped</option>
+                    <option value="Delivered" <%= filters?.status === 'Delivered' ? 'selected' : '' %>>Delivered</option>
+                    <option value="Cancelled" <%= filters?.status === 'Cancelled' ? 'selected' : '' %>>Cancelled</option>
+                </select>
+                
+                <div class="flex space-x-2">
+                    <input type="date" name="startDate" value="<%= filters?.startDate || '' %>"
+                        class="bg-gray-700 text-white rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500">
+                    <input type="date" name="endDate" value="<%= filters?.endDate || '' %>"
+                        class="bg-gray-700 text-white rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500">
                 </div>
                 
-                <!-- Order Information -->
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                    <div>
-                        <h3 class="text-lg font-semibold text-white mb-3">Customer Information</h3>
-                        <div class="space-y-2 text-gray-300">
-                            <p><span class="text-gray-400">Name:</span> <span id="customerName"></span></p>
-                            <p><span class="text-gray-400">Email:</span> <span id="customerEmail"></span></p>
-                            <p><span class="text-gray-400">Phone:</span> <span id="customerPhone"></span></p>
-                        </div>
-                    </div>
-                    <div>
-                        <h3 class="text-lg font-semibold text-white mb-3">Order Summary</h3>
-                        <div class="space-y-2 text-gray-300">
-                            <p><span class="text-gray-400">Order ID:</span> <span id="orderId"></span></p>
-                            <p><span class="text-gray-400">Order Date:</span> <span id="orderDate"></span></p>
-                            <p><span class="text-gray-400">Payment Method:</span> <span id="paymentMethod"></span></p>
-                            <p><span class="text-gray-400">Total Amount:</span> $<span id="totalAmount"></span></p>
-                        </div>
-                    </div>
+                <div class="flex space-x-2">
+                    <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg">Apply Filters</button>
+                    <button type="button" onclick="resetFilters()" class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg">Reset</button>
                 </div>
-
-                <!-- Status Toggle -->
-                <div class="mb-6">
-                    <h3 class="text-lg font-semibold text-white mb-3">Order Status</h3>
-                    <select id="statusToggle" class="w-full md:w-64 px-4 py-2 bg-white/10 border border-gray-600 rounded-md focus:ring-blue-500 focus:border-blue-500 text-white">
-                        <option value="Pending">Pending</option>
-                        <option value="Processing">Processing</option>
-                        <option value="Shipped">Shipped</option>
-                        <option value="Delivered">Delivered</option>
-                        <option value="Cancelled">Cancelled</option>
-                    </select>
-                </div>
-
-                <!-- Order Items Table -->
-                <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-gray-700">
-                        <thead class="bg-white/5">
+            </form>
+            
+            <div class="overflow-x-auto mt-6">
+                <table class="w-full table-auto border-collapse bg-gray-800 text-white rounded-lg">
+                    <thead class="bg-gray-700">
+                        <tr>
+                            <th class="px-6 py-4">Order ID</th>
+                            <th class="px-6 py-4">Customer</th>
+                            <th class="px-6 py-4">Total Amount</th>
+                            <th class="px-6 py-4">Status</th>
+                            <th class="px-6 py-4">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% if (orders.length > 0) { %>
+                            <% orders.forEach(order => { %>
+                                <tr class="hover:bg-gray-700 transition">
+                                    <td class="px-6 py-4"><%= order._id %></td>
+                                    <td class="px-6 py-4"><%= order.user.name %></td>
+                                    <td class="px-6 py-4">₹<%= order.orderAmount.toFixed(2) %></td>
+                                    <td class="px-6 py-4">
+                                        <select class="bg-gray-700 text-white rounded-lg py-1 px-2 focus:ring-2 focus:ring-blue-500"
+                                            data-order-id="<%= order._id %>" onchange="updateStatus(this)">
+                                            <option value="Pending" <%= order.status === 'Pending' ? 'selected' : '' %>>Pending</option>
+                                            <option value="Processing" <%= order.status === 'Processing' ? 'selected' : '' %>>Processing</option>
+                                            <option value="Shipped" <%= order.status === 'Shipped' ? 'selected' : '' %>>Shipped</option>
+                                            <option value="Delivered" <%= order.status === 'Delivered' ? 'selected' : '' %>>Delivered</option>
+                                            <option value="Cancelled" <%= order.status === 'Cancelled' ? 'selected' : '' %>>Cancelled</option>
+                                        </select>
+                                    </td>
+                                    <td class="px-6 py-4">
+                                        <a href="/admin/viewdetails/<%= order._id %>" class="text-blue-400 hover:text-blue-300 transition">
+                                            <i class="fas fa-eye"></i> View Details
+                                        </a>
+                                    </td>
+                                    
+                                </tr>
+                            <% }) %>
+                        <% } else { %>
                             <tr>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase">Product</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase">Quantity</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase">Price</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase">Total</th>
+                                <td colspan="5" class="px-6 py-8 text-center text-gray-400">No orders found.</td>
                             </tr>
-                        </thead>
-                        <tbody id="orderItems" class="divide-y divide-gray-700"></tbody>
-                    </table>
-                </div>
+                        <% } %>
+                    </tbody>
+                </table>
             </div>
         </div>
-    </div>
-</div>
+    </main>
 
-<!-- Add this to your existing JavaScript section -->
-<script>
-function showOrderDetails(orderId) {
-    // Fetch order details from backend
-    fetch(`/api/orders/${orderId}`)
-        .then(response => response.json())
-        .then(order => {
-            // Populate modal with order details
-            document.getElementById('customerName').textContent = order.user.name;
-            document.getElementById('customerEmail').textContent = order.user.email;
-            document.getElementById('customerPhone').textContent = order.user.phone;
-            document.getElementById('orderId').textContent = order._id;
-            document.getElementById('orderDate').textContent = new Date(order.date).toLocaleDateString();
-            document.getElementById('paymentMethod').textContent = order.paymentMethod;
-            document.getElementById('totalAmount').textContent = order.orderAmount.toFixed(2);
-            
-            // Set current status
-            document.getElementById('statusToggle').value = order.products[0].status;
-            
-            // Populate order items
-            const orderItemsBody = document.getElementById('orderItems');
-            orderItemsBody.innerHTML = '';
-            
-            order.products.forEach(item => {
-                const row = document.createElement('tr');
-                row.className = 'hover:bg-white/5';
-                row.innerHTML = `
-                    <td class="px-6 py-4 text-sm text-gray-300">
-                        <div class="flex items-center">
-                            <img src="${item.image}" alt="${item.name}" class="h-10 w-10 rounded-md object-cover mr-3">
-                            <span>${item.name}</span>
-                        </div>
-                    </td>
-                    <td class="px-6 py-4 text-sm text-gray-300">${item.quantity}</td>
-                    <td class="px-6 py-4 text-sm text-gray-300">$${item.price.toFixed(2)}</td>
-                    <td class="px-6 py-4 text-sm text-gray-300">$${(item.price * item.quantity).toFixed(2)}</td>
-                `;
-                orderItemsBody.appendChild(row);
-            });
-            
-            // Show modal
-            document.getElementById('orderModal').classList.remove('hidden');
+    <!-- Order Details Modal -->
+ 
+
+    <script>
+    async function updateStatus(selectElement) {
+    const orderId = selectElement.dataset.orderId;
+    const newStatus = selectElement.value;
+
+    try {
+        const response = await fetch(`/admin/orders/${orderId}/toggle-status`, {  // Ensure the correct route
+            method: 'PATCH',  // Use PATCH instead of POST
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ status: newStatus }),
+            credentials: 'include' // If authentication is required
         });
-}
 
-function closeModal() {
-    document.getElementById('orderModal').classList.add('hidden');
-}
+        const data = await response.json();
 
-// Status Toggle Handler
-document.getElementById('statusToggle').addEventListener('change', function(e) {
-    const orderId = document.getElementById('orderId').textContent;
-    const newStatus = e.target.value;
-    
-    // Update order status
-    fetch(`/api/orders/${orderId}/status`, {
-        method: 'PATCH',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ status: newStatus })
-    })
-    .then(response => response.json())
-    .then(data => {
-        // Show success message
-        Swal.fire({
-            title: 'Status Updated!',
-            text: `Order status has been updated to ${newStatus}`,
-            icon: 'success',
-            background: '#1a1a1a',
-            color: '#ffffff',
-            confirmButtonColor: '#3b82f6'
-        }).then(() => {
-            // Refresh the page to show updated status
-            window.location.reload();
-        });
-    })
-    .catch(error => {
-        Swal.fire({
-            title: 'Error!',
-            text: 'Failed to update order status',
-            icon: 'error',
-            background: '#1a1a1a',
-            color: '#ffffff',
-            confirmButtonColor: '#3b82f6'
-        });
-    });
-});
-
-// Close modal when clicking outside
-document.getElementById('orderModal').addEventListener('click', function(e) {
-    if (e.target === this) {
-        closeModal();
-    }
-});
-</script>
-
-<!-- JavaScript -->
-<script>
-// Profile Dropdown Toggle
-const profileDropdown = document.getElementById('profileDropdown');
-const profileMenu = document.getElementById('profileMenu');
-
-if (profileDropdown && profileMenu) {
-profileDropdown.addEventListener('click', () => {
-profileMenu.classList.toggle('hidden');
-});
-
-// Close dropdown when clicking outside
-document.addEventListener('click', (e) => {
-if (!profileDropdown.contains(e.target) && !profileMenu.contains(e.target)) {
-profileMenu.classList.add('hidden');
-}
-});
-}
-
-// Sidebar Toggle for mobile
-const sidebarToggle = document.getElementById('sidebarToggle');
-const sidebar = document.getElementById('sidebar');
-
-if (sidebarToggle && sidebar) {
-sidebarToggle.addEventListener('click', () => {
-sidebar.classList.toggle('-translate-x-full');
-});
-}
-
-// Form auto-submit on change
-document.addEventListener('DOMContentLoaded', function() {
-const filterForm = document.querySelector('form');
-const inputs = filterForm.querySelectorAll('input, select');
-
-inputs.forEach(input => {
-input.addEventListener('change', () => {
-filterForm.submit();
-});
-});
-});
-function showOrderDetails(orderId) {
-    // Fetch order details from backend
-    fetch(`/admin/orders/${orderId}/details`)
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Network response was not ok');
-            }
-            return response.json();
-        })
-        .then(order => {
-            // Populate modal with order details
-            document.getElementById('customerName').textContent = order.user.name;
-            document.getElementById('customerEmail').textContent = order.user.email;
-            document.getElementById('customerPhone').textContent = order.user.phone || 'N/A';
-            document.getElementById('orderId').textContent = order._id;
-            document.getElementById('orderDate').textContent = new Date(order.createdAt).toLocaleDateString();
-            document.getElementById('paymentMethod').textContent = order.paymentMethod;
-            document.getElementById('totalAmount').textContent = order.orderAmount.toFixed(2);
-            
-            // Set current status
-            const statusToggle = document.getElementById('statusToggle');
-            statusToggle.value = order.products[0].status;
-            
-            // Populate order items
-            const orderItemsBody = document.getElementById('orderItems');
-            orderItemsBody.innerHTML = '';
-            
-            order.products.forEach(item => {
-                const row = document.createElement('tr');
-                row.className = 'hover:bg-white/5';
-                row.innerHTML = `
-                    <td class="px-6 py-4 text-sm text-gray-300">
-                        <div class="flex items-center">
-                            <span>${item.productId.name}</span>
-                        </div>
-                    </td>
-                    <td class="px-6 py-4 text-sm text-gray-300">${item.quantity}</td>
-                    <td class="px-6 py-4 text-sm text-gray-300">$${item.price.toFixed(2)}</td>
-                    <td class="px-6 py-4 text-sm text-gray-300">$${(item.price * item.quantity).toFixed(2)}</td>
-                `;
-                orderItemsBody.appendChild(row);
-            });
-            
-            // Store product ID for status updates
-            statusToggle.dataset.productId = order.products[0]._id;
-            
-            // Show modal
-            document.getElementById('orderModal').classList.remove('hidden');
-        })
-        .catch(error => {
+        if (response.ok) {
             Swal.fire({
-                title: 'Error!',
-                text: 'Failed to load order details',
-                icon: 'error',
-                background: '#1a1a1a',
-                color: '#ffffff',
-                confirmButtonColor: '#3b82f6'
-            });
-            console.error('Error:', error);
-        });
-}
-
-// Status Toggle Handler
-document.getElementById('statusToggle').addEventListener('change', function(e) {
-    const orderId = document.getElementById('orderId').textContent;
-    const productId = e.target.dataset.productId;
-    const newStatus = e.target.value;
-    
-    // Update order status
-    fetch(`/admin/orders/update-status`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]')?.content
-        },
-        body: JSON.stringify({ 
-            orderId: orderId,
-            productId: productId,
-            status: newStatus 
-        })
-    })
-    .then(response => {
-        if (!response.ok) {
-            throw new Error('Network response was not ok');
-        }
-        return response.json();
-    })
-    .then(data => {
-        if (data.success) {
-            Swal.fire({
-                title: 'Status Updated!',
-                text: `Order status has been updated to ${newStatus}`,
                 icon: 'success',
-                background: '#1a1a1a',
-                color: '#ffffff',
-                confirmButtonColor: '#3b82f6'
-            }).then(() => {
-                window.location.reload();
+                title: `Status updated to ${newStatus}`,
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 1500
             });
         } else {
-            throw new Error(data.message || 'Failed to update status');
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: data.message || 'Failed to update order status'
+            });
+            selectElement.value = selectElement.querySelector('[selected]').value;  // Reset to previous value
         }
-    })
-    .catch(error => {
+    } catch (error) {
+        console.error('Error updating status:', error);
         Swal.fire({
-            title: 'Error!',
-            text: error.message || 'Failed to update order status',
             icon: 'error',
-            background: '#1a1a1a',
-            color: '#ffffff',
-            confirmButtonColor: '#3b82f6'
+            title: 'Error',
+            text: 'An error occurred while updating the status'
         });
-    });
-});
+    }
+}
 
-</script>
+        // Function to open order details modal
+        async function openOrderDetails(orderId) {
+            try {
+                const response = await fetch(`/admin/orders/${orderId}`);
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+
+                const order = await response.json();
+
+                // Build order details dynamically
+                document.getElementById('modalContent').innerHTML = `
+                    <p><strong>Order ID:</strong> ${order._id}</p>
+                    <p><strong>Customer:</strong> ${order.user.name}</p>
+                    <p><strong>Email:</strong> ${order.user.email}</p>
+                    <p><strong>Total Amount:</strong> ₹${order.orderAmount ? order.orderAmount.toFixed(2) : '0.00'}</p>
+                    <p><strong>Status:</strong> ${order.status}</p>
+                    <p><strong>Address:</strong> ${order.deliveryAddress.address},${order.deliveryAddress.city},${order.deliveryAddress.landmark}, ${order.deliveryAddress.street}, ${order.deliveryAddress.city}, ${order.deliveryAddress.state}, ${order.deliveryAddress.pincode}, ${order.deliveryAddress.country}</p>
+
+                    <p class="mt-4"><strong>Products:</strong></p>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        ${order.products.map(product => `
+                            <div class="flex items-center space-x-4 bg-gray-800 p-3 rounded-md shadow">
+                                <img src="${product.productId.image}" alt="${product.productId.name}" class="w-16 h-16 object-cover rounded">
+                                <div>
+                                    <p class="font-semibold">${product.productId.name}</p>
+                                    <p class="text-sm text-gray-400">$${product.productId.price}</p>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+
+                document.getElementById('orderDetailsModal').classList.remove('hidden'); 
+            } catch (error) {
+                console.error('Error fetching order details:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Failed to fetch order details',
+                });
+            }
+        }
+
+        // Function to close order details modal
+        function closeOrderDetails() {
+            document.getElementById('orderDetailsModal').classList.add('hidden');
+        }
+
+        // Function to handle form submission
+        document.getElementById('filterForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const formData = new URLSearchParams(new FormData(this));
+            window.location.href = `/admin/orders?${formData.toString()}`;
+        });
+
+        // Function to reset filters
+        function resetFilters() {
+            window.location.href = '/admin/orders';
+        }
+
+        // Add debounce function for search input
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
+
+        // Add event listener for search input with debounce
+        const searchInput = document.querySelector('input[name="search"]');
+        if (searchInput) {
+            searchInput.addEventListener('input', debounce(function(e) {
+                document.getElementById('filterForm').submit();
+            }, 500));
+        }
+
+        // Close modal when clicking outside
+        document.getElementById('orderDetailsModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeOrderDetails();
+            }
+        });
+
+        // Add escape key listener for modal
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && !document.getElementById('orderDetailsModal').classList.contains('hidden')) {
+                closeOrderDetails();
+            }
+        });
+    </script>
 </body>
 </html>

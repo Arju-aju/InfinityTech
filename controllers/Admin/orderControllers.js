@@ -1,151 +1,138 @@
-const Order =  require('../../models/orderSchema')
+const Order = require('../../models/orderSchema');
 
-const OrderPerPage = 10
+const OrderPerPage = 10;
 
-exports.getOrders = async(req,res) => {
+exports.getOrders = async (req, res) => {
     try {
-        
-        const page = parseInt(req.query.page) || 1
-        const search = req.query.search || '';
-        const status = req.query.status || '';
-        const fromDate = req.query.fromDate || '';
-        const toDate = req.query.toDate || '';
+        const { search, status, startDate, endDate, minAmount, maxAmount } = req.query;
 
-        const query = {}
+        // Build filter query
+        let query = {};
 
-        // Search filter
-        if(search) {
-            query.$or = [
-                {orderId : {$regex: search , $options: 'i'}},
-                {customerName: {$regex: search , $options :'i'}},
-                {customerEmail : {$regex:search , $options :'i'}}
-                
-            ]
+        // Search filter (search by order ID)
+        if (search) {
+            query._id = { $regex: search, $options: 'i' };
         }
 
         // Status filter
-        if(status){
-            query.status = status
+        if (status && status !== 'All') {
+            query.status = status;
         }
 
-
-        // Date range filter
-        if (fromDate || toDate) {
-            query.orderDate = {};
-            if (fromDate) {
-                query.orderDate.$gte = new Date(fromDate);
-            }
-            if (toDate) {
-                query.orderDate.$lte = new Date(toDate + 'T23:59:59.999Z');
-            }
+        // Date range filter with proper checks
+        if (startDate || endDate) {
+            query.createdAt = {};
+            if (startDate) query.createdAt.$gte = new Date(startDate);
+            if (endDate) query.createdAt.$lte = new Date(endDate);
         }
 
-         // Count total documents for pagination
-        const totalItems = await Order.countDocuments(query)
-        const totalPages = Math.ceil(totalItems/OrderPerPage)
+        // Amount range filter
+        if (minAmount || maxAmount) {
+            query.orderAmount = {};
+            if (minAmount) query.orderAmount.$gte = parseFloat(minAmount);
+            if (maxAmount) query.orderAmount.$lte = parseFloat(maxAmount);
+        }
 
-           // Get orders with pagination
-        const orders = await Order.find(query)
-            .sort({orderDate:-1})
-            .skip((page - 1) * OrderPerPage)
-            .limit(OrderPerPage)
+        let orders = await Order.find(query)
+            .populate({
+                path: 'user',
+                select: 'name email'
+            })
+            .populate({
+                path: 'products.productId',
+                select: 'name price image'
+            })
+            .sort({ createdAt: -1 })
+            .lean();
 
-        // Build query string for pagination links
-        const queryParams = new URLSearchParams({
-            search,
-            status,
-            fromDate,
-            toDate
-        }).toString()
+        // If search is by user name, filter manually
+        if (search) {
+            const searchRegex = new RegExp(search, 'i');
+            orders = orders.filter(order => order.user && searchRegex.test(order.user.name));
+        }
 
+        // Process orders to handle null/undefined values
+        const processedOrders = orders.map(order => ({
+            ...order,
+            user: order.user || { name: 'Unknown User', email: 'No email' },
+            products: order.products.map(product => ({
+                ...product,
+                productId: product.productId || {
+                    name: 'Product Unavailable',
+                    price: 0,
+                    image: '/placeholder-image.jpg'
+                }
+            }))
+        }));
 
-        //Render the template with data
-
-        res.render('admin/orders',{
-            orders,
-            currentPage : page,
-            totalPages,
-            totalItems,
-            limit:OrderPerPage,
-            searchQuery:search,
-            status,
-            fromDate,
-            toDate,
-            queryString: queryParams
-        })
-
+        res.render('admin/orders', {
+            orders: processedOrders,
+            filters: { search, status, startDate, endDate, minAmount, maxAmount }
+        });
     } catch (error) {
         console.error('Error in getOrders:', error);
         res.status(500).render('error', {
-            message: 'Error loading orders',
-            error: process.env.NODE_ENV === 'development' ? error : {}
-        });
-    }
-}
-
-exports.getOrderDetails = async (req, res) => {
-    try {
-        const orderId = req.params.orderId;
-
-        // Validate orderId
-        if (!mongoose.Types.ObjectId.isValid(orderId)) {
-            return res.status(400).json({
-                success: false,
-                message: 'Invalid Order ID'
-            });
-        }
-
-        const order = await Order.findById(orderId)
-            .populate('user', 'name email phone')
-            .populate('products.productId', 'name price');
-
-        if (!order) {
-            return res.status(404).json({
-                success: false,
-                message: 'Order not found'
-            });
-        }
-
-        // Return JSON response
-        res.json(order);
-    } catch (error) {
-        console.error('Error in getOrderDetails:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Error loading order details',
-            error: process.env.NODE_ENV === 'development' ? error.message : undefined
+            message: 'Error fetching orders',
+            error: error.message
         });
     }
 };
 
-
-exports.updateOrderStatus = async (req, res) => {
+exports.toggleOrderStatus = async (req, res) => {
     try {
-        const { orderId, productId, status } = req.body;
-        const order = await Order.findById(orderId);
+        const orderId = req.params.orderId;
+        console.log('orderId+++++++++++++++',orderId);
+        const { status } = req.body;
 
+        if (!orderId || !status) {
+            return res.status(400).json({ success: false, message: 'Order ID and status are required' });
+        }
+
+        const validStatuses = ["Pending", "Processing", "Shipped", "Delivered", "Cancelled"];
+        if (!validStatuses.includes(status)) {
+            return res.status(400).json({ success: false, message: 'Invalid status value' });
+        }
+
+        const order = await Order.findById(orderId);
         if (!order) {
             return res.status(404).json({ success: false, message: 'Order not found' });
         }
 
-        const productIndex = order.products.findIndex(
-            p => p._id.toString() === productId
-        );
-
-        if (productIndex === -1) {
-            return res.status(404).json({ success: false, message: 'Product not found in order' });
-        }
-
-        order.products[productIndex].status = status;
+        order.status = status;
         await order.save();
 
-        res.json({ success: true, message: 'Order status updated successfully' });
+        res.json({ success: true, message: 'Order status updated successfully', newStatus: order.status });
     } catch (error) {
-        console.error('Error in updateOrderStatus:', error);
-        res.status(500).json({ 
-            success: false, 
-            message: 'Error updating order status'
-        });
+        console.error('Error in toggleOrderStatus:', error);
+        res.status(500).json({ success: false, message: 'Error updating order status' });
     }
 };
+
+
+exports.viewOrderDetails = async (req, res) => {
+    try {
+        const orderId = req.params.orderId;
+        console.log('OrderId>>>>>>>>>>>>>====',orderId);
+        // Fetch order details from the database
+        const order = await Order.findById(orderId).populate('user').populate('products.productId');
+        
+        if (!order) {
+            return res.status(404).json({ success: false, message: 'Order not found' });
+        }
+        
+        // Format date if needed
+        const formattedDate = new Date(order.createdAt).toLocaleDateString('en-GB', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric'
+        });
+        
+        // Render viewDetails page with order data
+        res.render('admin/viewdetails', { order: { ...order.toObject(), formattedDate } });
+    } catch (error) {
+        console.error('Error in toggleOrderStatus:', error);
+        res.status(500).json({ success: false, message: 'Error viewing order details' });
+    }
+};
+
 
