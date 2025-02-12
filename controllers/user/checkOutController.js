@@ -74,7 +74,7 @@ exports.placeOrder = async (req, res) => {
         const order = new Order({
             user: req.user._id,
             products: orderProducts,
-            deliveryAddress: [selectedAddress],
+            deliveryAddress: selectedAddress,
             orderAmount: cart.calculateTotal(),
             paymentMethod: paymentMethod
         });

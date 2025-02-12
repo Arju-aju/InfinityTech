@@ -34,7 +34,7 @@ const orderSchema = new Schema({
         default: "Pending",
     },
     deliveryAddress: {
-        type: Array,
+        type: Object,
         required: true
     },
     orderAmount: {

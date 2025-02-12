@@ -6,12 +6,13 @@ exports.getOrders = async (req, res) => {
     try {
         const { search, status, startDate, endDate, minAmount, maxAmount } = req.query;
 
-        // Build filter query
         let query = {};
 
-        // Search filter (search by order ID)
+        // Check if search is a valid ObjectId (for order ID search)
         if (search) {
-            query._id = { $regex: search, $options: 'i' };
+            if (mongoose.Types.ObjectId.isValid(search)) {
+                query._id = search; // Exact match for ObjectId
+            }
         }
 
         // Status filter
@@ -46,7 +47,7 @@ exports.getOrders = async (req, res) => {
             .lean();
 
         // If search is by user name, filter manually
-        if (search) {
+        if (search && !mongoose.Types.ObjectId.isValid(search)) {
             const searchRegex = new RegExp(search, 'i');
             orders = orders.filter(order => order.user && searchRegex.test(order.user.name));
         }
@@ -77,7 +78,6 @@ exports.getOrders = async (req, res) => {
         });
     }
 };
-
 exports.toggleOrderStatus = async (req, res) => {
     try {
         const orderId = req.params.orderId;
@@ -112,9 +112,12 @@ exports.toggleOrderStatus = async (req, res) => {
 exports.viewOrderDetails = async (req, res) => {
     try {
         const orderId = req.params.orderId;
-        console.log('OrderId>>>>>>>>>>>>>====',orderId);
         // Fetch order details from the database
-        const order = await Order.findById(orderId).populate('user').populate('products.productId');
+        const order = await Order.findById(orderId).populate('user').populate({
+            path:'products.productId',
+            select:'name images price'
+        });
+        console.log('OrderId>>>>>>>>>>>>>====',order);
         
         if (!order) {
             return res.status(404).json({ success: false, message: 'Order not found' });

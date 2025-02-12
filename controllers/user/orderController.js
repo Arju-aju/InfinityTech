@@ -2,29 +2,27 @@ const Order = require('../../models/orderSchema');
 
 exports.getOrdersList = async (req, res) => {
     try {
-        // Fetch all orders from the database for admin
-        const orders = await Order.find().populate('products.productId');
+        // Get the logged-in user's ID
+        const userId = req.user._id;
 
-        // Ensure the orders array is passed properly
-        res.render('user/orders', { orders });
+        const orders = await Order.find({user:userId})
+        .populate({
+            path: 'products.productId',
+            select: 'name image price'
+        })
+        .sort({createdAt:-1})
+        console.log('orders details varu>>>>>>>>>>>>',orders);
+        res.render('user/orders',{orders})
+
     } catch (error) {
         console.error('Get orders list error:', error);
         res.status(500).render('error', {
-            message: 'Error retrieving orders list'
+            message: 'Error retrieving your orders'
         });
     }
 };
 
-exports.getAdminOrdersList = async (req, res) => {
-    try {
-        const orders = await Order.find().populate('products.productId');
 
-        res.render('user/orders', { orders: orders || [], message: orders.length ? null : 'No orders found.' });
-    } catch (error) {
-        console.error('Get admin orders list error:', error);
-        res.status(500).render('error', { message: 'Error retrieving orders list' });
-    }
-};
 
 exports.cancelOrder = async (req, res) => {
     try {
