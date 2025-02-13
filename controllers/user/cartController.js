@@ -67,13 +67,13 @@ const getCart = async (req, res) => {
 const addToCart = async (req, res) => {
     try {
         const { productId, quantity = 1 } = req.body;
-
         const userId = req.session.user?._id;
-        
 
-        // Ensure productId is a valid ObjectId
         if (!mongoose.Types.ObjectId.isValid(productId)) {
-            return res.status(400).json({ success: false, message: 'Invalid product ID' });
+            return res.status(400).json({ 
+                success: false, 
+                message: 'Invalid product ID' 
+            });
         }
 
         // Find the product
@@ -82,7 +82,7 @@ const addToCart = async (req, res) => {
             isListed: true,
             isDeleted: false
         });
-        console.log('product indo',product);
+
         if (!product) {
             return res.status(404).json({
                 success: false,
@@ -90,9 +90,17 @@ const addToCart = async (req, res) => {
             });
         }
 
+        // Check if there's enough stock
+        if (product.stock < quantity) {
+            return res.status(400).json({
+                success: false,
+                message: `Only ${product.stock} items available in stock`
+            });
+        }
+
         // Calculate discounted price
         const discountedPrice = product.price * (1 - (product.discountPercentage / 100));
-        console.log('discounted price>>>>',discountedPrice);
+
         // Find or create cart for the user
         let cart = await Cart.findOne({ user: new mongoose.Types.ObjectId(userId) });
 
@@ -105,30 +113,47 @@ const addToCart = async (req, res) => {
             item => item.product.toString() === productId.toString()
         );
 
+        let newQuantity;
         if (existingItemIndex > -1) {
+            // Calculate new quantity for existing item
+            newQuantity = cart.items[existingItemIndex].quantity + parseInt(quantity);
+            
+            // Check if new total quantity exceeds stock
+            if (newQuantity > product.stock) {
+                return res.status(400).json({
+                    success: false,
+                    message: `Cannot add more items. Only ${product.stock} available in stock`
+                });
+            }
+
             // Update existing item quantity
-            console.log('product indodaaaaa cartil');
-            cart.items[existingItemIndex].quantity += parseInt(quantity);
+            cart.items[existingItemIndex].quantity = newQuantity;
         } else {
             // Add new item to cart
-            console.log('product varunindooooo');
+            newQuantity = parseInt(quantity);
             cart.items.push({
                 product: productId,
-                quantity: parseInt(quantity),
+                quantity: newQuantity,
                 price: discountedPrice
             });
         }
+
+        // Reduce the product stock
+        product.stock -= parseInt(quantity);
+        await product.save();
+
         // Save the cart
         await cart.save();
         
         // Populate product details for response
         await cart.populate('items.product');
-        console.log('cartil sathanam indoo>>>>>',cart);
 
         res.json({
             success: true,
             message: 'Product added to cart successfully',
-            cart: cart
+            cart: cart,
+            newQuantity: newQuantity,
+            remainingStock: product.stock
         });
 
     } catch (error) {
@@ -139,7 +164,6 @@ const addToCart = async (req, res) => {
         });
     }
 };
-
 const removeFromCart = async (req, res) => {
     try {
         if (!req.session.user) {
@@ -170,14 +194,14 @@ const removeFromCart = async (req, res) => {
         // Save the updated cart
         await cart.save();
 
-        // Return the updated cart data
-        const updatedCart = await Cart.findOne({ user: userId })
-            .populate('items.product');
+        // Calculate new cart total
+        const cartTotal = cart.items.reduce((sum, item) => sum + item.total, 0);
 
         res.json({
             success: true,
             message: 'Item removed from cart successfully',
-            cart: updatedCart
+            cartTotal: cartTotal,
+            isEmpty: cart.items.length === 0
         });
 
     } catch (error) {
@@ -189,7 +213,7 @@ const removeFromCart = async (req, res) => {
     }
 }
 
- const updateCartQuantity = async (req, res) => {
+const updateCartQuantity = async (req, res) => {
     try {
         if (!req.session.user) {
             return res.status(401).json({
@@ -202,16 +226,15 @@ const removeFromCart = async (req, res) => {
         const { quantity } = req.body;
         const userId = req.session.user._id;
 
-        // Find the cart for this user
         let cart = await Cart.findOne({ user: userId });
-        
+
         if (!cart) {
             return res.status(404).json({
                 success: false,
                 message: 'Cart not found'
             });
         }
-        // Find the item in the cart
+
         const cartItemIndex = cart.items.findIndex(
             item => item.product.toString() === productId
         );
@@ -223,19 +246,25 @@ const removeFromCart = async (req, res) => {
             });
         }
 
-        // Calculate new quantity
         const currentQuantity = cart.items[cartItemIndex].quantity;
         const newQuantity = currentQuantity + parseInt(quantity);
 
-        // If new quantity would be 0 or less, return error
-        if (newQuantity < 1) {
+        if (newQuantity > 10) {
             return res.status(400).json({
                 success: false,
-                message: 'Quantity cannot be less than 1'
+                message: 'Maximum quantity limit (10) reached for this product',
+                currentQuantity: currentQuantity
             });
         }
 
-        // Get the product to check stock and calculate price
+        if (newQuantity < 1) {
+            return res.status(400).json({
+                success: false,
+                message: 'Quantity cannot be less than 1',
+                currentQuantity: currentQuantity
+            });
+        }
+
         const product = await Product.findById(productId);
         if (!product) {
             return res.status(404).json({
@@ -244,26 +273,30 @@ const removeFromCart = async (req, res) => {
             });
         }
 
-        // Check if new quantity exceeds stock
         if (newQuantity > product.stock) {
             return res.status(400).json({
                 success: false,
-                message: 'Requested quantity exceeds available stock'
+                message: 'Requested quantity exceeds available stock',
+                currentQuantity: currentQuantity
             });
         }
 
-        // Update quantity and price
         const discountedPrice = product.price * (1 - (product.discountPercentage / 100));
         cart.items[cartItemIndex].quantity = newQuantity;
         cart.items[cartItemIndex].price = discountedPrice;
+        cart.items[cartItemIndex].total = discountedPrice * newQuantity;
 
-        // Save the updated cart
         await cart.save();
+
+        // Calculate new cart total
+        const cartTotal = cart.items.reduce((sum, item) => sum + item.total, 0);
 
         res.json({
             success: true,
             message: 'Cart quantity updated successfully',
-            cart: cart
+            newQuantity: newQuantity,
+            total: cart.items[cartItemIndex].total.toFixed(2),
+            cartTotal: cartTotal.toFixed(2)
         });
 
     } catch (error) {
@@ -274,7 +307,6 @@ const removeFromCart = async (req, res) => {
         });
     }
 }
-
 
 
 

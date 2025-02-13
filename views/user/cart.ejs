@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Shopping Cart</title>
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 <%- include('../partials/header') %>
 <body class="min-h-screen bg-gray-50">
@@ -104,64 +105,161 @@
     <%- include('../partials/footer') %>
 
     <script>
-      async function updateQuantity(itemId, action) {
-          try {
-              // Get current quantity
-              const quantityElement = document.querySelector(`[data-product-id="${itemId}"]`);
-              const currentQuantity = parseInt(quantityElement.textContent);
+
+
+   async function updateQuantity(itemId, action) {
+    try {
+        const quantityElement = document.querySelector(`[data-product-id="${itemId}"]`);
+        const currentQuantity = parseInt(quantityElement.textContent);
+
+        if (action === 'decrease' && currentQuantity <= 1) {
+            const result = await Swal.fire({
+                title: 'Remove Item?',
+                text: 'Do you want to remove this item from cart?',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Yes, remove it!'
+            });
+
+            if (result.isConfirmed) {
+                return removeFromCart(itemId);
+            }
+            return;
+        }
+
+        const response = await fetch(`/cart/update/${itemId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                quantity: action === 'increase' ? 1 : -1,
+            })
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+            // Update quantity display
+            quantityElement.textContent = data.newQuantity;
+            
+            // Update item total price
+            const itemTotalElement = quantityElement.closest('.flex').querySelector('.text-gray-500');
+            if (itemTotalElement) {
+                itemTotalElement.textContent = `Total: ₹${data.total}`;
+            }
+
+            // Update cart total
+            const cartTotalElements = document.querySelectorAll('.text-gray-900');
+            cartTotalElements.forEach(element => {
+                if (element.textContent.includes('₹')) {
+                    element.textContent = `₹${data.cartTotal}`;
+                }
+            });
+
+        } else {
+            // Show error with SweetAlert2
+            let errorMessage = data.message;
+            if (data.message.includes('Maximum quantity limit')) {
+                errorMessage = 'You can only add up to 10 items of the same product';
+            }
+
+            await Swal.fire({
+                icon: 'error',
+                title: 'Oops...',
+                text: errorMessage,
+                confirmButtonColor: '#3085d6'
+            });
+
+            // Reset quantity display if needed
+            if (data.currentQuantity) {
+                quantityElement.textContent = data.currentQuantity;
+            }
+        }
+    } catch (error) {
+        console.error('Error updating quantity:', error);
+        await Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'An error occurred while updating the cart',
+            confirmButtonColor: '#3085d6'
+        });
+    }
+}
       
-              // Check if reducing quantity would go below 1
-              if (action === 'decrease' && currentQuantity <= 1) {
-                  if (confirm('Do you want to remove this item from cart?')) {
-                      return removeFromCart(itemId);
-                  }
-                  return;
-              }
-      
-              const response = await fetch(`/cart/update/${itemId}`, {
-                  method: 'PUT',
-                  headers: {
-                      'Content-Type': 'application/json',
-                  },
-                  body: JSON.stringify({
-                      quantity: action === 'increase' ? 1 : -1,
-                  })
-              });
-      
-              const data = await response.json();
-      
-              if (response.ok) {
-                  window.location.reload();
-              } else {
-                  // Show error message to user
-                  alert(data.message || 'Failed to update quantity');
-              }
-          } catch (error) {
-              console.error('Error updating quantity:', error);
-              alert('An error occurred while updating the cart');
-          }
-      }
-      
-      async function removeFromCart(itemId) {
-          if (confirm('Are you sure you want to remove this item?')) {
-              try {
-                  const response = await fetch(`/cart/remove/${itemId}`, {
-                      method: 'DELETE',
-                  });
-      
-                  const data = await response.json();
-      
-                  if (response.ok) {
-                      window.location.reload();
-                  } else {
-                      alert(data.message || 'Failed to remove item');
-                  }
-              } catch (error) {
-                  console.error('Error removing item:', error);
-                  alert('An error occurred while removing the item');
-              }
-          }
-      }
+async function removeFromCart(itemId) {
+    try {
+        const result = await Swal.fire({
+            title: 'Are you sure?',
+            text: "You won't be able to revert this!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Yes, remove it!'
+        });
+
+        if (result.isConfirmed) {
+            const response = await fetch(`/cart/remove/${itemId}`, {
+                method: 'DELETE',
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                // Find the item element
+                const itemElement = document.querySelector(`[data-product-id="${itemId}"]`);
+                
+                if (itemElement) {
+                    const cartItem = itemElement.closest('.flex.items-center.bg-white');
+                    if (cartItem) {
+                        cartItem.remove();
+                    }
+                }
+
+                // Update cart total
+                if (data.cartTotal !== undefined) {
+                    const cartTotalElements = document.querySelectorAll('.text-base.font-medium.text-gray-900');
+                    cartTotalElements.forEach(element => {
+                        if (element.textContent.includes('₹')) {
+                            element.textContent = `₹${data.cartTotal.toFixed(2)}`;
+                        }
+                    });
+                }
+
+                // Show success message
+                await Swal.fire({
+                    title: 'Removed!',
+                    text: 'Item has been removed from cart.',
+                    icon: 'success',
+                    confirmButtonColor: '#3085d6'
+                });
+
+                // Check if cart is empty
+                if (data.isEmpty) {
+                    window.location.reload();
+                }
+            } else {
+                await Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: data.message || 'Failed to remove item',
+                    confirmButtonColor: '#3085d6'
+                });
+            }
+        }
+    } catch (error) {
+        console.error('Error removing item:', error);
+        await Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'An error occurred while removing the item',
+            confirmButtonColor: '#3085d6'
+        });
+    }
+}
       </script>
 </body>
 </html>
