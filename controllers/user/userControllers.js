@@ -589,7 +589,7 @@ const changePassword = async (req, res) => {
         await user.save();
 
 
-
+        res.render('/')
         req.flash('message', 'Password changed successfully');
 
         res.status(200).json({ 

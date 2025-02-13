@@ -1,3 +1,4 @@
+<!-- views/user/profile.ejs -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -10,7 +11,7 @@
         .gradient-bg {
             background: linear-gradient(135deg, #6366f1, #8b5cf6);
             background-size: 400% 400%;
-            animation: gradient 15s ease infinite;
+
         }
         @keyframes gradient {
             0% { background-position: 0% 50%; }
@@ -19,103 +20,205 @@
         }
         .glass-card {
             background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
             border: 1px solid rgba(255, 255, 255, 0.2);
         }
+        /* .hover-scale {
+            transition: transform 0.2s;
+        }
+        .hover-scale:hover {
+            transform: scale(1.02);
+        } */
     </style>
 </head>
 <body class="gradient-bg min-h-screen flex">
     <!-- Sidebar -->
-
     <%- include('../partials/profileSideBar') %>
 
     <!-- Main Content -->
     <div class="flex-1 p-8">
-        <div id="error-container" class="hidden mb-4">
-            <div class="bg-red-500 text-white p-4 rounded-lg flex items-center">
-                <i class="fas fa-exclamation-triangle mr-3"></i>
-                <span id="error-message">Failed to load profile. Please try again later.</span>
-                <button onclick="retryProfileLoad()" class="ml-4 bg-white/20 hover:bg-white/30 px-3 py-1 rounded">
-                    Retry
-                </button>
-            </div>
-        </div>
+        <!-- Flash Messages -->
+        <% if (typeof messages !== 'undefined') { %>
+            <% if (messages.success && messages.success.length > 0) { %>
+                <div class="bg-green-500 text-white p-4 rounded-lg mb-4 flex items-center justify-between animate-fade-in">
+                    <span><i class="fas fa-check-circle mr-2"></i><%= messages.success %></span>
+                    <button onclick="this.parentElement.remove()" class="hover:text-gray-200">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            <% } %>
+            <% if (messages.error && messages.error.length > 0) { %>
+                <div class="bg-red-500 text-white p-4 rounded-lg mb-4 flex items-center justify-between animate-fade-in">
+                    <span><i class="fas fa-exclamation-circle mr-2"></i><%= messages.error %></span>
+                    <button onclick="this.parentElement.remove()" class="hover:text-gray-200">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            <% } %>
+        <% } %>
+
+        <!-- Header -->
         <div class="flex justify-between items-center mb-6">
-            <h1 class="text-2xl font-bold"></h1>
-            <a href="/" class="text-white-900 hover:text-blue-300">
-                <i class="fas fa-arrow-left"></i> Back to Home
+            <div>
+                <h1 class="text-3xl font-bold text-white mb-2">My Profile</h1>
+                <p class="text-white/70">Manage your account settings and preferences</p>
+            </div>
+            <a href="/" class="text-white hover:text-blue-300 transition duration-300">
+                <i class="fas fa-arrow-left mr-2"></i>Back to Home
             </a>
         </div>
 
+        <!-- Main Grid Layout -->
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <!-- Profile Card -->
-            <div class="bg-white/10 backdrop-blur-lg p-6 rounded-lg text-white shadow-lg w-full max-w-md mx-auto">
-                <div class="flex justify-between items-center mb-4">
+            <div class="bg-white/10 backdrop-blur-lg p-6 rounded-lg text-white shadow-lg hover-scale">
+                <div class="flex justify-between items-center mb-6">
                     <h2 class="text-2xl font-bold">Profile Details</h2>
-                    <button class="bg-indigo-500 hover:bg-indigo-600 px-4 py-2 rounded-lg transition duration-300">
-                        Edit Profile
+                    <button onclick="confirmEditProfile()"
+                        class="bg-indigo-500 hover:bg-indigo-600 px-4 py-2 rounded-lg transition duration-300 flex items-center">
+                        <i class="fas fa-edit mr-2"></i>Edit Profile
                     </button>
                 </div>
-            
-                <div id="profile-details" class="space-y-4">
-                    <!-- Name -->
-                    <div class="flex items-center gap-2">
-                        <span class="font-semibold">Name:</span>
-                        <span class="text-gray-300"><%= userProfile.name %></span>
+
+                <div class="space-y-6">
+                    <div class="flex items-center gap-4">
+                        <div class="w-12 h-12 rounded-full bg-indigo-500 flex items-center justify-center">
+                            <i class="fas fa-user text-xl"></i>
+                        </div>
+                        <div>
+                            <div class="text-sm text-gray-300">Full Name</div>
+                            <div class="font-semibold"><%= userProfile.name %></div>
+                        </div>
                     </div>
-            
-                    <!-- Email -->
-                    <div class="flex items-center gap-2">
-                        <span class="font-semibold">Email:</span>
-                        <span class="text-gray-300"><%= userProfile.email %></span>
+
+                    <div class="flex items-center gap-4">
+                        <div class="w-12 h-12 rounded-full bg-indigo-500 flex items-center justify-center">
+                            <i class="fas fa-envelope text-xl"></i>
+                        </div>
+                        <div>
+                            <div class="text-sm text-gray-300">Email Address</div>
+                            <div class="font-semibold"><%= userProfile.email %></div>
+                        </div>
                     </div>
-            
-                    <!-- Mobile -->
-                    <div class="flex items-center gap-2">
-                        <span class="font-semibold">Mobile:</span>
-                        <span class="text-gray-300"><%= userProfile.phone %></span>
+
+                    <div class="flex items-center gap-4">
+                        <div class="w-12 h-12 rounded-full bg-indigo-500 flex items-center justify-center">
+                            <i class="fas fa-phone text-xl"></i>
+                        </div>
+                        <div>
+                            <div class="text-sm text-gray-300">Phone Number</div>
+                            <div class="font-semibold"><%= userProfile.phone %></div>
+                        </div>
                     </div>
-            
-                    <!-- Status -->
-                    <div class="flex items-center gap-2">
-                        <span class="font-semibold">Status:</span>
-                        <span class="px-3 py-1 rounded-lg text-sm font-medium 
-                            <%= userProfile.status === 'Active' ? 'bg-green-500' : 'bg-red-500' %>">
-                            <%= userProfile.status %>
-                        </span>
+
+                    <div class="flex items-center gap-4">
+                        <div class="w-12 h-12 rounded-full bg-indigo-500 flex items-center justify-center">
+                            <i class="fas fa-circle text-xl"></i>
+                        </div>
+                        <div>
+                            <div class="text-sm text-gray-300">Account Status</div>
+                            <div class="inline-block px-3 py-1 rounded-full text-sm font-medium 
+                                <%= userProfile.status === 'Active' ? 'bg-green-500' : 'bg-red-500' %>">
+                                <%= userProfile.status %>
+                            </div>
+                        </div>
                     </div>
-            
-                    <!-- Member Since -->
-                    <div class="flex items-center gap-2">
-                        <span class="font-semibold">Member Since:</span>
-                        <span class="text-gray-300"><%= userProfile.memberSince %></span>
+
+                    <div class="flex items-center gap-4">
+                        <div class="w-12 h-12 rounded-full bg-indigo-500 flex items-center justify-center">
+                            <i class="fas fa-calendar text-xl"></i>
+                        </div>
+                        <div>
+                            <div class="text-sm text-gray-300">Member Since</div>
+                            <div class="font-semibold"><%= userProfile.memberSince %></div>
+                        </div>
                     </div>
                 </div>
             </div>
-            
 
             <!-- Recent Orders Card -->
-            <div class="glass-card p-6 rounded-lg text-white">
-                <h2 class="text-2xl font-bold mb-4">Recent Orders</h2>
-                <div id="recent-activity">
-                    <div class="animate-pulse">
-                        <div class="h-4 bg-white/20 rounded w-full mb-2"></div>
-                        <div class="h-4 bg-white/20 rounded w-3/4 mb-2"></div>
-                    </div>
+            <div class="glass-card p-6 rounded-lg text-white hover-scale">
+                <h2 class="text-2xl font-bold mb-6 flex items-center">
+                    <i class="fas fa-shopping-bag mr-3"></i>Recent Orders
+                </h2>
+                <div class="space-y-4">
+                    <% if (typeof orders !== 'undefined' && orders.length > 0) { %>
+                        <% orders.forEach(order => { %>
+                            <div class="bg-white/5 p-4 rounded-lg">
+                                <div class="flex justify-between items-center">
+                                    <div>
+                                        <div class="font-semibold">#<%= order.orderNumber %></div>
+                                        <div class="text-sm text-gray-300"><%= order.date %></div>
+                                    </div>
+                                    <div class="text-right">
+                                        <div class="font-semibold">₹<%= order.amount %></div>
+                                        <div class="text-sm px-2 py-1 rounded-full 
+                                            <%= order.status === 'Completed' ? 'bg-green-500' : 
+                                               order.status === 'Pending' ? 'bg-yellow-500' : 'bg-red-500' %>">
+                                            <%= order.status %>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        <% }); %>
+                    <% } else { %>
+                        <div class="text-center py-8 text-gray-300">
+                            <i class="fas fa-shopping-cart text-4xl mb-4"></i>
+                            <p>No orders found</p>
+                        </div>
+                    <% } %>
                 </div>
             </div>
         </div>
 
         <!-- Wallet History -->
-        <div class="glass-card p-6 rounded-lg text-white mt-6">
-            <h2 class="text-2xl font-bold mb-4">Wallet History</h2>
-            <div id="wallet-history">
-                <div class="animate-pulse">
-                    <div class="h-4 bg-white/20 rounded w-full mb-2"></div>
-                    <div class="h-4 bg-white/20 rounded w-3/4 mb-2"></div>
-                </div>
+        <div class="glass-card p-6 rounded-lg text-white mt-6 hover-scale">
+            <h2 class="text-2xl font-bold mb-6 flex items-center">
+                <i class="fas fa-wallet mr-3"></i>Wallet History
+            </h2>
+            <div class="space-y-4">
+                <% if (typeof walletHistory !== 'undefined' && walletHistory.length > 0) { %>
+                    <% walletHistory.forEach(transaction => { %>
+                        <div class="bg-white/5 p-4 rounded-lg">
+                            <div class="flex justify-between items-center">
+                                <div>
+                                    <div class="font-semibold"><%= transaction.type %></div>
+                                    <div class="text-sm text-gray-300"><%= transaction.date %></div>
+                                </div>
+                                <div class="text-right">
+                                    <div class="font-semibold <%= transaction.type === 'Credit' ? 'text-green-400' : 'text-red-400' %>">
+                                        <%= transaction.type === 'Credit' ? '+' : '-' %>₹<%= transaction.amount %>
+                                    </div>
+                                    <div class="text-sm text-gray-300">Balance: ₹<%= transaction.balance %></div>
+                                </div>
+                            </div>
+                        </div>
+                    <% }); %>
+                <% } else { %>
+                    <div class="text-center py-8 text-gray-300">
+                        <i class="fas fa-coins text-4xl mb-4"></i>
+                        <p>No transactions found</p>
+                    </div>
+                <% } %>
             </div>
         </div>
     </div>
+
+    <script>
+        // Auto-hide flash messages after 5 seconds
+        setTimeout(() => {
+            const messages = document.querySelectorAll('.bg-green-500, .bg-red-500');
+            messages.forEach(msg => {
+                msg.style.opacity = '0';
+                msg.style.transition = 'opacity 0.5s ease';
+                setTimeout(() => msg.remove(), 500);
+            });
+        }, 5000);
+
+        function confirmEditProfile() {
+            if (confirm("Do you want to edit your profile?")) {
+                window.location.href = "/edit-profile";
+            }
+        }
+    </script>
 </body>
 </html>

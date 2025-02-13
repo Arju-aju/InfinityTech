@@ -91,7 +91,7 @@
                             <%= product.brand %>
                         </span>
                         <span class="text-green-600">
-                            <% if (product.stock > 0) { %>
+                            <% if (product.stock > 5) { %>
                                 In Stock (<%= product.stock %> units)
                             <% } else { %>
                                 Out of Stock
@@ -239,105 +239,113 @@
 
 <script src="https://cdn.jsdelivr.net/npm/swiper@8/swiper-bundle.min.js"></script>
 <script>
-// Initialize Swiper
-var thumbsSwiper = new Swiper(".thumbSwiper", {
-    spaceBetween: 10,
-    slidesPerView: 4,
-    freeMode: true,
-    watchSlidesProgress: true,
-});
-
-const mainImage = document.getElementById('mainImage');
-const magnifiedContainer = document.getElementById('magnifiedContainer');
-const magnifiedImage = document.getElementById('magnifiedImage');
-
-mainImage.addEventListener('mousemove', (e) => {
-    const { left, top, width, height } = mainImage.getBoundingClientRect();
-    const x = ((e.clientX - left) / width) * 100;
-    const y = ((e.clientY - top) / height) * 100;
-
-    // Show the magnified container
-    magnifiedContainer.style.display = 'block';
-
-    // Adjust the magnified image position and scale
-    magnifiedImage.style.transform = `scale(2) translate(-₹{x}%, -₹{y}%)`;
-    magnifiedImage.style.transformOrigin = `₹{x}% ₹{y}%`;
-});
-
-mainImage.addEventListener('mouseleave', () => {
-    // Hide the magnified container when the mouse leaves
-    magnifiedContainer.style.display = 'none';
-});
-
-// Change main image when thumbnail is clicked
-function changeMainImage(imageUrl) {
-    mainImage.src = imageUrl;
-    magnifiedImage.src = imageUrl;
-}
-
-// Change main image when thumbnail is clicked
-function changeMainImage(imageUrl) {
-    mainImage.src = imageUrl;
-    magnifiedImage.src = imageUrl;
-}
-
-// Quantity update functionality
-function updateQuantity(change) {
-    const quantityInput = document.getElementById('quantity');
-    const currentValue = parseInt(quantityInput.value);
-    const maxStock = parseInt(quantityInput.max);
+    // Initialize Swiper
+    var thumbsSwiper = new Swiper(".thumbSwiper", {
+        spaceBetween: 10,
+        slidesPerView: 4,
+        freeMode: true,
+        watchSlidesProgress: true,
+    });
     
-    let newValue = currentValue + change;
-    newValue = Math.max(1, Math.min(newValue, maxStock));
+    const mainImage = document.getElementById('mainImage');
+    const magnifiedContainer = document.getElementById('magnifiedContainer');
+    const magnifiedImage = document.getElementById('magnifiedImage');
     
-    quantityInput.value = newValue;
-}
-
-async function addToCart(productId) {
-    try {
-        const quantity = document.getElementById('quantity').value;
-        const response = await fetch('/cart/add', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ 
-                productId,
-                quantity: parseInt(quantity)
-            }),
-        });
-        const data = await response.json();
-        if (data.success) {
-            alert('Product added to cart successfully!');
-        } else {
-            alert(data.message || 'Error adding product to cart');
-        }
-    } catch (error) {
-        console.error('Error:', error);
-        alert('Error adding product to cart');
+    mainImage.addEventListener('mousemove', (e) => {
+        const { left, top, width, height } = mainImage.getBoundingClientRect();
+        const x = ((e.clientX - left) / width) * 100;
+        const y = ((e.clientY - top) / height) * 100;
+    
+        magnifiedContainer.style.display = 'block';
+        magnifiedImage.style.transform = `scale(2) translate(-${x}%, -${y}%)`;
+        magnifiedImage.style.transformOrigin = `${x}% ${y}%`;
+    });
+    
+    mainImage.addEventListener('mouseleave', () => {
+        magnifiedContainer.style.display = 'none';
+    });
+    
+    // Change main image when thumbnail is clicked
+    function changeMainImage(imageUrl) {
+        mainImage.src = imageUrl;
+        magnifiedImage.src = imageUrl;
     }
-}
-
-async function addToWishlist(productId) {
-    try {
-        const response = await fetch('/wishlist/add', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ productId }),
-        });
-        const data = await response.json();
-        if (data.success) {
-            alert('Product added to wishlist successfully!');
-        } else {
-            alert(data.message || 'Error adding product to wishlist');
-        }
-    } catch (error) {
-        console.error('Error:', error);
-        alert('Error adding product to wishlist');
+    
+    // Quantity update functionality
+    function updateQuantity(change) {
+        const quantityInput = document.getElementById('quantity');
+        const currentValue = parseInt(quantityInput.value);
+        const maxStock = parseInt(quantityInput.max);
+        
+        let newValue = currentValue + change;
+        newValue = Math.max(1, Math.min(newValue, maxStock));
+        
+        quantityInput.value = newValue;
     }
-}
-</script>
+    
+    async function addToCart(productId, stock) {
+        if (stock < 5) {
+            showFlashMessage('This product is low in stock and cannot be added to cart.', 'error');
+            return;
+        }
+        
+        try {
+            const quantity = document.getElementById('quantity').value;
+            const response = await fetch('/cart/add', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ 
+                    productId,
+                    quantity: parseInt(quantity)
+                }),
+            });
+            const data = await response.json();
+            if (data.success) {
+                showFlashMessage('Product added to cart successfully!', 'success');
+            } else {
+                showFlashMessage(data.message || 'Error adding product to cart', 'error');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            showFlashMessage('Error adding product to cart', 'error');
+        }
+    }
+    
+    async function addToWishlist(productId) {
+        try {
+            const response = await fetch('/wishlist/add', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ productId }),
+            });
+            const data = await response.json();
+            if (data.success) {
+                showFlashMessage('Product added to wishlist successfully!', 'success');
+            } else {
+                showFlashMessage(data.message || 'Error adding product to wishlist', 'error');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            showFlashMessage('Error adding product to wishlist', 'error');
+        }
+    }
+    
+    // Flash message display function
+    function showFlashMessage(message, type) {
+        const flashContainer = document.createElement('div');
+        flashContainer.className = `flash-message ${type}`;
+        flashContainer.innerText = message;
+        document.body.appendChild(flashContainer);
+        
+        setTimeout(() => {
+            flashContainer.remove();
+        }, 3000);
+    }
+    </script>
+    
 
 <%- include('../partials/footer') %>

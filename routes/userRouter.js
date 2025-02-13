@@ -30,7 +30,7 @@ router.get('/auth/google/callback', passport.authenticate('google', { failureRed
 router.get('/changePassword', userController.loadPassword)
 router.post("/send-password-otp", userController.sendOTPForPasswordChange)
 router.post('/change-password', userController.changePassword);
-
+router.post('/changePasswordresendOtp', userController.resendOtp);
 // Product routes
 router.get('/',userController.loadHomePage);
 router.get('/shop', productController.loadShop);
@@ -64,6 +64,10 @@ router.get('/contact', userController.loadContactPage);
 
 // Profile management
 router.get('/profile', auth, profileController.loadProfile);
+router.get("/edit-profile", profileController.getEditProfile);
+
+// Handle profile updates
+router.post("/edit-profile", profileController.postEditProfile);
 
 
 //Address Mangament
