@@ -211,7 +211,6 @@ const removeFromCart = async (req, res) => {
                 message: 'Cart not found'
             });
         }
-
         // Find the item in the cart
         const cartItemIndex = cart.items.findIndex(
             item => item.product.toString() === productId

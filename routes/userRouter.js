@@ -72,11 +72,12 @@ router.post("/edit-profile", profileController.postEditProfile);
 
 //Address Mangament
 
-router.get('/address',addressController.getAddress)
-router.post('/add-address',addressController.addAddress)
-router.get('/edit-address/:id',addressController.editAddress)
-router.post('/edit-address/:id',addressController.updateAddress)
+router.get('/address', addressController.getAddress);
+router.post('/add-address', addressController.addAddress);
+router.get('/edit-address/:id', addressController.editAddress);
+router.post('/edit-address/:id', addressController.updateAddress);
 router.post('/set-default-address/:id', addressController.setDefaultAddress);
-router.get('/delete-address/:id', addressController.deleteAddress);
+router.delete('/delete-address/:id', addressController.deleteAddress);
+
 
 module.exports = router;
