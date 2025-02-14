@@ -26,7 +26,8 @@
     transition: transform 0.1s ease-out;
 }
 </style>
-
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@8/swiper-bundle.min.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 
@@ -246,73 +247,138 @@
         freeMode: true,
         watchSlidesProgress: true,
     });
-    
+
     const mainImage = document.getElementById('mainImage');
     const magnifiedContainer = document.getElementById('magnifiedContainer');
     const magnifiedImage = document.getElementById('magnifiedImage');
-    
+
     mainImage.addEventListener('mousemove', (e) => {
         const { left, top, width, height } = mainImage.getBoundingClientRect();
         const x = ((e.clientX - left) / width) * 100;
         const y = ((e.clientY - top) / height) * 100;
-    
+
         magnifiedContainer.style.display = 'block';
         magnifiedImage.style.transform = `scale(2) translate(-${x}%, -${y}%)`;
         magnifiedImage.style.transformOrigin = `${x}% ${y}%`;
     });
-    
+
     mainImage.addEventListener('mouseleave', () => {
         magnifiedContainer.style.display = 'none';
     });
-    
+
     // Change main image when thumbnail is clicked
     function changeMainImage(imageUrl) {
         mainImage.src = imageUrl;
         magnifiedImage.src = imageUrl;
     }
+
+    async function addToCart(productId) {
+    const quantity = parseInt(document.getElementById('quantity').value);
     
-    // Quantity update functionality
-    function updateQuantity(change) {
-        const quantityInput = document.getElementById('quantity');
-        const currentValue = parseInt(quantityInput.value);
-        const maxStock = parseInt(quantityInput.max);
-        
-        let newValue = currentValue + change;
-        newValue = Math.max(1, Math.min(newValue, maxStock));
-        
-        quantityInput.value = newValue;
+    // Validate quantity
+    if (quantity > 10) {
+        await Swal.fire({
+            title: 'Invalid Quantity',
+            text: 'You cannot add more than 10 quantities of this product.',
+            icon: 'error',
+            confirmButtonColor: '#9333ea' // Purple color to match your theme
+        });
+        return;
     }
-    
-    async function addToCart(productId, stock) {
-        if (stock < 5) {
-            showFlashMessage('This product is low in stock and cannot be added to cart.', 'error');
-            return;
-        }
-        
-        try {
-            const quantity = document.getElementById('quantity').value;
-            const response = await fetch('/cart/add', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ 
-                    productId,
-                    quantity: parseInt(quantity)
-                }),
+
+    try {
+        const response = await fetch('/cart/add', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ 
+                productId,
+                quantity: quantity
+            }),
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            // Success message with cart view option
+            const result = await Swal.fire({
+                title: 'Added to Cart!',
+                text: 'Product added to cart successfully',
+                icon: 'success',
+                showCancelButton: true,
+                confirmButtonColor: '#9333ea',
+                cancelButtonColor: '#6b7280',
+                confirmButtonText: 'View Cart',
+                cancelButtonText: 'Continue Shopping'
             });
-            const data = await response.json();
-            if (data.success) {
-                showFlashMessage('Product added to cart successfully!', 'success');
-            } else {
-                showFlashMessage(data.message || 'Error adding product to cart', 'error');
+
+            // If user clicks "View Cart", redirect to cart page
+            if (result.isConfirmed) {
+                window.location.href = '/cart';
             }
-        } catch (error) {
-            console.error('Error:', error);
-            showFlashMessage('Error adding product to cart', 'error');
+
+            // Update stock display if it exists
+            if (data.remainingStock !== undefined) {
+                const stockElement = document.querySelector('.text-green-600');
+                if (stockElement) {
+                    if (data.remainingStock > 5) {
+                        stockElement.textContent = `In Stock (${data.remainingStock} units)`;
+                    } else if (data.remainingStock > 0) {
+                        stockElement.textContent = `Low Stock (${data.remainingStock} units)`;
+                        stockElement.classList.remove('text-green-600');
+                        stockElement.classList.add('text-orange-600');
+                    } else {
+                        stockElement.textContent = 'Out of Stock';
+                        stockElement.classList.remove('text-green-600');
+                        stockElement.classList.add('text-red-600');
+                    }
+                }
+            }
+        } else {
+            // Error message
+            await Swal.fire({
+                title: 'Oops...',
+                text: data.message || 'Error adding product to cart',
+                icon: 'error',
+                confirmButtonColor: '#9333ea'
+            });
         }
+    } catch (error) {
+        console.error('Error:', error);
+        await Swal.fire({
+            title: 'Error',
+            text: 'An error occurred while adding the product to cart',
+            icon: 'error',
+            confirmButtonColor: '#9333ea'
+        });
+    }
+}
+
+// Update quantity with validation
+function updateQuantity(change) {
+    const quantityInput = document.getElementById('quantity');
+    const currentValue = parseInt(quantityInput.value);
+    const maxStock = parseInt(quantityInput.max);
+    
+    let newValue = currentValue + change;
+    
+    // Validate the new value
+    if (newValue < 1) {
+        newValue = 1;
+    } else if (newValue > Math.min(maxStock, 10)) {
+        newValue = Math.min(maxStock, 10);
+        Swal.fire({
+            title: 'Maximum Quantity Reached',
+            text: `You can only add up to ${Math.min(maxStock, 10)} units of this product`,
+            icon: 'info',
+            confirmButtonColor: '#9333ea'
+        });
     }
     
+    quantityInput.value = newValue;
+}
+
     async function addToWishlist(productId) {
         try {
             const response = await fetch('/wishlist/add', {
@@ -333,7 +399,7 @@
             showFlashMessage('Error adding product to wishlist', 'error');
         }
     }
-    
+
     // Flash message display function
     function showFlashMessage(message, type) {
         const flashContainer = document.createElement('div');
@@ -345,7 +411,6 @@
             flashContainer.remove();
         }, 3000);
     }
-    </script>
-    
+</script>
 
 <%- include('../partials/footer') %>

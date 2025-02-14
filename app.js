@@ -85,12 +85,11 @@ app.use(handleMulterError);
 app.use('/', userRouter);
 app.use('/admin', adminRouter);
 
-// Add these logs to debug view resolution
-// app.use((req, res, next) => {
-//     console.log('Request URL:', req.url);
-//     console.log('View Paths:', app.get('views'));
-//     next();
-// });
+app.use((req, res, next) => {
+    res.locals.searchQuery = req.query.q || ''; // Provide a default value
+    next();
+});
+
 
 // Error handling middleware
 app.use((req, res, next) => {

@@ -21,9 +21,6 @@ exports.isNotAuthenticated = (req, res, next) => {
 
 
 exports.authMiddleware = async (req, res, next) => {
-    // if (!req.session.user) {
-    //     return res.redirect('/'); // Redirect to home page if not logged in
-    // }
 
     try {
         const userID = req.session?.user?._id;

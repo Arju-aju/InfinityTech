@@ -34,27 +34,27 @@ router.post('/changePasswordresendOtp', userController.resendOtp);
 // Product routes
 router.get('/',userController.loadHomePage);
 router.get('/shop', productController.loadShop);
-router.get('/products/:id', productController.getSingleProduct);
-router.get('/categories', productController.getAllCategories);
+router.get('/products/:id',auth, productController.getSingleProduct);
+router.get('/categories',auth, productController.getAllCategories);
 router.get('/category/:id', productController.getCategoryProducts);
 router.get('/search', productController.searchProducts);
 
 // Cart routes
-router.get('/cart',cartController.getCart);
-router.post('/cart/add', cartController.addToCart);
-router.put('/cart/update/:productId', cartController.updateCartQuantity);
-router.delete('/cart/remove/:productId', cartController.removeFromCart);
+router.get('/cart',auth,cartController.getCart);
+router.post('/cart/add',auth, cartController.addToCart);
+router.put('/cart/update/:productId',auth, cartController.updateCartQuantity);
+router.delete('/cart/remove/:productId',auth, cartController.removeFromCart);
 
 // checkout routes
 
-router.get('/checkout',checkoutController.getCheckout)
-router.post('/checkout/place-order', checkoutController.placeOrder);
+router.get('/checkout',auth,checkoutController.getCheckout)
+router.post('/checkout/place-order',auth, checkoutController.placeOrder);
 
 
 //order route
-router.get('/orders',orderController.getOrdersList)
-router.get('/orders/:id', orderController.getOrdersList);
-router.get('/orders/:id', orderController.getOrdersList);
+router.get('/orders',auth,orderController.getOrdersList)
+router.get('/orders/:id',auth, orderController.getOrdersList);
+router.get('/orders/:id',auth, orderController.getOrdersList);
 
 router.post('/order/:id/cancel', orderController.cancelOrder);
 

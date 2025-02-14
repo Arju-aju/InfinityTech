@@ -136,22 +136,38 @@
         <div class="layout-container">
             <!-- Left Sidebar -->
             <aside class="sidebar">
-                <div class="sidebar-filter">
-                    <h2 class="text-xl font-bold mb-4">Categories</h2>
-                    
-                    <!-- Category Filter -->
-                    <div class="filter-section">
-                        <select class="form-select" id="categorySelect" onchange="filterByCategory(this.value)">
-                            <option value="">All Categories</option>
-                            <% categories.forEach(category => { %>
-                                <option value="<%= category._id %>" 
-                                    <%= selectedCategory && selectedCategory.toString() === category._id.toString() ? 'selected' : '' %>>
-                                    <%= category.name %>
-                                </option>
-                            <% }) %>
-                        </select>
-                    </div>
-                </div>
+<!-- Inside the sidebar-filter div -->
+<div class="sidebar-filter">
+    <h2 class="text-xl font-bold mb-4">Categories</h2>
+    
+    <!-- Category Filter -->
+    <div class="filter-section">
+        <select class="form-select" id="categorySelect" onchange="filterByCategory(this.value)">
+            <option value="">All Categories</option>
+            <% categories.forEach(category => { %>
+                <option value="<%= category._id %>" 
+                    <%= selectedCategory && selectedCategory.toString() === category._id.toString() ? 'selected' : '' %>>
+                    <%= category.name %>
+                </option>
+            <% }) %>
+        </select>
+    </div>
+
+    <!-- Sorting Options -->
+    <div class="filter-section">
+        <h3 class="filter-title">Sort By</h3>
+        <select class="form-select" id="sortSelect" onchange="filterBySort(this.value)">
+            <option value="newest" <%= sortOption === 'newest' ? 'selected' : '' %>>New Arrivals</option>
+            <option value="popularity" <%= sortOption === 'popularity' ? 'selected' : '' %>>Popularity</option>
+            <option value="price_low_to_high" <%= sortOption === 'price_low_to_high' ? 'selected' : '' %>>Price: Low to High</option>
+            <option value="price_high_to_low" <%= sortOption === 'price_high_to_low' ? 'selected' : '' %>>Price: High to Low</option>
+            <option value="average_rating" <%= sortOption === 'average_rating' ? 'selected' : '' %>>Average Rating</option>
+            <option value="featured" <%= sortOption === 'featured' ? 'selected' : '' %>>Featured Products</option>
+            <option value="name_a_to_z" <%= sortOption === 'name_a_to_z' ? 'selected' : '' %>>Name: A to Z</option>
+            <option value="name_z_to_a" <%= sortOption === 'name_z_to_a' ? 'selected' : '' %>>Name: Z to A</option>
+        </select>
+    </div>
+</div>
             </aside>
 
         <main class="product-container">
@@ -291,6 +307,30 @@
     document.addEventListener('DOMContentLoaded', function() {
         updatePaginationLinks();
     });
+
+    function filterByCategory(categoryId) {
+    const sortOption = document.getElementById('sortSelect').value;
+    const url = new URL(window.location.href);
+    if (categoryId) {
+        url.searchParams.set('category', categoryId);
+    } else {
+        url.searchParams.delete('category');
+    }
+    url.searchParams.set('sort', sortOption);
+    url.searchParams.set('page', '1'); // Reset to first page when changing filters
+    window.location.href = url.toString();
+}
+
+function filterBySort(sortOption) {
+    const categoryId = document.getElementById('categorySelect').value;
+    const url = new URL(window.location.href);
+    if (categoryId) {
+        url.searchParams.set('category', categoryId);
+    }
+    url.searchParams.set('sort', sortOption);
+    url.searchParams.set('page', '1'); // Reset to first page when changing filters
+    window.location.href = url.toString();
+}
     
     </script>
   </body>

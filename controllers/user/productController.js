@@ -201,6 +201,7 @@ const loadShop = async (req, res) => {
         const limit = parseInt(req.query.limit) || 12;
         const skip = (page - 1) * limit;
         const selectedCategory = req.query.category || null; // Get the selected category from query
+        const sortOption = req.query.sort || 'newest'; // Get the sorting option from query
 
         // Build filter object
         const filter = { isListed: true };
@@ -208,12 +209,44 @@ const loadShop = async (req, res) => {
             filter.category = selectedCategory;
         }
 
+        // Define sorting logic based on the selected option
+        let sortQuery = {};
+        switch (sortOption) {
+            case 'popularity':
+                sortQuery = { popularity: -1 }; // Sort by popularity (descending)
+                break;
+            case 'price_low_to_high':
+                sortQuery = { price: 1 }; // Sort by price (ascending)
+                break;
+            case 'price_high_to_low':
+                sortQuery = { price: -1 }; // Sort by price (descending)
+                break;
+            case 'average_rating':
+                sortQuery = { averageRating: -1 }; // Sort by average rating (descending)
+                break;
+            case 'featured':
+                filter.isFeatured = true; // Filter featured products
+                sortQuery = { createdAt: -1 }; // Sort by newest first
+                break;
+            case 'newest':
+                sortQuery = { createdAt: -1 }; // Sort by newest first
+                break;
+            case 'name_a_to_z':
+                sortQuery = { name: 1 }; // Sort by name (A-Z)
+                break;
+            case 'name_z_to_a':
+                sortQuery = { name: -1 }; // Sort by name (Z-A)
+                break;
+            default:
+                sortQuery = { createdAt: -1 }; // Default sorting (newest first)
+        }
+
         const [products, totalProducts, categories] = await Promise.all([
             Product.find(filter)
                 .populate('category')
                 .skip(skip)
                 .limit(limit)
-                .sort('-createdAt')
+                .sort(sortQuery) // Apply sorting
                 .lean(),
             Product.countDocuments(filter),
             LaptopCategory.find().sort('name').lean()
@@ -232,7 +265,8 @@ const loadShop = async (req, res) => {
             currentPage: page,
             totalPages,
             totalProducts,
-            selectedCategory, // Pass selectedCategory to the template
+            selectedCategory,
+            sortOption, // Pass the selected sorting option to the template
             message: {
                 type: req.flash('error').length ? 'error' : 'success',
                 content: req.flash('error')[0] || req.flash('success')[0]
@@ -244,7 +278,6 @@ const loadShop = async (req, res) => {
         res.redirect('/');
     }
 };
-
 // Search Products
 const searchProducts = async (req, res) => {
     try {
@@ -253,17 +286,55 @@ const searchProducts = async (req, res) => {
             isListed: true,
             isDeleted: false,
             $or: [
-                { name: { $regex: searchQuery, $options: 'i' } },
+                { name: { $regex: searchQuery, $options: 'i' } }, // Case-insensitive search
                 { description: { $regex: searchQuery, $options: 'i' } }
             ]
         })
         .populate('category')
         .lean();
 
+        // Calculate discounted price for each product
         products.forEach(product => {
             product.discountedPrice = product.price - (product.price * (product.discountPercentage / 100));
         });
 
+        // If the request accepts JSON (for AJAX), return JSON
+        if (req.accepts('json')) {
+            return res.json({
+                html: `
+                    <div class="container mx-auto px-4 py-8">
+                        <h1 class="text-2xl font-bold mb-4">Search Results for "${searchQuery}"</h1>
+                        ${products.length > 0 ? `
+                            <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                                ${products.map(product => `
+                                    <div class="bg-white rounded-lg shadow-md overflow-hidden">
+                                        <img src="${product.imageUrl}" alt="${product.name}" class="w-full h-48 object-cover">
+                                        <div class="p-4">
+                                            <h2 class="text-lg font-semibold">${product.name}</h2>
+                                            <p class="text-gray-600">${product.description}</p>
+                                            <div class="mt-4">
+                                                <span class="text-lg font-bold">$${product.discountedPrice.toFixed(2)}</span>
+                                                ${product.discountPercentage > 0 ? `
+                                                    <span class="text-sm text-gray-500 line-through">$${product.price.toFixed(2)}</span>
+                                                    <span class="text-sm text-green-600 ml-2">${product.discountPercentage}% off</span>
+                                                ` : ''}
+                                            </div>
+                                            <div class="mt-4">
+                                                <a href="/product/${product._id}" class="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600">View Product</a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        ` : `
+                            <p class="text-gray-600">No products found.</p>
+                        `}
+                    </div>
+                `
+            });
+        }
+
+        // Render the search results page (for non-AJAX requests)
         res.render('user/search', {
             products,
             searchQuery,

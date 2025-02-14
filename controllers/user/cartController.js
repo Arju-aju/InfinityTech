@@ -69,6 +69,10 @@ const addToCart = async (req, res) => {
         const { productId, quantity = 1 } = req.body;
         const userId = req.session.user?._id;
 
+        if (!userId) {
+            return res.redirect('/login');
+        }
+
         if (!mongoose.Types.ObjectId.isValid(productId)) {
             return res.status(400).json({ 
                 success: false, 
@@ -87,6 +91,14 @@ const addToCart = async (req, res) => {
             return res.status(404).json({
                 success: false,
                 message: 'Product not found or unavailable'
+            });
+        }
+
+        // Check if quantity exceeds 10
+        if (quantity > 10) {
+            return res.status(400).json({
+                success: false,
+                message: 'You cannot add more than 10 quantities of this product.'
             });
         }
 
@@ -113,11 +125,18 @@ const addToCart = async (req, res) => {
             item => item.product.toString() === productId.toString()
         );
 
-        let newQuantity;
         if (existingItemIndex > -1) {
             // Calculate new quantity for existing item
-            newQuantity = cart.items[existingItemIndex].quantity + parseInt(quantity);
+            let newQuantity = cart.items[existingItemIndex].quantity + parseInt(quantity);
             
+            // Check if new total quantity exceeds 10
+            if (newQuantity > 10) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'You cannot add more than 10 quantities of this product.'
+                });
+            }
+
             // Check if new total quantity exceeds stock
             if (newQuantity > product.stock) {
                 return res.status(400).json({
@@ -164,6 +183,8 @@ const addToCart = async (req, res) => {
         });
     }
 };
+
+
 const removeFromCart = async (req, res) => {
     try {
         if (!req.session.user) {
@@ -186,7 +207,32 @@ const removeFromCart = async (req, res) => {
             });
         }
 
-        // Remove the item using MongoDB's pull operator
+        // Find the item being removed to get its quantity
+        const removedItem = cart.items.find(item => 
+            item.product.toString() === productId.toString()
+        );
+
+        if (!removedItem) {
+            return res.status(404).json({
+                success: false,
+                message: 'Product not found in cart'
+            });
+        }
+
+        // Update product stock
+        const product = await Product.findById(productId);
+        if (!product) {
+            return res.status(404).json({
+                success: false,
+                message: 'Product not found'
+            });
+        }
+
+        // Add the removed quantity back to stock
+        product.stock += removedItem.quantity;
+        await product.save();
+
+        // Remove the item from cart
         cart.items = cart.items.filter(item => 
             item.product.toString() !== productId.toString()
         );
@@ -285,6 +331,11 @@ const updateCartQuantity = async (req, res) => {
         cart.items[cartItemIndex].quantity = newQuantity;
         cart.items[cartItemIndex].price = discountedPrice;
         cart.items[cartItemIndex].total = discountedPrice * newQuantity;
+
+        // Adjust the stock based on the difference in quantity
+        const quantityDifference = newQuantity - currentQuantity;
+        product.stock -= quantityDifference;
+        await product.save();
 
         await cart.save();
 
