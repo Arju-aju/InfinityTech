@@ -8,6 +8,7 @@ const addressController = require('../controllers/user/addressController')
 const cartController = require('../controllers/user/cartController')
 const checkoutController = require('../controllers/user/checkOutController')
 const orderController = require('../controllers/user/orderController')
+const password =  require('../controllers/user/password')
 const { isAuthenticated, isNotAuthenticated, auth ,authMiddleware} = require('../middleware/auth');
 const passport = require('passport');
 const User = require('../models/userSchema');
@@ -31,6 +32,20 @@ router.get('/changePassword', userController.loadPassword)
 router.post("/send-password-otp", userController.sendOTPForPasswordChange)
 router.post('/change-password', userController.changePassword);
 router.post('/changePasswordresendOtp', userController.resendOtp);
+
+router.get('/forgotPassword', password.getForgotPasswordPage);
+router.post('/forgotPassword', password.forgotPassword);
+router.get('/forgotOtp', password.getVerifyOTP);
+router.post('/forgotOtp', password.verifyOTP);
+router.get('/resetPassword', password.getResetPassword);
+router.post('/resetPassword', password.resetPassword);
+
+
+
+
+
+
+
 // Product routes
 router.get('/',userController.loadHomePage);
 router.get('/shop', productController.loadShop);

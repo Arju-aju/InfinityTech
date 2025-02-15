@@ -1,532 +1,182 @@
 <%- include('./partials/adminHeader.ejs') %>
+<script src="/js/addProduct.js" defer></script>
 
-<style>
-
-.glass-morphism {
-    background: rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(10px);
-    border-radius: 10px;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-}
-
-.glass-morphism input,
-.glass-morphism textarea,
-.glass-morphism select {
-    background: rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    color: white;
-}
-
-.glass-morphism input:focus,
-.glass-morphism textarea:focus,
-.glass-morphism select:focus {
-    background: rgba(255, 255, 255, 0.2);
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    outline: none;
-}
-</style>
-<!-- Add required CSS -->
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastify-js/1.12.0/toastify.min.css">
-
-<!-- Main Content -->
-<div class="flex min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-teal-900">
+<div class="flex h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-violet-900">
     <%- include('./partials/adminSidebar.ejs') %>
-    
+
+    <!-- Main Content -->
     <div class="flex-1 overflow-x-hidden overflow-y-auto">
-        <div class="container mx-auto px-4 py-8">
-            <!-- Header -->
-            <div class="flex justify-between items-center mb-6">
-                <h1 class="text-3xl font-semibold text-white">Add New Product</h1>
-                <a href="/admin/products" class="btn-secondary">
-                    <i class="fas fa-arrow-left mr-2"></i>Back to Products
+        <div class="container mx-auto px-6 py-8">
+            <div class="flex justify-between items-center mb-8">
+                <h3 class="text-3xl font-semibold text-white tracking-tight">Add New Product</h3>
+                <a href="/admin/products" class="inline-flex items-center px-4 py-2 rounded-lg bg-gray-800 hover:bg-gray-700 text-white transition-all duration-200 transform hover:scale-105">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 17l-5-5m0 0l5-5m-5 5h12"></path>
+                    </svg>
+                    Back to Products
                 </a>
             </div>
+    
+            <div class="backdrop-blur-lg bg-gray-900/50 rounded-2xl p-8 max-w-4xl mx-auto shadow-2xl border border-gray-800">
 
-            <!-- Main Form -->
-            <div class="bg-gray-800 bg-opacity-50 backdrop-blur-lg rounded-xl shadow-xl p-6">
-                <div class="bg-gray-800 bg-opacity-50 backdrop-blur-lg rounded-xl shadow-xl p-6 glass-morphism">
-                    <form id="productForm" class="space-y-6">
-                        <!-- Grid Layout for Form Fields -->
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <!-- Left Column -->
-                            <div class="space-y-6">
-                                <!-- Basic Info Section -->
-                                <div class="bg-gray-900 bg-opacity-50 p-6 rounded-lg space-y-4 glass-morphism">
-                                    <h2 class="text-xl font-semibold text-white mb-4">Basic Information</h2>
-                                    
-                                    <div class="form-group">
-                                        <label for="name">Product Name*</label>
-                                        <input type="text" id="name" name="name" required 
-                                               class="form-input glass-morphism" minlength="3">
-                                        <span class="error-message"></span>
-                                    </div>
-                
-                                    <div class="form-group">
-                                        <label for="brand">Brand*</label>
-                                        <input type="text" id="brand" name="brand" required 
-                                               class="form-input glass-morphism">
-                                        <span class="error-message"></span>
-                                    </div>
-                
-                                    <div class="form-group">
-                                        <label for="category">Category*</label>
-                                        <select id="category" name="category" required class="form-select glass-morphism">
-                                            <option value="">Select Category</option>
-                                            <% categories.forEach(category => { %>
-                                                <option value="<%= category._id %>"><%= category.name %></option>
-                                            <% }); %>
-                                        </select>
-                                        <span class="error-message"></span>
-                                    </div>
-                
-                                    <div class="form-group">
-                                        <label for="description">Description*</label>
-                                        <textarea id="description" name="description" required 
-                                                  class="form-textarea glass-morphism" rows="4" minlength="10"></textarea>
-                                        <span class="error-message"></span>
-                                    </div>
+    
+                <form id="addProductForm" action="/admin/addProduct" method="POST" enctype="multipart/form-data" class="space-y-8">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <!-- Left Column -->
+                        <div class="space-y-6">
+                            <div>
+                                <label for="name" class="block text-sm font-medium text-gray-300 mb-2">Product Name*</label>
+                                <input type="text" id="name" name="name"   minlength="3"
+                                    class="w-full px-4 py-3 rounded-lg bg-gray-800 border border-gray-700 text-white placeholder-gray-400 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/50 transition-all duration-200"
+                                    placeholder="Enter product name">
+                                <div class="error-message text-red-500 text-sm mt-1"></div>
+                            </div>
+
+                            <div>
+                                <label for="brand" class="block text-sm font-medium text-gray-300 mb-2">Brand*</label>
+                                <input type="text" id="brand" name="brand"  
+                                    class="w-full px-4 py-3 rounded-lg bg-gray-800 border border-gray-700 text-white placeholder-gray-400 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/50 transition-all duration-200"
+                                    placeholder="Enter brand name">
+                                <div class="error-message text-red-500 text-sm mt-1"></div>
+                            </div>
+
+                            <div>
+                                <label for="description" class="block text-sm font-medium text-gray-300 mb-2">Description*</label>
+                                <textarea id="description" name="description"   minlength="10" rows="4"
+                                    class="w-full px-4 py-3 rounded-lg bg-gray-800 border border-gray-700 text-white placeholder-gray-400 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/50 transition-all duration-200"
+                                    placeholder="Enter product description"></textarea>
+                                <div class="error-message text-red-500 text-sm mt-1"></div>
+                            </div>
+
+                            <div>
+                                <label for="category" class="block text-sm font-medium text-gray-300 mb-2">Category*</label>
+                                <select id="category" name="category"   
+                                    class="w-full px-4 py-3 rounded-lg bg-gray-800 border border-gray-700 text-white focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/50 transition-all duration-200">
+                                    <option value="">Select a category</option>
+                                    <% categories.forEach(category => { %>
+                                        <option value="<%= category._id %>"><%= category.name %></option>
+                                    <% }); %>
+                                </select>
+                                <div class="error-message text-red-500 text-sm mt-1"></div>
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label for="price" class="block text-sm font-medium text-gray-300 mb-2">Price (₹)*</label>
+                                    <input type="number" id="price" name="price"  
+                                        class="w-full px-4 py-3 rounded-lg bg-gray-800 border border-gray-700 text-white placeholder-gray-400 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/50 transition-all duration-200"
+                                        min="0" step="0.01" placeholder="Enter price">
+                                    <div class="error-message text-red-500 text-sm mt-1"></div>
                                 </div>
-                
-                                <!-- Pricing Section -->
-                                <div class="bg-gray-900 bg-opacity-50 p-6 rounded-lg space-y-4 glass-morphism">
-                                    <h2 class="text-xl font-semibold text-white mb-4">Pricing</h2>
-                                    
-                                    <div class="grid grid-cols-2 gap-4">
-                                        <div class="form-group">
-                                            <label for="price">Price (₹)*</label>
-                                            <input type="number" id="price" name="price" required 
-                                                   class="form-input glass-morphism" min="0" step="0.01">
-                                            <span class="error-message"></span>
-                                        </div>
-                
-                                        <div class="form-group">
-                                            <label for="discount">Discount (%)</label>
-                                            <input type="number" id="discount" name="discount" 
-                                                   class="form-input glass-morphism" min="0" max="100" step="0.1">
-                                            <span class="error-message"></span>
-                                        </div>
-                                    </div>
-                
-                                    <div class="form-group">
-                                        <label for="stock">Stock Quantity*</label>
-                                        <input type="number" id="stock" name="stock" required 
-                                               class="form-input glass-morphism" min="0">
-                                        <span class="error-message"></span>
-                                    </div>
-                
-                                    <!-- Price Summary -->
-                                    <div class="mt-4 p-4 bg-gray-700 bg-opacity-50 rounded-lg glass-morphism">
-                                        <div class="space-y-2 text-sm">
-                                            <div class="flex justify-between">
-                                                <span>Original Price:</span>
-                                                <span id="originalPrice">₹0.00</span>
-                                            </div>
-                                            <div class="flex justify-between">
-                                                <span>Discount Amount:</span>
-                                                <span id="discountAmount">₹0.00</span>
-                                            </div>
-                                            <div class="flex justify-between font-semibold">
-                                                <span>Final Price:</span>
-                                                <span id="finalPrice">₹0.00</span>
-                                            </div>
-                                        </div>
-                                    </div>
+
+                                <div>
+                                    <label for="discountPercentage" class="block text-sm font-medium text-gray-300 mb-2">Discount (%)</label>
+                                    <input type="number" id="discountPercentage" name="discountPercentage"
+                                        class="w-full px-4 py-3 rounded-lg bg-gray-800 border border-gray-700 text-white placeholder-gray-400 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/50 transition-all duration-200"
+                                        min="0" max="100" step="0.1" placeholder="Enter discount">
+                                    <div class="error-message text-red-500 text-sm mt-1"></div>
                                 </div>
                             </div>
-                
-                            <!-- Right Column -->
-                            <div class="space-y-6">
-                                <!-- Image Upload Section -->
-                                <div class="bg-gray-900 bg-opacity-50 p-6 rounded-lg glass-morphism">
-                                    <h2 class="text-xl font-semibold text-white mb-4">Product Images</h2>
-                                    
-                                    <div class="image-upload-container">
-                                        <div class="upload-area" id="dropZone">
-                                            <input type="file" id="imageInput" multiple accept="image/*" class="hidden">
-                                            <div class="text-center">
-                                                <i class="fas fa-cloud-upload-alt text-4xl mb-2"></i>
-                                                <p class="mb-2">Drag & Drop images here</p>
-                                                <button type="button" class="btn-primary" id="uploadButton">
-                                                    Upload Images
-                                                </button>
-                                            </div>
+
+                            <div>
+                                <label for="stock" class="block text-sm font-medium text-gray-300 mb-2">Stock Quantity*</label>
+                                <input type="number" id="stock" name="stock"  
+                                    class="w-full px-4 py-3 rounded-lg bg-gray-800 border border-gray-700 text-white placeholder-gray-400 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/50 transition-all duration-200"
+                                    min="0" step="1" placeholder="Enter stock quantity">
+                                <div class="error-message text-red-500 text-sm mt-1"></div>
+                            </div>
+                        </div>
+
+                        <!-- Right Column -->
+                        <div class="space-y-6">
+                            <div class="bg-gray-800/50 p-6 rounded-lg space-y-4">
+                                <h3 class="text-lg font-medium text-gray-300 mb-4">Specifications</h3>
+                                
+                                <div>
+                                    <label for="processor" class="block text-sm font-medium text-gray-300 mb-2">Processor</label>
+                                    <input type="text" id="processor" 
+                                        name="specifications[processor]" 
+                                        class="w-full px-4 py-3 rounded-lg..."
+                                        placeholder="e.g., Intel Core i7-12700H">
+                                </div>
+
+                                <div>
+                                    <label for="ram" class="block text-sm font-medium text-gray-300 mb-2">RAM</label>
+                                    <input type="text" id="ram" 
+                                        name="specifications[ram]" 
+                                        class="w-full px-4 py-3 rounded-lg..."
+                                        placeholder="e.g., 16GB DDR4">
+                                </div>
+
+                                <div>
+                                    <label for="storage" class="block text-sm font-medium text-gray-300 mb-2">Storage</label>
+                                    <input type="text" id="storage" 
+                                         name="specifications[storage]" 
+                                         class="w-full px-4 py-3 rounded-lg..."
+                                        placeholder="e.g., 512GB NVMe SSD">
+                                </div>
+
+                                <div>
+                                    <label for="graphics" class="block text-sm font-medium text-gray-300 mb-2">Graphics</label>
+                                    <input type="text" id="graphics" 
+                                        name="specifications[graphics]" 
+                                        class="w-full px-4 py-3 rounded-lg..."
+                                        placeholder="e.g., NVIDIA RTX 3060 6GB">
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-300 mb-2">Product Images*</label>
+                                <div class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-700 border-dashed rounded-lg hover:border-cyan-500 transition-colors duration-200">
+                                    <div class="space-y-1 text-center">
+                                        <svg class="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48">
+                                            <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                        </svg>
+                                        <div class="flex text-sm text-gray-400">
+                                            <label for="images" class="relative cursor-pointer rounded-md font-medium text-cyan-500 hover:text-cyan-400 focus-within:outline-none">
+                                                <span>Upload images</span>
+                                                <input id="images" name="images" type="file" class="sr-only" accept="image/*" multiple  >
+                                            </label>
+                                            <p class="pl-1">or drag and drop</p>
                                         </div>
-                                        
-                                        <div id="previewContainer" class="grid grid-cols-2 gap-4 mt-4">
-                                            <!-- Image previews will be added here -->
-                                        </div>
+                                        <p class="text-xs text-gray-400">PNG, JPG up to 5MB</p>
                                     </div>
                                 </div>
-                
-                                <!-- Specifications Section -->
-                                <div class="bg-gray-900 bg-opacity-50 p-6 rounded-lg glass-morphism">
-                                    <h2 class="text-xl font-semibold text-white mb-4">Specifications</h2>
-                                    
-                                    <div class="space-y-4">
-                                        <div class="form-group">
-                                            <label for="processor">Processor</label>
-                                            <input type="text" id="processor" name="specs[processor]" 
-                                                   class="form-input glass-morphism">
-                                        </div>
-                
-                                        <div class="form-group">
-                                            <label for="ram">RAM</label>
-                                            <input type="text" id="ram" name="specs[ram]" 
-                                                   class="form-input glass-morphism">
-                                        </div>
-                
-                                        <div class="form-group">
-                                            <label for="storage">Storage</label>
-                                            <input type="text" id="storage" name="specs[storage]" 
-                                                   class="form-input glass-morphism">
-                                        </div>
-                
-                                        <div class="form-group">
-                                            <label for="graphics">Graphics</label>
-                                            <input type="text" id="graphics" name="specs[graphics]" 
-                                                   class="form-input glass-morphism">
-                                        </div>
-                                    </div>
+                                <div id="imagePreviewContainer" class="mt-4 grid grid-cols-4 gap-4"></div>
+                                <div class="error-message text-red-500 text-sm mt-1"></div>
+                            </div>
+
+                            <div class="bg-gray-800/50 p-4 rounded-lg">
+                                <p class="text-gray-300 text-sm mb-2">Price Summary:</p>
+                                <div class="flex justify-between text-white">
+                                    <span>Original Price:</span>
+                                    <span id="originalPrice">₹0.00</span>
+                                </div>
+                                <div class="flex justify-between text-white mt-1">
+                                    <span>Discount:</span>
+                                    <span id="discountAmount">₹0.00</span>
+                                </div>
+                                <div class="flex justify-between text-white mt-1 font-medium">
+                                    <span>Final Price:</span>
+                                    <span id="finalPrice">₹0.00</span>
                                 </div>
                             </div>
                         </div>
-                
-                        <!-- Submit Button -->
-                        <div class="flex justify-end mt-6">
-                            <button type="submit" class="btn-primary glass-morphism">
-                                <i class="fas fa-plus mr-2"></i>Add Product
-                            </button>
-                        </div>
-                    </form>
-                </div>
-        </div>
-    </div>
-</div>
-
-<!-- Image Cropping Modal -->
-<div id="cropModal" class="modal hidden">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h3>Crop Image</h3>
-            <button type="button" class="close-modal">&times;</button>
-        </div>
-        <div class="modal-body">
-            <div class="crop-container">
-                <img id="cropImage" src="" alt="Image to crop">
+                    </div>
+    
+                    <div class="flex justify-end mt-8">
+                        <button type="submit" 
+                            class="inline-flex items-center px-6 py-3 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white font-medium transition-all duration-200 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-cyan-500">
+                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                            </svg>
+                            Add Product
+                        </button>
+                    </div>
+                </form>
             </div>
         </div>
-        <div class="modal-footer">
-            <button type="button" class="btn-secondary" id="cancelCrop">Cancel</button>
-            <button type="button" class="btn-primary" id="applyCrop">Apply Crop</button>
-        </div>
     </div>
 </div>
-
-<!-- Add required JavaScript -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/toastify-js/1.12.0/toastify.min.js"></script>
-
-<script>
-
-const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
-const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
-let cropper = null;
-let currentImageIndex = null;
-const croppedImages = new Map();
-
-// Utility Functions
-const showToast = (message, type = 'success') => {
-    Toastify({
-        text: message,
-        duration: 3000,
-        gravity: 'top',
-        position: 'right',
-        backgroundColor: type === 'success' ? '#10B981' : '#EF4444',
-    }).showToast();
-};
-
-const validateImage = (file) => {
-    if (!ALLOWED_TYPES.includes(file.type)) {
-        throw new Error('Invalid file type. Only JPG, PNG and WebP images are allowed.');
-    }
-    if (file.size > MAX_FILE_SIZE) {
-        throw new Error('File size exceeds 5MB limit.');
-    }
-    return true;
-};
-
-// Image Handling Functions
-const handleImageUpload = async (files) => {
-    for (const file of files) {
-        try {
-            validateImage(file);
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                const index = croppedImages.size;
-                addImagePreview(e.target.result, index);
-                showCropModal(e.target.result, index);
-            };
-            reader.readAsDataURL(file);
-        } catch (error) {
-            showToast(error.message, 'error');
-        }
-    }
-};
-
-const addImagePreview = (src, index) => {
-    const previewDiv = document.createElement('div');
-    previewDiv.className = 'relative group';
-    previewDiv.innerHTML = `
-        <img src="${src}" alt="Preview ${index + 1}" 
-             class="w-full h-48 object-cover rounded-lg">
-        <div class="absolute inset-0 bg-black bg-opacity-50 opacity-0 
-                    group-hover:opacity-100 transition-all duration-200 
-                    flex items-center justify-center space-x-3">
-            <button type="button" class="edit-btn">
-                <i class="fas fa-crop text-white"></i>
-            </button>
-            <button type="button" class="delete-btn">
-                <i class="fas fa-trash text-white"></i>
-            </button>
-        </div>
-    `;
-
-    // Add event listeners
-    previewDiv.querySelector('.edit-btn').onclick = () => showCropModal(src, index);
-    previewDiv.querySelector('.delete-btn').onclick = () => {
-        previewDiv.remove();
-        croppedImages.delete(index);
-        updateImageValidation();
-    };
-
-    document.getElementById('previewContainer').appendChild(previewDiv);
-    updateImageValidation();
-};
-
-// Cropping Functions
-const showCropModal = (src, index) => {
-    const modal = document.getElementById('cropModal');
-    const cropImage = document.getElementById('cropImage');
-    
-    modal.classList.remove('hidden');
-    cropImage.src = src;
-    currentImageIndex = index;
-
-    if (cropper) {
-        cropper.destroy();
-    }
-
-    cropper = new Cropper(cropImage, {
-        aspectRatio: 1,
-        viewMode: 2,
-        dragMode: 'move',
-        background: false,
-        cropBoxMovable: true,
-        cropBoxResizable: true,
-        guides: true,
-        zoomable: true,
-        zoomOnTouch: true,
-        zoomOnWheel: true,
-    });
-};
-
-const applyCrop = () => {
-    if (!cropper) return;
-
-    // Get cropped area dimensions dynamically
-    const croppedCanvas = cropper.getCroppedCanvas({
-        imageSmoothingEnabled: true,
-        imageSmoothingQuality: 'high',
-    });
-
-    if (!croppedCanvas) {
-        showToast('Cropping failed. Try again.');
-        return;
-    }
-
-    // Convert cropped area to Base64 image
-    const croppedImage = croppedCanvas.toDataURL('image/jpeg', 1);
-    croppedImages.set(currentImageIndex, croppedImage);
-
-    // Update preview dynamically
-    const previewImage = document.querySelector(`#previewContainer img:nth-child(${currentImageIndex + 1})`);
-    if (previewImage) {
-        previewImage.src = croppedImage;
-    }
-
-    closeCropModal();
-    showToast('Image cropped successfully');
-};
-
-const closeCropModal = () => {
-    const modal = document.getElementById('cropModal');
-    modal.classList.add('hidden');
-    if (cropper) {
-        cropper.destroy();
-        cropper = null;
-    }
-};
-
-// Form Validation and Submission
-const validateForm = () => {
-    let isValid = true;
-    const requiredFields = document.querySelectorAll('[required]');
-    
-    requiredFields.forEach(field => {
-        if (!field.value.trim()) {
-            showFieldError(field, 'This field is required');
-            isValid = false;
-        } else {
-            clearFieldError(field);
-        }
-    });
-
-    if (croppedImages.size === 0) {
-        showToast('Please add at least one product image', 'error');
-        isValid = false;
-    }
-
-    return isValid;
-};
-
-const showFieldError = (field, message) => {
-    const errorSpan = field.nextElementSibling;
-    if (errorSpan && errorSpan.classList.contains('error-message')) {
-        errorSpan.textContent = message;
-        field.classList.add('error');
-    }
-};
-
-const clearFieldError = (field) => {
-    const errorSpan = field.nextElementSibling;
-    if (errorSpan && errorSpan.classList.contains('error-message')) {
-        errorSpan.textContent = '';
-        field.classList.remove('error');
-    }
-};
-
-// Price Calculation Functions
-const calculatePrices = () => {
-    const price = parseFloat(document.getElementById('price').value) || 0;
-    const discount = parseFloat(document.getElementById('discount').value) || 0;
-    
-    const discountAmount = (price * discount) / 100;
-    const finalPrice = price - discountAmount;
-    
-    document.getElementById('originalPrice').textContent = `₹${price.toFixed(2)}`;
-    document.getElementById('discountAmount').textContent = `₹${discountAmount.toFixed(2)}`;
-    document.getElementById('finalPrice').textContent = `₹${finalPrice.toFixed(2)}`;
-};
-
-// Form Submission
-const handleFormSubmit = async (event) => {
-    event.preventDefault();
-    
-    if (!validateForm()) {
-        return;
-    }
-
-    const formData = new FormData(event.target);
-    
-    // Add cropped images to FormData
-    for (const [index, croppedImage] of croppedImages) {
-        // Convert base64 to blob
-        const response = await fetch(croppedImage);
-        const blob = await response.blob();
-        formData.append('images', blob, `product-image-${index}.jpg`);
-    }
-
-    // Add specifications
-    const specs = {};
-    document.querySelectorAll('[name^="specs["]').forEach(input => {
-        const key = input.name.match(/\[(.*?)\]/)[1];
-        if (input.value.trim()) {
-            specs[key] = input.value.trim();
-        }
-    });
-    formData.append('specifications', JSON.stringify(specs));
-
-    try {
-        const response = await fetch('/admin/products/add', {
-            method: 'POST',
-            body: formData
-        });
-
-        const data = await response.json();
-
-        if (data.success) {
-            showToast('Product added successfully');
-            setTimeout(() => {
-                window.location.href = '/admin/products';
-            }, 1500);
-        } else {
-            throw new Error(data.message || 'Failed to add product');
-        }
-    } catch (error) {
-        showToast(error.message, 'error');
-    }
-};
-
-// Event Listeners
-document.addEventListener('DOMContentLoaded', () => {
-    const form = document.getElementById('productForm');
-    const dropZone = document.getElementById('dropZone');
-    const imageInput = document.getElementById('imageInput');
-    const uploadButton = document.getElementById('uploadButton');
-    const modal = document.getElementById('cropModal');
-    const closeModalBtn = modal.querySelector('.close-modal');
-    const cancelCropBtn = document.getElementById('cancelCrop');
-    const applyCropBtn = document.getElementById('applyCrop');
-
-    // Form submission
-    form.addEventListener('submit', handleFormSubmit);
-
-    // Price calculation
-    document.getElementById('price').addEventListener('input', calculatePrices);
-    document.getElementById('discount').addEventListener('input', calculatePrices);
-
-    // Image upload handlers
-    uploadButton.addEventListener('click', () => imageInput.click());
-    imageInput.addEventListener('change', (e) => handleImageUpload(e.target.files));
-
-    // Drag and drop handlers
-    dropZone.addEventListener('dragover', (e) => {
-        e.preventDefault();
-        dropZone.classList.add('drag-over');
-    });
-
-    dropZone.addEventListener('dragleave', () => {
-        dropZone.classList.remove('drag-over');
-    });
-
-    dropZone.addEventListener('drop', (e) => {
-        e.preventDefault();
-        dropZone.classList.remove('drag-over');
-        handleImageUpload(e.dataTransfer.files);
-    });
-
-    // Cropping modal handlers
-    closeModalBtn.addEventListener('click', closeCropModal);
-    cancelCropBtn.addEventListener('click', closeCropModal);
-    applyCropBtn.addEventListener('click', applyCrop);
-
-    // Close modal on outside click
-    modal.addEventListener('click', (e) => {
-        if (e.target === modal) {
-            closeCropModal();
-        }
-    });
-
-    // Add keyboard support for modal
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && !modal.classList.contains('hidden')) {
-            closeCropModal();
-        }
-    });
-});
-
-</script>
 
 <%- include('./partials/adminFooter.ejs') %>

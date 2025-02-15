@@ -274,7 +274,8 @@
 
     async function addToCart(productId) {
     const quantity = parseInt(document.getElementById('quantity').value);
-    
+
+ 
     // Validate quantity
     if (quantity > 10) {
         await Swal.fire({

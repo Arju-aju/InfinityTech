@@ -94,6 +94,12 @@ const addToCart = async (req, res) => {
             });
         }
 
+        if(product.stock < 6) {
+            return res.status(400).json({
+                success:false,
+                 message: 'Out of stock'
+            })
+        }
         // Check if quantity exceeds 10
         if (quantity > 10) {
             return res.status(400).json({
