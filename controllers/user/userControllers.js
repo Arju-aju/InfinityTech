@@ -542,67 +542,43 @@ const sendOTPEmail = async (email, otp) => {
 const changePassword = async (req, res) => {
     try {
         const { email, otp, newPassword } = req.body;
-        
+
         // Validate input
         if (!email || !otp || !newPassword) {
-            return res.status(400).json({ 
-                success: false, 
-                message: 'All fields are required' 
-            });
+            return res.status(400).json({ success: false, message: 'All fields are required' });
         }
 
         const user = await User.findOne({ email });
 
         if (!user) {
-            return res.status(404).json({ 
-                success: false, 
-                message: 'User not found' 
-            });
+            return res.status(404).json({ success: false, message: 'User not found' });
         }
 
         // Validate OTP
-        if (!user.resetPasswordOTP || 
-            user.resetPasswordOTP.code !== otp || 
-            user.resetPasswordOTP.expiresAt < Date.now()) {
-            return res.status(400).json({ 
-                success: false, 
-                message: 'Invalid or expired OTP' 
-            });
+        if (!user.resetPasswordOTP || user.resetPasswordOTP.code !== otp || user.resetPasswordOTP.expiresAt < Date.now()) {
+            return res.status(400).json({ success: false, message: 'Invalid or expired OTP' });
         }
 
         // Password strength validation
         const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
         if (!passwordRegex.test(newPassword)) {
-            return res.status(400).json({ 
-                success: false, 
-                message: 'Password does not meet complexity requirements' 
-            });
+            return res.status(400).json({ success: false, message: 'Password does not meet complexity requirements' });
         }
 
         // Hash new password
         const hashedPassword = await bcrypt.hash(newPassword, 10);
-        
+
         // Update password and clear OTP
         user.password = hashedPassword;
         user.resetPasswordOTP = undefined;
-        
+
         await user.save();
 
-
-        res.render('/')
-        req.flash('message', 'Password changed successfully');
-
-        res.status(200).json({ 
-            success: true, 
-            message: 'Password changed successfully' 
-        });
+        return res.json({ success: true, message: 'Password changed successfully' });
 
     } catch (error) {
         console.error('Error changing password:', error);
-        res.status(500).json({ 
-            success: false, 
-            message: 'Server error. Please try again later.' 
-        });
+        return res.status(500).json({ success: false, message: 'Server error. Please try again later.' });
     }
 };
 

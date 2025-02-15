@@ -24,7 +24,7 @@
     <div class="flex-1 p-8 flex justify-center items-start">
         <div class="w-full max-w-2xl">
             <% if (locals.messages?.success) { %>
-                <div class="bg-green-500 text-white p-4 rounded-lg mb-4 flex items-center justify-between animate-fade-in">
+                <div id="successMessage" class="bg-green-500 text-white p-4 rounded-lg mb-4 flex items-center justify-between animate-fade-in hidden">
                     <span><i class="fas fa-check-circle mr-2"></i><%= messages.success %></span>
                     <button onclick="this.parentElement.remove()" class="hover:text-gray-200 focus:outline-none">
                         <i class="fas fa-times"></i>
@@ -33,7 +33,7 @@
             <% } %>
             
             <% if (locals.messages?.error) { %>
-                <div class="bg-red-500 text-white p-4 rounded-lg mb-4 flex items-center justify-between animate-fade-in">
+                <div id="errorMessage" class="bg-red-500 text-white p-4 rounded-lg mb-4 flex items-center justify-between animate-fade-in hidden">
                     <span><i class="fas fa-exclamation-circle mr-2"></i><%= messages.error %></span>
                     <button onclick="this.parentElement.remove()" class="hover:text-gray-200 focus:outline-none">
                         <i class="fas fa-times"></i>

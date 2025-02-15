@@ -53,10 +53,10 @@ router.post('/checkout/place-order',auth, checkoutController.placeOrder);
 
 //order route
 router.get('/orders',auth,orderController.getOrdersList)
-router.get('/orders/:id',auth, orderController.getOrdersList);
+router.get('/orders/:id', auth, orderController.getOrderDetails);
 router.get('/orders/:id',auth, orderController.getOrdersList);
 
-router.post('/order/:id/cancel', orderController.cancelOrder);
+router.post('/orders/:id/cancel', auth, orderController.cancelOrder);
 
 // Static pages
 router.get('/about', userController.loadAboutPage);

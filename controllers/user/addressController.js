@@ -35,6 +35,30 @@ exports.addAddress = async (req, res) => {
 
         const { addressType, name, address, city, landmark, state, pincode, phone } = req.body;
 
+        // Validate all required fields
+        const requiredFields = {
+            addressType: 'Address Type',
+            name: 'Full Name',
+            address: 'Address',
+            city: 'City',
+            landmark: 'Landmark',
+            state: 'State',
+            pincode: 'Pincode',
+            phone: 'Phone'
+        };
+
+        const errors = [];
+        for (const [field, label] of Object.entries(requiredFields)) {
+            if (!req.body[field] || req.body[field].trim() === '') {
+                errors.push(`${label} is required`);
+            }
+        }
+
+        if (errors.length > 0) {
+            req.flash('error', errors);
+            return res.redirect('/address');
+        }
+
         let userAddress = await Address.findOne({ userID });
 
         if (!userAddress) {
@@ -53,7 +77,6 @@ exports.addAddress = async (req, res) => {
         };
 
         userAddress.address.push(newAddress);
-
         await userAddress.save();
 
         req.flash('success', 'Address added successfully');

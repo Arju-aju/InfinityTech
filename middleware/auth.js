@@ -5,7 +5,7 @@ const User = require("../models/userSchema");
 
 exports.isAuthenticated = (req, res, next) => {
     if (req.session.user) {
-        return res.redirect("/dashboard"); // Redirect logged-in users away from login/signup
+        return res.redirect("/"); // Redirect logged-in users away from login/signup
     }
     next();
 };
