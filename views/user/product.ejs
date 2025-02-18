@@ -1,384 +1,240 @@
 <%- include('../partials/header') %>
-<style>
-    #magnifiedContainer {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    overflow: hidden;
-    pointer-events: none;
-    background: white;
-    z-index: 10;
-}
 
-#magnifiedImage {
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-    position: absolute;
-    top: 0;
-    left: 0;
-    transform-origin: 0 0;
-    transition: transform 0.1s ease-out;
-}
-#magnifiedImage {
-    transition: transform 0.1s ease-out;
-}
-</style>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@8/swiper-bundle.min.css">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+<!-- Main Content Container -->
+<main class="min-h-screen">
 
-<main class="container mx-auto px-4 py-8">
-    <!-- Breadcrumb -->
-    <nav class="mb-8">
-        <ol class="flex items-center space-x-2 text-gray-600">
-            <li><a href="/" class="hover:text-purple-600">Home</a></li>
-            <li>/</li>
-            <li><a href="/shop" class="hover:text-purple-600">Shop</a></li>
-            <li>/</li>
-            <li class="text-purple-600"><%= product.name %></li>
-        </ol>
-    </nav>
-    <div class="container mx-auto px-4 py-8">
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-12 mb-16">
-            <!-- Product Images Section -->
-            <div class="space-y-6">
-                <!-- Main Image with Zoom -->
-                <div class="relative overflow-hidden rounded-lg bg-white mb-8 h-[350px] w-full border-8 p-2 flex justify-center items-center shadow-lg" id="mainImageContainer">
-                    <img 
-                        src="<%= product.images[0] %>" 
-                        alt="<%= product.name %>"
-                        id="mainImage"
-                        class="w-1/2 object-contain transition-transform duration-200 cursor-zoom-in"
-                    >
-                    <!-- Magnified image container -->
-                    <div id="magnifiedContainer" class="hidden absolute top-0 left-0 w-full h-full pointer-events-none bg-white" style="z-index: 10;">
-                        <img 
-                            src="<%= product.images[0] %>" 
-                            alt="<%= product.name %>"
-                            id="magnifiedImage"
-                            class="w-full h-full object-contain absolute top-0 left-0"
-                            style="transform-origin: 0 0;"
-                        >
+       <!-- Breadcrumbs -->
+       <div class="container mx-auto px-9 py-6 max-w-8xl mt-4 mb-4">
+        <nav class="flex" aria-label="Breadcrumb">
+            <ol class="inline-flex items-center space-x-1 md:space-x-3">
+                <li class="inline-flex items-center">
+                    <a href="/" class="text-gray-700 hover:text-gray-900 inline-flex items-center">
+                        <svg class="w-5 h-5 mr-2.5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"></path>
+                        </svg>
+                        Home
+                    </a>
+                </li>
+                <li>
+                    <div class="flex items-center">
+                        <svg class="w-6 h-6 text-gray-400" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                            <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
+                        </svg>
+                        <a href="/shop" class="text-gray-700 hover:text-gray-900 ml-1 md:ml-2 text-sm font-medium">Shop</a>
                     </div>
+                </li>
+                <li aria-current="page">
+                    <div class="flex items-center">
+                        <svg class="w-6 h-6 text-gray-400" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                            <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
+                        </svg>
+                        <span class="text-gray-500 ml-1 md:ml-2 text-sm font-medium"><%= product.name %></span>
+                    </div>
+                </li>
+            </ol>
+        </nav>
+    </div>
+
+    <div class="container mx-auto px-8 py-8 max-w-7xl">
+        <!-- Flash Messages -->
+        <% if (message.content) { %>
+            <div class="mb-4 p-4 rounded <%= message.type === 'error' ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700' %>">
+                <%= message.content %>
+            </div>
+        <% } %>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-12">
+            <!-- Product Images Section -->
+            <div class="space-y-4">
+                <!-- Main Image Container -->
+                <div class="relative h-[500px] overflow-hidden rounded-lg border bg-white">
+                    <img id="mainImage" src="<%= product.images[0] %>" 
+                         alt="<%= product.name %>"
+                         class="w-full h-full object-contain transition-transform duration-300 cursor-zoom-in"
+                         data-zoom="false">
                 </div>
 
-                <!-- Thumbnail Swiper -->
-                <div class="swiper thumbSwiper">
-                    <div class="swiper-wrapper flex space-x-4">
-                        <% product.images.forEach(function(image) { %>
-                            <div class="swiper-slide" style="height: 100px;">
-                                <img 
-                                    src="<%= image %>" 
-                                    alt="Thumbnail" 
-                                    class="object-contain cursor-pointer hover:opacity-75 transition-opacity duration-200"
-                                    onclick="changeMainImage('<%= image %>')"
-                                >
-                            </div>
-                        <% }); %>
-                    </div>
+                <!-- Image Thumbnails -->
+                <div class="grid grid-cols-4 gap-2">
+                    <% product.images.forEach((image, index) => { %>
+                        <button onclick="changeMainImage(this, '<%= image %>')" 
+                                class="border rounded-lg p-1 hover:border-blue-500 transition-colors bg-white">
+                            <img src="<%= image %>" 
+                                 alt="Product thumbnail <%= index + 1 %>"
+                                 class="w-full h-30 object-contain">
+                        </button>
+                    <% }) %>
                 </div>
             </div>
 
             <!-- Product Details Section -->
-            <div class="space-y-8">
-                <div>
-                    <h1 class="text-4xl font-bold text-gray-800 mb-2"><%= product.name %></h1>
-                    <div class="flex items-center space-x-4">
-                        <span class="inline-block px-3 py-1 bg-gray-100 text-gray-800 rounded-full text-sm">
-                            <%= product.brand %>
-                        </span>
-                        <span class="text-green-600">
-                            <% if (product.stock > 5) { %>
-                                In Stock (<%= product.stock %> units)
-                            <% } else { %>
-                                Out of Stock
-                            <% } %>
-                        </span>
-                    </div>
-                </div>
+            <div class="space-y-6 h-full">
+                <div class="bg-white p-6 rounded-lg shadow-sm">
+                    <h1 class="text-3xl font-bold text-gray-900 mb-3"><%= product.name %></h1>
+                    <p class="text-lg text-gray-600 mb-6"><%= product.brand %></p>
 
-                <!-- Rating Section -->
-                <div class="flex items-center space-x-2">
-                    <div class="flex text-yellow-400">
-                        <% for (let i = 0; i < 5; i++) { %>
-                            <i class="fas fa-star"></i>
+                    <!-- Price Section -->
+                    <div class="space-y-2 mb-6">
+                        <div class="flex items-baseline gap-4">
+                            <span class="text-3xl font-bold text-gray-900">₹<%= product.discountedPrice.toFixed(2) %></span>
+                            <% if (product.discountPercentage > 0) { %>
+                                <span class="text-lg text-gray-500 line-through">₹<%= product.price.toFixed(2) %></span>
+                                <span class="text-green-600 font-semibold">-<%= product.discountPercentage %>%</span>
+                            <% } %>
+                        </div>
+                    </div>
+
+                    <!-- Specifications -->
+                    <div class="border-t border-gray-200 pt-6 mb-6">
+                        <h2 class="text-xl font-semibold mb-4">Specifications</h2>
+                        <div class="grid grid-cols-1 gap-4">
+                            <div class="flex items-center">
+                                <span class="w-32 text-gray-600">Processor:</span>
+                                <span class="font-medium"><%= product.specifications.processor %></span>
+                            </div>
+                            <div class="flex items-center">
+                                <span class="w-32 text-gray-600">RAM:</span>
+                                <span class="font-medium"><%= product.specifications.ram %></span>
+                            </div>
+                            <div class="flex items-center">
+                                <span class="w-32 text-gray-600">Storage:</span>
+                                <span class="font-medium"><%= product.specifications.storage %></span>
+                            </div>
+                            <div class="flex items-center">
+                                <span class="w-32 text-gray-600">Graphics:</span>
+                                <span class="font-medium"><%= product.specifications.graphics %></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="space-y-3">
+                        <% if (product.stock > 0) { %>
+                            <div class="grid grid-cols-2 gap-4">
+                                <button onclick="addToCart('<%= product._id %>')" 
+                                        class="w-full bg-gray-100 text-gray-800 px-6 py-3 rounded-lg font-semibold hover:bg-gray-200 transition-colors flex items-center justify-center gap-2"">
+                                    Add to Cart
+                                </button>
+                                <button onclick="addToWishlist('<%= product._id %>')"
+                                        class="w-full bg-gray-100 text-gray-800 px-6 py-3 rounded-lg font-semibold hover:bg-gray-200 transition-colors flex items-center justify-center gap-2">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                                    </svg>
+                                    Wishlist
+                                </button>
+                            </div>
+                            <button onclick="buyNow('<%= product._id %>')"
+                                    class="w-full bg-green-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-green-700 transition-colors">
+                                Buy Now
+                            </button>
+                            <p class="text-green-600 mt-2 text-center">In Stock (<%= product.stock %> available)</p>
+                        <% } else { %>
+                            <button disabled class="w-full bg-gray-400 text-white px-6 py-3 rounded-lg font-semibold cursor-not-allowed">
+                                Out of Stock
+                            </button>
                         <% } %>
                     </div>
-                    <span class="text-gray-600">(4.5/5 based on 120 reviews)</span>
-                </div>
 
-                <!-- Price Section -->
-                <div class="space-y-2">
-                    <% if (product.discountPercentage) { %>
-                        <p class="text-gray-500 line-through text-xl">
-                            ₹<%= product.price.toLocaleString('en-IN') %>
-                        </p>
-                        <p class="text-4xl font-bold text-purple-600">
-                            ₹<%= (product.price - (product.price * product.discountPercentage / 100)).toLocaleString('en-IN') %>
-                            <span class="text-green-600 text-lg">
-                                (<%= product.discountPercentage %>% off)
-                            </span>
-                        </p>
-                    <% } else { %>
-                        <p class="text-4xl font-bold text-purple-600">
-                            ₹<%= product.price.toLocaleString('en-IN') %>
-                        </p>
-                    <% } %>
-                </div>
-
-                <!-- Specifications -->
-                <div class="space-y-4">
-                    <h3 class="text-xl font-semibold text-gray-800">Key Features</h3>
-                    <div class="grid grid-cols-2 gap-4 bg-gray-50 p-6 rounded-lg shadow-sm">
-                        <div class="space-y-3">
-                            <p class="text-gray-600">
-                                <span class="font-medium">Processor:</span><br>
-                                <%= product.specifications?.processor || 'Not specified' %>
-                            </p>
-                            <p class="text-gray-600">
-                                <span class="font-medium">RAM:</span><br>
-                                <%= product.specifications?.ram || 'Not specified' %>
-                            </p>
-                        </div>
-                        <div class="space-y-3">
-                            <p class="text-gray-600">
-                                <span class="font-medium">Storage:</span><br>
-                                <%= product.specifications?.storage || 'Not specified' %>
-                            </p>
-                            <p class="text-gray-600">
-                                <span class="font-medium">Graphics:</span><br>
-                                <%= product.specifications?.graphics || 'Not specified' %>
-                            </p>
-                        </div>
+                    <!-- Description -->
+                    <div class="border-t border-gray-200 pt-6 mt-6">
+                        <h2 class="text-xl font-semibold mb-4">Description</h2>
+                        <p class="text-gray-600 whitespace-pre-line"><%= product.description %></p>
                     </div>
-                </div>
-
-                <!-- Description -->
-                <div>
-                    <h3 class="text-xl font-semibold text-gray-800 mb-2">Description</h3>
-                    <p class="text-gray-600 leading-relaxed"><%= product.description %></p>
-                </div>
-
-                <!-- Add to Cart Section -->
-                <div class="flex items-center space-x-4 pt-4">
-                    <div class="flex items-center border rounded-lg">
-                        <button onclick="updateQuantity(-1)" class="px-4 py-2 text-gray-600 hover:text-purple-600">-</button>
-                        <input type="number" id="quantity" value="1" min="1" max="<%= product.stock %>"
-                               class="w-16 text-center border-x focus:outline-none focus:ring-2 focus:ring-purple-500">
-                        <button onclick="updateQuantity(1)" class="px-4 py-2 text-gray-600 hover:text-purple-600">+</button>
-                    </div>
-                    <button onclick="addToCart('<%= product._id %>')" 
-                            class="flex-1 text-purple-600 border-2 border-purple-600 py-3 rounded-lg hover:bg-purple-600 hover:text-white transition-colors duration-200 <%= !product.stock ? 'opacity-50 cursor-not-allowed' : '' %>"
-                            <%= !product.stock ? 'disabled' : '' %>>
-                        <%= product.stock ? 'Add to Cart' : 'Out of Stock' %>
-                    </button>
-                </div>
-
-                <!-- Wishlist Button -->
-                <div class="mt-4">
-                    <button onclick="addToWishlist('<%= product._id %>')" 
-                            class="w-full bg-white text-purple-600 border-2 border-purple-600 py-3 rounded-lg hover:bg-purple-600 hover:text-white transition-colors duration-200">
-                        Add to Wishlist
-                    </button>
                 </div>
             </div>
         </div>
 
-        <!-- Similar Products Section -->
-        <section class="py-16 bg-white">
-            <div class="max-w-7xl mx-auto px-4 sm:px-9 lg:px-9">
-                <h2 class="text-3xl font-bold text-center mb-12">Featured Products</h2>
-                <div class="grid grid-cols-4 gap-8">
-                        <% if (recommendedProducts && recommendedProducts.length > 0) { %>
-                            <% recommendedProducts.forEach(function(relatedProduct) { %>
-                                <div class="bg-white rounded-lg shadow-lg overflow-hidden transition-transform duration-300 hover:scale-105">
-                                    <a href="/products/<%= relatedProduct._id %>">
-                                        <img 
-                                            src="<%= relatedProduct.images && relatedProduct.images.length > 0 ? relatedProduct.images[0] : '/default-image.jpg' %>" 
-                                            alt="<%= relatedProduct.name || 'Product Image' %>"
-                                            class="w-full h-48 object-cover"
-                                        >
-                                        <div class="p-4">
-                                            <h3 class="text-lg font-semibold mb-2"><%= relatedProduct.name %></h3>
-                                            <div class="flex items-center justify-between">
-                                                <div>
-                                                    <% if (relatedProduct.discountPercentage && relatedProduct.discountPercentage > 0) { %>
-                                                        <span class="text-gray-500 line-through">
-                                                            ₹<%= relatedProduct.price.toLocaleString('en-IN') %>
-                                                        </span>
-                                                        <span class="text-xl font-bold text-primary ml-2">
-                                                            ₹<%= (relatedProduct.price - (relatedProduct.price * relatedProduct.discountPercentage / 100)).toLocaleString('en-IN') %>
-                                                        </span>
-                                                        <span class="bg-red-100 text-red-800 text-sm font-semibold px-2.5 py-0.5 rounded ml-2">
-                                                            <%= relatedProduct.discountPercentage %>% OFF
-                                                        </span>
-                                                    <% } else { %>
-                                                        <span class="text-xl font-bold text-primary">
-                                                            ₹<%= relatedProduct.price.toLocaleString('en-IN') %>
-                                                        </span>
-                                                    <% } %>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </a>
+        <!-- Recommended Products Section -->
+        <section class="mt-16 mb-12">
+            <h2 class="text-2xl font-bold mb-6">Recommended Products</h2>
+            <% if (recommendedProducts && recommendedProducts.length > 0) { %>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <% recommendedProducts.forEach(rec => { %>
+                        <a href="/product/<%= rec._id %>" class="group">
+                            <div class="border rounded-lg p-4 transition-shadow hover:shadow-lg bg-white">
+                                <img src="<%= rec.images[0] %>" 
+                                     alt="<%= rec.name %>" 
+                                     class="w-full h-48 object-contain mb-4">
+                                <h3 class="font-semibold text-lg group-hover:text-blue-600"><%= rec.name %></h3>
+                                <p class="text-gray-600"><%= rec.brand %></p>
+                                <div class="mt-2">
+                                    <span class="font-bold">₹<%= rec.discountedPrice.toFixed(2) %></span>
+                                    <% if (rec.discountPercentage > 0) { %>
+                                        <span class="text-sm text-gray-500 line-through ml-2">₹<%= rec.price.toFixed(2) %></span>
+                                    <% } %>
                                 </div>
-                            <% }); %>
-                        <% } else { %>
-                            <div class="col-span-4 text-center text-gray-500">
-                                No similar products available.
                             </div>
-                        <% } %>
+                        </a>
+                    <% }) %>
+                </div>
+            <% } else { %>
+                <div class="bg-gray-50 rounded-lg p-8 text-center">
+                    <div class="flex flex-col items-center justify-center space-y-4">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                        </svg>
+                        <h3 class="text-xl font-semibold text-gray-700">No Recommended Products Available</h3>
+                        <p class="text-gray-500">We currently don't have any similar products to recommend.</p>
+                        <a href="/shop" class="inline-flex items-center text-blue-600 hover:text-blue-700">
+                            <span>Browse All Products</span>
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 ml-1" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clip-rule="evenodd" />
+                            </svg>
+                        </a>
                     </div>
                 </div>
-            </section>
-    
+            <% } %>
+        </section>
     </div>
+</main>
 
-<script src="https://cdn.jsdelivr.net/npm/swiper@8/swiper-bundle.min.js"></script>
+<!-- Footer -->
+<footer class="w-full bg-gray-100 mt-auto">
+    <%- include('../partials/footer') %>
+</footer>
+
+<!-- Image Zoom JavaScript -->
 <script>
-    // Initialize Swiper
-    var thumbsSwiper = new Swiper(".thumbSwiper", {
-        spaceBetween: 10,
-        slidesPerView: 4,
-        freeMode: true,
-        watchSlidesProgress: true,
-    });
-
-    const mainImage = document.getElementById('mainImage');
-    const magnifiedContainer = document.getElementById('magnifiedContainer');
-    const magnifiedImage = document.getElementById('magnifiedImage');
-
-    mainImage.addEventListener('mousemove', (e) => {
-        const { left, top, width, height } = mainImage.getBoundingClientRect();
-        const x = ((e.clientX - left) / width) * 100;
-        const y = ((e.clientY - top) / height) * 100;
-
-        magnifiedContainer.style.display = 'block';
-        magnifiedImage.style.transform = `scale(2) translate(-${x}%, -${y}%)`;
-        magnifiedImage.style.transformOrigin = `${x}% ${y}%`;
-    });
-
-    mainImage.addEventListener('mouseleave', () => {
-        magnifiedContainer.style.display = 'none';
-    });
-
-    // Change main image when thumbnail is clicked
-    function changeMainImage(imageUrl) {
-        mainImage.src = imageUrl;
-        magnifiedImage.src = imageUrl;
+    function changeMainImage(thumbnail, imageSrc) {
+        const mainImage = document.getElementById('mainImage');
+        mainImage.src = imageSrc;
+        mainImage.dataset.zoom = 'false';
+        mainImage.style.transform = 'scale(1)';
+        
+        // Update thumbnail borders
+        document.querySelectorAll('[onclick^="changeMainImage"]').forEach(btn => {
+            btn.classList.remove('border-blue-500');
+        });
+        thumbnail.classList.add('border-blue-500');
     }
+
+    document.getElementById('mainImage').addEventListener('click', function() {
+        const isZoomed = this.dataset.zoom === 'true';
+        this.style.transform = isZoomed ? 'scale(1)' : 'scale(1.5)';
+        this.dataset.zoom = isZoomed ? 'false' : 'true';
+    });
 
     async function addToCart(productId) {
-    const quantity = parseInt(document.getElementById('quantity').value);
-
- 
-    // Validate quantity
-    if (quantity > 10) {
-        await Swal.fire({
-            title: 'Invalid Quantity',
-            text: 'You cannot add more than 10 quantities of this product.',
-            icon: 'error',
-            confirmButtonColor: '#9333ea' // Purple color to match your theme
-        });
-        return;
-    }
-
-    try {
-        const response = await fetch('/cart/add', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ 
-                productId,
-                quantity: quantity
-            }),
-        });
-
-        const data = await response.json();
-
-        if (data.success) {
-            // Success message with cart view option
-            const result = await Swal.fire({
-                title: 'Added to Cart!',
-                text: 'Product added to cart successfully',
-                icon: 'success',
-                showCancelButton: true,
-                confirmButtonColor: '#9333ea',
-                cancelButtonColor: '#6b7280',
-                confirmButtonText: 'View Cart',
-                cancelButtonText: 'Continue Shopping'
+        try {
+            const response = await fetch('/cart/add', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ productId }),
             });
-
-            // If user clicks "View Cart", redirect to cart page
-            if (result.isConfirmed) {
-                window.location.href = '/cart';
+            
+            if (response.ok) {
+                window.location.reload();
+            } else {
+                const data = await response.json();
+                alert(data.message || 'Error adding to cart');
             }
-
-            // Update stock display if it exists
-            if (data.remainingStock !== undefined) {
-                const stockElement = document.querySelector('.text-green-600');
-                if (stockElement) {
-                    if (data.remainingStock > 5) {
-                        stockElement.textContent = `In Stock (${data.remainingStock} units)`;
-                    } else if (data.remainingStock > 0) {
-                        stockElement.textContent = `Low Stock (${data.remainingStock} units)`;
-                        stockElement.classList.remove('text-green-600');
-                        stockElement.classList.add('text-orange-600');
-                    } else {
-                        stockElement.textContent = 'Out of Stock';
-                        stockElement.classList.remove('text-green-600');
-                        stockElement.classList.add('text-red-600');
-                    }
-                }
-            }
-        } else {
-            // Error message
-            await Swal.fire({
-                title: 'Oops...',
-                text: data.message || 'Error adding product to cart',
-                icon: 'error',
-                confirmButtonColor: '#9333ea'
-            });
+        } catch (error) {
+            console.error('Error:', error);
+            alert('Error adding to cart');
         }
-    } catch (error) {
-        console.error('Error:', error);
-        await Swal.fire({
-            title: 'Error',
-            text: 'An error occurred while adding the product to cart',
-            icon: 'error',
-            confirmButtonColor: '#9333ea'
-        });
     }
-}
-
-// Update quantity with validation
-function updateQuantity(change) {
-    const quantityInput = document.getElementById('quantity');
-    const currentValue = parseInt(quantityInput.value);
-    const maxStock = parseInt(quantityInput.max);
-    
-    let newValue = currentValue + change;
-    
-    // Validate the new value
-    if (newValue < 1) {
-        newValue = 1;
-    } else if (newValue > Math.min(maxStock, 10)) {
-        newValue = Math.min(maxStock, 10);
-        Swal.fire({
-            title: 'Maximum Quantity Reached',
-            text: `You can only add up to ${Math.min(maxStock, 10)} units of this product`,
-            icon: 'info',
-            confirmButtonColor: '#9333ea'
-        });
-    }
-    
-    quantityInput.value = newValue;
-}
 
     async function addToWishlist(productId) {
         try {
@@ -389,29 +245,38 @@ function updateQuantity(change) {
                 },
                 body: JSON.stringify({ productId }),
             });
-            const data = await response.json();
-            if (data.success) {
-                showFlashMessage('Product added to wishlist successfully!', 'success');
+            
+            if (response.ok) {
+                alert('Product added to wishlist!');
             } else {
-                showFlashMessage(data.message || 'Error adding product to wishlist', 'error');
+                const data = await response.json();
+                alert(data.message || 'Error adding to wishlist');
             }
         } catch (error) {
             console.error('Error:', error);
-            showFlashMessage('Error adding product to wishlist', 'error');
+            alert('Error adding to wishlist');
         }
     }
 
-    // Flash message display function
-    function showFlashMessage(message, type) {
-        const flashContainer = document.createElement('div');
-        flashContainer.className = `flash-message ${type}`;
-        flashContainer.innerText = message;
-        document.body.appendChild(flashContainer);
-        
-        setTimeout(() => {
-            flashContainer.remove();
-        }, 3000);
+    async function buyNow(productId) {
+        try {
+            const response = await fetch('/orders/buy-now', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ productId }),
+            });
+            
+            if (response.ok) {
+                window.location.href = '/checkout';
+            } else {
+                const data = await response.json();
+                alert(data.message || 'Error processing purchase');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('Error processing purchase');
+        }
     }
 </script>
-
-<%- include('../partials/footer') %>

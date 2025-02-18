@@ -93,12 +93,22 @@ const getSingleProduct = async (req, res) => {
             prod.discountedPrice = prod.price - (prod.price * (prod.discountPercentage / 100));
         });
 
+        // Fetch the cart items count for the logged-in user
+        let cartItemsCount = 0;
+        if (req.user) {
+            const cart = await Cart.findOne({ user: req.user._id });
+            if (cart) {
+                cartItemsCount = cart.items.length;
+            }
+        }
+
         res.render('user/product', {
             product: {
                 ...product.toObject(),
                 discountedPrice
             },
             recommendedProducts,
+            cartItemsCount, // Pass the cart items count to the template
             message: {
                 type: req.flash('error').length ? 'error' : 'success',
                 content: req.flash('error')[0] || req.flash('success')[0]

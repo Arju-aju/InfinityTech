@@ -81,7 +81,6 @@ exports.getOrders = async (req, res) => {
 exports.toggleOrderStatus = async (req, res) => {
     try {
         const orderId = req.params.orderId;
-        console.log('orderId+++++++++++++++',orderId);
         const { status } = req.body;
 
         if (!orderId || !status) {
@@ -98,10 +97,22 @@ exports.toggleOrderStatus = async (req, res) => {
             return res.status(404).json({ success: false, message: 'Order not found' });
         }
 
+        // Prevent status changes if order is already cancelled
+        if (order.status === "Cancelled") {
+            return res.status(400).json({ 
+                success: false, 
+                message: 'Cannot modify status of cancelled orders' 
+            });
+        }
+
         order.status = status;
         await order.save();
 
-        res.json({ success: true, message: 'Order status updated successfully', newStatus: order.status });
+        res.json({ 
+            success: true, 
+            message: 'Order status updated successfully', 
+            newStatus: order.status 
+        });
     } catch (error) {
         console.error('Error in toggleOrderStatus:', error);
         res.status(500).json({ success: false, message: 'Error updating order status' });

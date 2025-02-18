@@ -62,14 +62,18 @@
                                     <td class="px-6 py-4"><%= order.user.name %></td>
                                     <td class="px-6 py-4">₹<%= order.orderAmount.toFixed(2) %></td>
                                     <td class="px-6 py-4">
-                                        <select class="bg-gray-700 text-white rounded-lg py-1 px-2 focus:ring-2 focus:ring-blue-500"
-                                            data-order-id="<%= order._id %>" onchange="updateStatus(this)">
-                                            <option value="Pending" <%= order.status === 'Pending' ? 'selected' : '' %>>Pending</option>
-                                            <option value="Processing" <%= order.status === 'Processing' ? 'selected' : '' %>>Processing</option>
-                                            <option value="Shipped" <%= order.status === 'Shipped' ? 'selected' : '' %>>Shipped</option>
-                                            <option value="Delivered" <%= order.status === 'Delivered' ? 'selected' : '' %>>Delivered</option>
-                                            <option value="Cancelled" <%= order.status === 'Cancelled' ? 'selected' : '' %>>Cancelled</option>
-                                        </select>
+                                        <% if (order.status === 'Cancelled') { %>
+                                            <span class="px-3 py-1 bg-red-500 text-white rounded-lg">Cancelled</span>
+                                        <% } else { %>
+                                            <select class="bg-gray-700 text-white rounded-lg py-1 px-2 focus:ring-2 focus:ring-blue-500"
+                                                data-order-id="<%= order._id %>" onchange="updateStatus(this)">
+                                                <option value="Pending" <%= order.status === 'Pending' ? 'selected' : '' %>>Pending</option>
+                                                <option value="Processing" <%= order.status === 'Processing' ? 'selected' : '' %>>Processing</option>
+                                                <option value="Shipped" <%= order.status === 'Shipped' ? 'selected' : '' %>>Shipped</option>
+                                                <option value="Delivered" <%= order.status === 'Delivered' ? 'selected' : '' %>>Delivered</option>
+                                                <option value="Cancelled" <%= order.status === 'Cancelled' ? 'selected' : '' %>>Cancelled</option>
+                                            </select>
+                                        <% } %>
                                     </td>
                                     <td class="px-6 py-4">
                                         <a href="/admin/viewdetails/<%= order._id %>" class="text-blue-400 hover:text-blue-300 transition">
@@ -97,13 +101,14 @@
     async function updateStatus(selectElement) {
     const orderId = selectElement.dataset.orderId;
     const newStatus = selectElement.value;
+    const originalStatus = selectElement.querySelector('[selected]').value;
 
     try {
-        const response = await fetch(`/admin/orders/${orderId}/toggle-status`, {  // Ensure the correct route
-            method: 'PATCH',  // Use PATCH instead of POST
+        const response = await fetch(`/admin/orders/${orderId}/toggle-status`, {
+            method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ status: newStatus }),
-            credentials: 'include' // If authentication is required
+            credentials: 'include'
         });
 
         const data = await response.json();
@@ -117,13 +122,21 @@
                 showConfirmButton: false,
                 timer: 1500
             });
+
+            // If status was changed to Cancelled, replace the select with a static span
+            if (newStatus === 'Cancelled') {
+                const staticStatus = document.createElement('span');
+                staticStatus.className = 'px-3 py-1 bg-red-500 text-white rounded-lg';
+                staticStatus.textContent = 'Cancelled';
+                selectElement.parentNode.replaceChild(staticStatus, selectElement);
+            }
         } else {
             Swal.fire({
                 icon: 'error',
                 title: 'Error',
                 text: data.message || 'Failed to update order status'
             });
-            selectElement.value = selectElement.querySelector('[selected]').value;  // Reset to previous value
+            selectElement.value = originalStatus;  // Reset to previous value
         }
     } catch (error) {
         console.error('Error updating status:', error);
@@ -132,6 +145,7 @@
             title: 'Error',
             text: 'An error occurred while updating the status'
         });
+        selectElement.value = originalStatus;  // Reset to previous value
     }
 }
 
