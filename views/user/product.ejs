@@ -1,5 +1,11 @@
 <%- include('../partials/header') %>
+<style>
 
+.image-container {
+    height: 600px; /* Set a fixed height */
+    width: 100%; /* Ensure full width */
+}
+</style>
 <!-- Main Content Container -->
 <main class="min-h-screen">
 
@@ -36,18 +42,14 @@
     </div>
 
     <div class="container mx-auto px-8 py-8 max-w-7xl">
-        <!-- Flash Messages -->
-        <% if (message.content) { %>
-            <div class="mb-4 p-4 rounded <%= message.type === 'error' ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700' %>">
-                <%= message.content %>
-            </div>
-        <% } %>
+
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-12">
             <!-- Product Images Section -->
             <div class="space-y-4">
                 <!-- Main Image Container -->
-                <div class="relative h-[500px] overflow-hidden rounded-lg border bg-white">
+                <div class="relative image-container overflow-hidden rounded-lg border bg-white">
+
                     <img id="mainImage" src="<%= product.images[0] %>" 
                          alt="<%= product.name %>"
                          class="w-full h-full object-contain transition-transform duration-300 cursor-zoom-in"
@@ -215,26 +217,71 @@
     });
 
     async function addToCart(productId) {
-        try {
-            const response = await fetch('/cart/add', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ productId }),
-            });
+    try {
+        const response = await fetch('/cart/add', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ productId, quantity: 1 }),
+            credentials: 'include'
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok && data.success) {
+            // Update UI
+            updateCartUI(data.cart);
             
-            if (response.ok) {
-                window.location.reload();
-            } else {
-                const data = await response.json();
-                alert(data.message || 'Error adding to cart');
+            // Show success message
+            showNotification(data.message);
+            
+            // Update stock display if it exists
+            const stockElement = document.querySelector('.stock-count');
+            if (stockElement && data.remainingStock !== undefined) {
+                stockElement.textContent = data.remainingStock;
             }
-        } catch (error) {
-            console.error('Error:', error);
-            alert('Error adding to cart');
+        } else {
+            // Handle redirect for login
+            if (response.status === 401 || data.message === 'Please login to continue') {
+                window.location.href = '/login';
+                return;
+            }
+            
+            // Show error message
+            showNotification(data.message, true);
         }
+    } catch (error) {
+        console.error('Error:', error);
+        showNotification('Error adding to cart. Please try again.', true);
     }
+}
+async function getCart() {
+    try {
+        const response = await fetch('/cart', {
+            method: 'GET',
+            credentials: 'include'
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok && data.success) {
+            updateCartUI(data.cart);
+            return data.cart;
+        } else {
+            if (response.status === 401) {
+                window.location.href = '/login';
+                return null;
+            }
+            showNotification(data.message, true);
+            return null;
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        showNotification('Error fetching cart details', true);
+        return null;
+    }
+}
 
     async function addToWishlist(productId) {
         try {
@@ -279,4 +326,24 @@
             alert('Error processing purchase');
         }
     }
+    function showNotification(message, isError = false) {
+    // You can replace this with a better notification system
+    alert(message);
+}
+function updateCartUI(cartData) {
+    // Update cart count in header if element exists
+    const cartCountElement = document.querySelector('.cart-count');
+    if (cartCountElement && cartData.count !== undefined) {
+        cartCountElement.textContent = cartData.count;
+    }
+
+    // Update cart total if element exists
+    const cartTotalElement = document.querySelector('.cart-total');
+    if (cartTotalElement && cartData.total !== undefined) {
+        cartTotalElement.textContent = `₹${cartData.total.toFixed(2)}`;
+    }
+}
+document.addEventListener('DOMContentLoaded', () => {
+    getCart();
+});
 </script>

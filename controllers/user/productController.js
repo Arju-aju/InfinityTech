@@ -10,9 +10,14 @@ const getHomePageProducts = async (req, res) => {
         const sevenDaysAgo = new Date();
         sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
+        // Fetch active categories
+        const activeCategories = await LaptopCategory.find({ isActive: true }).select('_id');
+        const activeCategoryIds = activeCategories.map(cat => cat._id);
+
         const newArrivals = await Product.find({ 
             isListed: true,
             isDeleted: false,
+            category: { $in: activeCategoryIds },
             createdAt: { $gte: sevenDaysAgo }
         })
         .sort({ createdAt: -1 })
@@ -21,6 +26,7 @@ const getHomePageProducts = async (req, res) => {
         const featuredProducts = await Product.find({ 
             isListed: true,
             isDeleted: false,
+            category: { $in: activeCategoryIds },
             discount: { $gt: 56 }
         })
         .sort({ discount: -1 })
@@ -28,7 +34,8 @@ const getHomePageProducts = async (req, res) => {
 
         const topSellingProducts = await Product.find({ 
             isListed: true,
-            isDeleted: false
+            isDeleted: false,
+            category: { $in: activeCategoryIds }
         })
         .sort({ salesCount: -1 })
         .limit(8);
@@ -36,6 +43,7 @@ const getHomePageProducts = async (req, res) => {
         const dealProducts = await Product.find({ 
             isListed: true,
             isDeleted: false,
+            category: { $in: activeCategoryIds },
             discount: { $gt: 0 }
         })
         .sort({ discount: -1 })
@@ -51,14 +59,13 @@ const getHomePageProducts = async (req, res) => {
                 content: req.flash('error')[0] || req.flash('success')[0]
             }
         });
-     
-
     } catch (error) {
         console.error('Error in getHomePageProducts:', error);
         req.flash('error', 'Error loading home page');
         res.redirect('/');
     }
 };
+
 
 // Get Single Product Details
 
@@ -125,7 +132,7 @@ const getSingleProduct = async (req, res) => {
 // Get All Categories
 const getAllCategories = async (req, res) => {
     try {
-        const categories = await LaptopCategory.find()
+        const categories = await LaptopCategory.find({isActive:true})
             .sort('name')
             .lean();
 
@@ -153,15 +160,17 @@ const getAllCategories = async (req, res) => {
 const getCategoryProducts = async (req, res) => {
     try {
         const categoryId = req.params.id;
+
+        // Ensure category is active
+        const category = await LaptopCategory.findOne({ _id: categoryId, isActive: true });
+        if (!category) {
+            req.flash('error', 'Category not found or inactive');
+            return res.redirect('/categories');
+        }
+
         const page = parseInt(req.query.page) || 1;
         const limit = parseInt(req.query.limit) || 12;
         const skip = (page - 1) * limit;
-
-        const category = await LaptopCategory.findById(categoryId);
-        if (!category) {
-            req.flash('error', 'Category not found');
-            return res.redirect('/categories');
-        }
 
         const [products, totalProducts] = await Promise.all([
             Product.find({ 
@@ -204,79 +213,106 @@ const getCategoryProducts = async (req, res) => {
         res.redirect('/categories');
     }
 };
+
+
+
 // Load Shop Page
 const loadShop = async (req, res) => {
     try {
         const page = parseInt(req.query.page) || 1;
         const limit = parseInt(req.query.limit) || 12;
         const skip = (page - 1) * limit;
-        const selectedCategory = req.query.category || null; // Get the selected category from query
-        const sortOption = req.query.sort || 'newest'; // Get the sorting option from query
+
+        // Get filter parameters
+        const selectedCategory = req.query.category || null;
+        const sortOption = req.query.sort || 'newest';
+        const searchQuery = req.query.search || '';
+        const minPrice = parseFloat(req.query.minPrice) || 0;
+        const maxPrice = parseFloat(req.query.maxPrice) || Number.MAX_VALUE;
+
+        // Get active categories
+        const activeCategories = await LaptopCategory.find({ isActive: true }).select('_id name');
+        const activeCategoryIds = activeCategories.map(cat => cat._id);
 
         // Build filter object
-        const filter = { isListed: true };
+        const filter = {
+            isListed: true,
+            isDeleted: false,
+            category: { $in: activeCategoryIds }
+        };
+
+        // Add search query if present
+        if (searchQuery) {
+            filter.$or = [
+                { name: { $regex: searchQuery, $options: 'i' } },
+                { description: { $regex: searchQuery, $options: 'i' } }
+            ];
+        }
+
         if (selectedCategory) {
             filter.category = selectedCategory;
         }
 
-        // Define sorting logic based on the selected option
-        let sortQuery = {};
-        switch (sortOption) {
-            case 'popularity':
-                sortQuery = { popularity: -1 }; // Sort by popularity (descending)
-                break;
-            case 'price_low_to_high':
-                sortQuery = { price: 1 }; // Sort by price (ascending)
-                break;
-            case 'price_high_to_low':
-                sortQuery = { price: -1 }; // Sort by price (descending)
-                break;
-            case 'average_rating':
-                sortQuery = { averageRating: -1 }; // Sort by average rating (descending)
-                break;
-            case 'featured':
-                filter.isFeatured = true; // Filter featured products
-                sortQuery = { createdAt: -1 }; // Sort by newest first
-                break;
-            case 'newest':
-                sortQuery = { createdAt: -1 }; // Sort by newest first
-                break;
-            case 'name_a_to_z':
-                sortQuery = { name: 1 }; // Sort by name (A-Z)
-                break;
-            case 'name_z_to_a':
-                sortQuery = { name: -1 }; // Sort by name (Z-A)
-                break;
-            default:
-                sortQuery = { createdAt: -1 }; // Default sorting (newest first)
-        }
+        // Fetch all products matching the filter
+        const allProducts = await Product.find(filter).populate('category').lean();
 
-        const [products, totalProducts, categories] = await Promise.all([
-            Product.find(filter)
-                .populate('category')
-                .skip(skip)
-                .limit(limit)
-                .sort(sortQuery) // Apply sorting
-                .lean(),
-            Product.countDocuments(filter),
-            LaptopCategory.find().sort('name').lean()
-        ]);
+        // Calculate discounted prices and filter by price range
+        const filteredProducts = allProducts
+            .map(product => {
+                product.discountedPrice = product.price - (product.price * (product.discountPercentage / 100));
+                return product;
+            })
+            .filter(product => {
+                return product.discountedPrice >= minPrice && product.discountedPrice <= maxPrice;
+            });
 
-        // Calculate discounted prices
-        products.forEach(product => {
-            product.discountedPrice = product.price - (product.price * (product.discountPercentage / 100));
+        // Define sorting logic based on discountedPrice
+        const sortQuery = {
+            'price_low_to_high': { discountedPrice: 1 },
+            'price_high_to_low': { discountedPrice: -1 },
+            'newest': { createdAt: -1 },
+            'name_a_to_z': { name: 1 },
+            'name_z_to_a': { name: -1 },
+            'popularity': { viewCount: -1 },
+            'average_rating': { averageRating: -1 }
+        }[sortOption] || { createdAt: -1 };
+
+        // Sort the filtered products
+        filteredProducts.sort((a, b) => {
+            if (sortOption === 'price_low_to_high') return a.discountedPrice - b.discountedPrice;
+            if (sortOption === 'price_high_to_low') return b.discountedPrice - a.discountedPrice;
+            if (sortOption === 'newest') return new Date(b.createdAt) - new Date(a.createdAt);
+            if (sortOption === 'name_a_to_z') return a.name.localeCompare(b.name);
+            if (sortOption === 'name_z_to_a') return b.name.localeCompare(a.name);
+            if (sortOption === 'popularity') return b.viewCount - a.viewCount;
+            if (sortOption === 'average_rating') return b.averageRating - a.averageRating;
+            return 0;
         });
 
+        // Paginate the sorted and filtered products
+        const paginatedProducts = filteredProducts.slice(skip, skip + limit);
+
+        // Get price range for the filter (based on discountedPrice)
+        const discountedPrices = filteredProducts.map(product => product.discountedPrice);
+        const minPriceInDb = Math.min(...discountedPrices);
+        const maxPriceInDb = Math.max(...discountedPrices);
+
+        const totalProducts = filteredProducts.length;
         const totalPages = Math.ceil(totalProducts / limit);
 
         res.render('user/shop', {
-            products,
-            categories,
+            products: paginatedProducts,
+            categories: activeCategories,
             currentPage: page,
             totalPages,
             totalProducts,
             selectedCategory,
-            sortOption, // Pass the selected sorting option to the template
+            sortOption,
+            searchQuery,
+            minPrice: minPriceInDb || 0,
+            maxPrice: maxPriceInDb || 0,
+            selectedMinPrice: minPrice,
+            selectedMaxPrice: maxPrice === Number.MAX_VALUE ? maxPriceInDb : maxPrice,
             message: {
                 type: req.flash('error').length ? 'error' : 'success',
                 content: req.flash('error')[0] || req.flash('success')[0]
@@ -288,6 +324,9 @@ const loadShop = async (req, res) => {
         res.redirect('/');
     }
 };
+
+
+
 // Search Products
 const searchProducts = async (req, res) => {
     try {

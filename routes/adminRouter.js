@@ -35,8 +35,8 @@ router.get('/addProduct', admin.isAdmin ,   productController.loadAddProduct);
 router.post('/addProduct', admin.isAdmin ,   upload.array('images', 5), validationMiddleware.validateProduct, productController.addProduct);
 router.get('/editProduct/:id', admin.isAdmin ,  admin.isAdmin ,  productController.loadEditProduct);
 router.post('/editProduct/:id',  admin.isAdmin ,  upload.array('images', 5), validationMiddleware.validateProduct, productController.updateProduct);
+router.delete('/deleteProductImage/:productId',   productController.deleteProductImage);
 router.delete('/deleteProduct/:id', admin.isAdmin ,   productController.deleteProduct);
-router.delete('/deleteProductImage/:productId/:imagePath',   productController.deleteProductImage);
 router.patch('/products/:id/toggle-list',   productController.toggleListStatus)
 router.delete('/softDeleteProduct/:id', productController.softDelete);
 

@@ -5,10 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Manage Addresses</title>
     <script src="https://cdn.tailwindcss.com"></script>
-<link
-  rel="stylesheet"
-  href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
-/>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
       .gradient-bg {
         background: linear-gradient(135deg, #6366f1, #8b5cf6);
@@ -240,11 +241,11 @@
       function openAddAddressForm() {
           document.getElementById("addAddressModal").classList.remove("hidden");
       }
-
+  
       function closeAddAddressForm() {
           document.getElementById("addAddressModal").classList.add("hidden");
       }
-
+  
       function openEditForm(id, name, address, landmark, city, state, pincode, phone) {
           document.getElementById("editId").value = id;
           document.getElementById("editName").value = name;
@@ -257,120 +258,115 @@
           document.getElementById("editAddressForm").action = `/edit-address/${id}`;
           document.getElementById("editModal").classList.remove("hidden");
       }
-
+  
       function closeEditForm() {
           document.getElementById("editModal").classList.add("hidden");
       }
-
+  
       function toggleDefaultAddress(addressId) {
-    fetch(`/set-default-address/${addressId}`, {
-        method: 'POST',
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            // Reload the page to reflect the changes
-            location.reload();
-        } else {
-            // Handle error (optional: display a message on the page)
-            console.error("Failed to update default address.");
-        }
-    });
-}
-
+          fetch(`/set-default-address/${addressId}`, {
+              method: 'POST',
+          })
+          .then(response => response.json())
+          .then(data => {
+              if (data.success) {
+                  location.reload();
+              } else {
+                  Swal.fire("Error", "Failed to update default address.", "error");
+              }
+          });
+      }
+  
       let currentAddressId = null;
-
+  
       function showDeleteConfirmation(addressId) {
           currentAddressId = addressId;
-          document.getElementById("deleteConfirmationModal").classList.remove("hidden");
+          Swal.fire({
+              title: "Are you sure?",
+              text: "You won't be able to revert this!",
+              icon: "warning",
+              showCancelButton: true,
+              confirmButtonColor: "#d33",
+              cancelButtonColor: "#3085d6",
+              confirmButtonText: "Yes, delete it!",
+          }).then((result) => {
+              if (result.isConfirmed) {
+                  deleteAddress();
+              }
+          });
       }
-
-      function closeDeleteModal() {
-          document.getElementById("deleteConfirmationModal").classList.add("hidden");
-          currentAddressId = null;
+  
+      function deleteAddress() {
+          if (currentAddressId) {
+              fetch(`/delete-address/${currentAddressId}`, { method: 'DELETE' })
+              .then(response => response.json())
+              .then(data => {
+                  if (data.success) {
+                      Swal.fire("Deleted!", "Your address has been deleted.", "success").then(() => {
+                          location.reload();
+                      });
+                  } else {
+                      Swal.fire("Error", "Failed to delete address.", "error");
+                  }
+              })
+              .catch(() => Swal.fire("Error", "Something went wrong!", "error"));
+          }
       }
-
-      document.getElementById("confirmDeleteBtn").addEventListener("click", async () => {
-    if (currentAddressId) {
-        try {
-            const response = await fetch(`/delete-address/${currentAddressId}`, {
-                method: 'DELETE',
-            });
-            if (response.ok) {
-                // Reload the page to reflect the changes
-                location.reload();
-            } else {
-                // Handle error (optional: display a message on the page)
-                console.error("Failed to delete address.");
-            }
-        } catch (error) {
-            console.error('Error:', error);
-        }
-    }
-    closeDeleteModal();
-});
-
-document.getElementById('addAddressForm').addEventListener('submit', function(e) {
-    e.preventDefault();
-    
-    // Reset all error messages
-    const errorMessages = this.querySelectorAll('.error-message');
-    errorMessages.forEach(msg => msg.classList.add('hidden'));
-    
-    // Get all form inputs
-    const inputs = this.querySelectorAll('input, select');
-    let hasError = false;
-    
-    // Check each input
-    inputs.forEach(input => {
-        if (!input.value.trim()) {
-            hasError = true;
-            const errorSpan = input.nextElementSibling;
-            errorSpan.textContent = `${input.previousElementSibling.textContent.replace('*', '')} is required`;
-            errorSpan.classList.remove('hidden');
-            
-            // Add shake animation to the input
-            input.classList.add('border-red-500');
-            input.classList.add('shake');
-            setTimeout(() => {
-                input.classList.remove('shake');
-            }, 500);
-        }
-    });
-    
-    // If no errors, submit the form
-    if (!hasError) {
-        this.submit();
-    }
-});
-
-// Add this CSS to your stylesheet
-const style = document.createElement('style');
-style.textContent = `
-    @keyframes shake {
-        0%, 100% { transform: translateX(0); }
-        25% { transform: translateX(-10px); }
-        75% { transform: translateX(10px); }
-    }
-    
-    .shake {
-        animation: shake 0.5s ease-in-out;
-    }
-    
-    input:invalid, select:invalid {
-        border-color: rgb(239, 68, 68);
-    }
-`;
-document.head.appendChild(style);
-
-// Clear error message when user starts typing
-document.querySelectorAll('input, select').forEach(input => {
-    input.addEventListener('input', function() {
-        const errorSpan = this.nextElementSibling;
-        errorSpan.classList.add('hidden');
-        this.classList.remove('border-red-500');
-    });
-});
-    </script>
+  
+      document.getElementById('addAddressForm').addEventListener('submit', function (e) {
+          e.preventDefault();
+  
+          const form = this;
+          const name = form.name.value.trim();
+          const address = form.address.value.trim();
+          const landmark = form.landmark.value.trim();
+          const city = form.city.value.trim();
+          const state = form.state.value.trim();
+          const pincode = form.pincode.value.trim();
+          const phone = form.phone.value.trim();
+          const addressType = form.addressType.value.trim();
+  
+          // Regular expressions for validation
+          const textRegex = /^[A-Za-z\s]+$/;  // Only letters and spaces
+          const pincodeRegex = /^\d{6}$/;  // 6-digit pincode
+          const phoneRegex = /^\d{10}$/;   // 10-digit phone number
+  
+          if (!addressType) {
+              Swal.fire("Validation Error", "Please select an address type.", "warning");
+              return;
+          }
+          if (!name.match(textRegex)) {
+              Swal.fire("Validation Error", "Full Name should only contain letters and spaces.", "warning");
+              return;
+          }
+          if (!address) {
+              Swal.fire("Validation Error", "Address is required.", "warning");
+              return;
+          }
+          if (!landmark.match(textRegex)) {
+              Swal.fire("Validation Error", "Landmark should only contain letters and spaces.", "warning");
+              return;
+          }
+          if (!city.match(textRegex)) {
+              Swal.fire("Validation Error", "City should only contain letters and spaces.", "warning");
+              return;
+          }
+          if (!state.match(textRegex)) {
+              Swal.fire("Validation Error", "State should only contain letters and spaces.", "warning");
+              return;
+          }
+          if (!pincode.match(pincodeRegex)) {
+              Swal.fire("Validation Error", "Please enter a valid 6-digit Indian Pincode.", "warning");
+              return;
+          }
+          if (!phone.match(phoneRegex)) {
+              Swal.fire("Validation Error", "Please enter a valid 10-digit Indian phone number.", "warning");
+              return;
+          }
+  
+          form.submit();
+      });
+  </script>
+  
   </body>
 </html>

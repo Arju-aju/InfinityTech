@@ -4,29 +4,31 @@ const OrderPerPage = 10;
 
 exports.getOrders = async (req, res) => {
     try {
-        const { search, status, startDate, endDate, minAmount, maxAmount } = req.query;
-
+        const { search, status, startDate, endDate, minAmount, maxAmount, page = 1 } = req.query;
+        const limit = 10; // Number of orders per page
+        const skip = (page - 1) * limit;
+        
         let query = {};
-
-        // Check if search is a valid ObjectId (for order ID search)
+        
+        // Search by OrderId
         if (search) {
             if (mongoose.Types.ObjectId.isValid(search)) {
-                query._id = search; // Exact match for ObjectId
+                query._id = search;
             }
         }
-
+        
         // Status filter
         if (status && status !== 'All') {
             query.status = status;
         }
-
-        // Date range filter with proper checks
+        
+        // Date range filter
         if (startDate || endDate) {
             query.createdAt = {};
             if (startDate) query.createdAt.$gte = new Date(startDate);
             if (endDate) query.createdAt.$lte = new Date(endDate);
         }
-
+        
         // Amount range filter
         if (minAmount || maxAmount) {
             query.orderAmount = {};
@@ -34,6 +36,11 @@ exports.getOrders = async (req, res) => {
             if (maxAmount) query.orderAmount.$lte = parseFloat(maxAmount);
         }
 
+        // Get total count for pagination
+        const totalOrders = await Order.countDocuments(query);
+        const totalPages = Math.ceil(totalOrders / limit);
+        
+        // Fetch paginated orders
         let orders = await Order.find(query)
             .populate({
                 path: 'user',
@@ -44,6 +51,8 @@ exports.getOrders = async (req, res) => {
                 select: 'name price image'
             })
             .sort({ createdAt: -1 })
+            .skip(skip)
+            .limit(limit)
             .lean();
 
         // If search is by user name, filter manually
@@ -68,7 +77,13 @@ exports.getOrders = async (req, res) => {
 
         res.render('admin/orders', {
             orders: processedOrders,
-            filters: { search, status, startDate, endDate, minAmount, maxAmount }
+            filters: { search, status, startDate, endDate, minAmount, maxAmount },
+            pagination: {
+                currentPage: parseInt(page),
+                totalPages,
+                hasNextPage: page < totalPages,
+                hasPrevPage: page > 1
+            }
         });
     } catch (error) {
         console.error('Error in getOrders:', error);
@@ -78,6 +93,7 @@ exports.getOrders = async (req, res) => {
         });
     }
 };
+
 exports.toggleOrderStatus = async (req, res) => {
     try {
         const orderId = req.params.orderId;

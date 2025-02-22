@@ -1,4 +1,4 @@
-<!-- views/orderDetails.ejs -->
+<!-- views/admin/viewdetails.ejs -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -9,7 +9,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body class="bg-gray-950 text-gray-200 min-h-screen flex">
-    <!-- Sidebar Placeholder - Include your sidebar partial here -->
+    <!-- Sidebar -->
     <%- include('./partials/adminSidebar.ejs') %>
 
     <main class="flex-1 p-6 md:ml-68">
@@ -79,18 +79,28 @@
                     <% order.products.forEach(product => { %>
                         <div class="flex items-center justify-between bg-gray-700 p-4 rounded-lg">
                             <div class="flex items-center space-x-4">
-                                <img src="<%= product.productId.images[0] %>" alt="Product Image" width="100">
-
+                                <% const productImage = product.productId && product.productId.images && product.productId.images.length > 0 ? 
+                                    product.productId.images[0] : '/default-image.jpg' %>
+                                <img src="<%= productImage %>" 
+                                     alt="Product Image" 
+                                     width="100"
+                                     class="object-cover h-24 w-24 rounded">
                                 <div>
-                                    <h3 class="font-medium"><%= product.productId.name %></h3>
+                                    <h3 class="font-medium">
+                                        <%= product.productId ? product.productId.name : 'Product Not Available' %>
+                                    </h3>
                                     <p class="text-sm text-gray-400">Quantity: <%= product.quantity %></p>
                                 </div>
                             </div>
                             <div class="text-right">
-                                <p class="font-medium">₹<%= product.productId.price %></p>
-                                <p class="text-sm text-gray-400">
-                                    Total: ₹<%= (product.productId.price * product.quantity).toFixed(2) %>
-                                </p>
+                                <% if (product.productId) { %>
+                                    <p class="font-medium">₹<%= product.productId.price %></p>
+                                    <p class="text-sm text-gray-400">
+                                        Total: ₹<%= (product.productId.price * product.quantity).toFixed(2) %>
+                                    </p>
+                                <% } else { %>
+                                    <p class="font-medium text-gray-400">Price not available</p>
+                                <% } %>
                             </div>
                         </div>
                     <% }); %>

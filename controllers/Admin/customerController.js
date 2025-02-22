@@ -1,15 +1,39 @@
 const User = require('../../models/userSchema');
 
+// Controller: customerController.js
 const customerInfo = async (req, res) => {
     try {
         const page = parseInt(req.query.page) || 1;
-        const limit = 10;
+        const limit = 3;
         const skip = (page - 1) * limit;
 
-        const totalItems = await User.countDocuments({ isAdmin: 0 });
+        // Get search and filter parameters
+        const searchQuery = req.query.search || '';
+        const statusFilter = req.query.status || 'all';
+        
+        // Build filter conditions
+        let filterConditions = { isAdmin: 0 };
+        
+        // Add search condition if search query exists
+        if (searchQuery) {
+            filterConditions.$or = [
+                { name: { $regex: searchQuery, $options: 'i' } },
+                { email: { $regex: searchQuery, $options: 'i' } },
+                { phone: { $regex: searchQuery, $options: 'i' } }
+            ];
+        }
+
+        // Add status filter if not 'all'
+        if (statusFilter !== 'all') {
+            filterConditions.isBlocked = statusFilter === 'blocked';
+        }
+
+        // Get total count for pagination
+        const totalItems = await User.countDocuments(filterConditions);
         const totalPages = Math.ceil(totalItems / limit);
 
-        const customers = await User.find({ isAdmin: 0 })
+        // Fetch filtered customers
+        const customers = await User.find(filterConditions)
             .skip(skip)
             .limit(limit)
             .sort({ createdAt: -1 });
@@ -21,7 +45,14 @@ const customerInfo = async (req, res) => {
 
         res.render('admin/customers', {
             customers,
-            pagination: { currentPage: page, totalPages, startPage, endPage },
+            pagination: { 
+                currentPage: page, 
+                totalPages, 
+                startPage, 
+                endPage,
+                searchQuery,
+                statusFilter
+            },
             breadcrumbs,
             messages: {
                 success: req.flash('success'),

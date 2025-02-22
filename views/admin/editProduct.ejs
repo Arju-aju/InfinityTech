@@ -139,7 +139,8 @@
                             </div>
                         </div>
 
-                        <!-- Product Images -->
+                        
+                        <!-- Product Images Section -->
                         <div class="space-y-4">
                             <h3 class="text-lg font-medium text-gray-300">Current Images</h3>
                             <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
@@ -149,51 +150,60 @@
                                             <img src="<%= image %>" 
                                                  alt="Product image <%= index + 1 %>"
                                                  class="w-full h-32 object-cover rounded-lg">
-                                            <button type="button"
-                                                    onclick="deleteImage('<%= product._id %>', '<%= image %>', this.parentElement)"
-                                                    class="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                                                <i class="fas fa-times"></i>
-                                            </button>
+                                            <div class="absolute top-2 right-2 space-x-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                                                <label class="cursor-pointer bg-blue-500 hover:bg-blue-400 text-white rounded-full p-2 transition-colors duration-200">
+                                                    <i class="fas fa-exchange-alt"></i>
+                                                    <input type="file" 
+                                                           class="hidden" 
+                                                           accept="image/jpeg,image/png,image/webp,image/avif"
+                                                           onchange="replaceImage(this, '<%= product._id %>', '<%= image %>')">
+                                                </label>
+                                                <button type="button"
+                                                        onclick="deleteImage('<%= product._id %>', '<%= image %>', this.closest('.relative'))"
+                                                        class="bg-red-500 hover:bg-red-400 text-white rounded-full p-2 transition-colors duration-200">
+                                                    <i class="fas fa-times"></i>
+                                                </button>
+                                            </div>
                                         </div>
                                     <% }); %>
                                 <% } else { %>
                                     <p class="text-gray-400 col-span-full">No images uploaded yet</p>
                                 <% } %>
                             </div>
+                        </div>
 
-                            <div>
-                                <label for="newImages" class="block text-sm font-medium text-gray-300 mb-2">Add New Images</label>
-                                <input type="file" id="newImages" name="images" 
-                                       multiple accept="image/*"
-                                       onchange="previewNewImages(this)"
-                                       class="w-full px-4 py-3 rounded-lg bg-gray-800 border border-gray-700 text-white placeholder-gray-400 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/50 transition-all duration-200">
-                            </div>
-
-                            <div id="imagePreviewContainer" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-                                <!-- New image previews will be inserted here -->
-                            </div>
+                        <div>
+                            <label for="newImages" class="block text-sm font-medium text-gray-300 mb-2">Add New Images</label>
+                            <input type="file" id="newImages" name="images" 
+                                   multiple accept="image/*"
+                                   onchange="previewNewImages(this)"
+                                   class="w-full px-4 py-3 rounded-lg bg-gray-800 border border-gray-700 text-white placeholder-gray-400 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/50 transition-all duration-200">
+                        </div>
+                        <div id="imagePreviewContainer" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                            <!-- New image previews will be inserted here -->
                         </div>
                     </div>
+                </div>
 
-                    <div class="flex justify-between mt-8">
-                        <button type="button" onclick="confirmDelete('<%= product._id %>')"
-                                class="inline-flex items-center px-6 py-3 rounded-lg bg-red-600 hover:bg-red-500 text-white font-medium transition-all duration-200 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
-                            <i class="fas fa-trash-alt mr-2"></i>
-                            Delete Product
+                <div class="flex justify-between mt-8">
+                    <button type="button" onclick="confirmDelete('<%= product._id %>')"
+                            class="inline-flex items-center px-6 py-3 rounded-lg bg-red-600 hover:bg-red-500 text-white font-medium transition-all duration-200 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
+                        <i class="fas fa-trash-alt mr-2"></i>
+                        Delete Product
+                    </button>
+                    
+                    <div class="space-x-4">
+                        <a href="/admin/products"
+                           class="inline-flex items-center px-6 py-3 rounded-lg border border-gray-600 text-gray-300 hover:bg-gray-800 font-medium transition-all duration-200">
+                            Cancel
+                        </a>
+                        <button type="submit"
+                                class="inline-flex items-center px-6 py-3 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white font-medium transition-all duration-200 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-cyan-500">
+                            <i class="fas fa-save mr-2"></i>
+                            Save Changes
                         </button>
-                        
-                        <div class="space-x-4">
-                            <a href="/admin/products"
-                               class="inline-flex items-center px-6 py-3 rounded-lg border border-gray-600 text-gray-300 hover:bg-gray-800 font-medium transition-all duration-200">
-                                Cancel
-                            </a>
-                            <button type="submit"
-                                    class="inline-flex items-center px-6 py-3 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white font-medium transition-all duration-200 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-cyan-500">
-                                <i class="fas fa-save mr-2"></i>
-                                Save Changes
-                            </button>
-                        </div>
                     </div>
+                </div>
                 </form>
             </div>
         </div>
@@ -202,7 +212,7 @@
 
 <!-- Scripts -->
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<script src="/js/editProduct.js"></script>
+
 
 <script>
 // Initialize the page with proper error handling
@@ -225,4 +235,163 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 });
+async function deleteImage(productId, imagePath, imageElement) {
+    console.log('1>>>>',imagePath)
+    try {
+        console.log('2>>>>',imagePath)
+        const response = await fetch(`/admin/deleteProductImage/${productId}`, {
+            method: 'DELETE', // Use DELETE request
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ imagePath }) // Send imagePath in the body
+        });
+
+        const data = await response.json();
+        if (data.success) {
+            imageElement.remove(); // Remove image from UI
+            Swal.fire('Deleted!', 'Image has been deleted.', 'success');
+        } else {
+            Swal.fire('Error!', data.message, 'error');
+        }
+    } catch (error) {
+        console.error('Error deleting image:', error);
+        Swal.fire('Error!', 'Something went wrong.', 'error');
+    }
+}
+
+async function replaceImage(input, productId, oldImagePath) {
+    if (!input.files || !input.files[0]) return;
+
+    // Validate file size (5MB limit)
+    if (input.files[0].size > 5 * 1024 * 1024) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'File size must be less than 5MB'
+        });
+        input.value = '';
+        return;
+    }
+
+    // Validate file type
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/avif'];
+    if (!allowedTypes.includes(input.files[0].type)) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'Only .jpg, .jpeg, .png, .avif and .webp formats are allowed'
+        });
+        input.value = '';
+        return;
+    }
+
+    try {
+        // Show loading state
+        Swal.fire({
+            title: 'Replacing image...',
+            didOpen: () => {
+                Swal.showLoading();
+            },
+            allowOutsideClick: false
+        });
+
+        const formData = new FormData();
+        formData.append('newImage', input.files[0]);
+        formData.append('oldImagePath', oldImagePath);
+
+        const response = await fetch(`/admin/replaceProductImage/${productId}`, {
+            method: 'POST',
+            body: formData
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.message || 'Failed to replace image');
+        }
+
+        const data = await response.json();
+
+        // Update the image in UI
+        const imgElement = input.closest('.relative').querySelector('img');
+        imgElement.src = data.newImagePath + '?t=' + new Date().getTime(); // Prevent caching
+
+        Swal.fire({
+            icon: 'success',
+            title: 'Success',
+            text: 'Image replaced successfully!',
+            timer: 2000,
+            showConfirmButton: false
+        });
+
+    } catch (error) {
+        console.error('Error replacing image:', error);
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: error.message || 'Failed to replace image'
+        });
+    }
+
+    // Clear the file input
+    input.value = '';
+}
+
+async function confirmDelete(productId) {
+        try {
+            const result = await Swal.fire({
+                title: 'Delete Product?',
+                text: "This action cannot be undone!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Yes, delete it!'
+            });
+
+            if (result.isConfirmed) {
+                const response = await fetch(`/admin/deleteProduct/${productId}`, {
+                    method: 'DELETE'
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to delete product');
+                }
+
+                await Swal.fire({
+                    icon: 'success',
+                    title: 'Deleted!',
+                    text: 'Product has been deleted.',
+                    timer: 2000,
+                    showConfirmButton: false
+                });
+
+                // Redirect to products page
+                window.location.href = '/admin/products';
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: error.message || 'Failed to delete product. Please try again.',
+                confirmButtonText: 'OK'
+            });
+        }
+    }
+
+    window.previewNewImages = previewNewImages;
+    window.deleteImage = deleteImage;
+    window.confirmDelete = confirmDelete;
 </script>
+
+
+
+
+
+
+
+
+
+
+
+
+

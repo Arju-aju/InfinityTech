@@ -62,38 +62,40 @@ const loadLogin = async (req, res) => {
 const login = async (req, res) => {
     try {
         const { email, password } = req.body;
+        console.log('datas>>>>>>>>>>>>>>',)
 
         if (!email || !password) {
-            return res.status(400).render("user/login", { error: "All fields are required." });
+            return res.status(400).json({ success: false, message: "All fields are required." });
         }
 
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(email)) {
-            return res.status(400).render("user/login", { error: "Invalid email format." });
+            return res.status(400).json({ success: false, message: "Invalid email format." });
         }
 
         const user = await User.findOne({ email });
         if (!user) {
-            return res.status(401).render("user/login", { error: "Invalid email or password" });
+            return res.status(400).json({ success: false, message: "Invalid email or password." });
         }
 
         if (user.isBlocked) {
-            return res.status(403).render("user/login", { error: "You have been blocked. Please contact support." });
+            console.log('User is blocked >>>>>>>>>>>>');
+            return res.status(403).json({ success: false, blocked: true, message: "Your account has been blocked. Please contact support." });
         }
 
         const isPasswordMatch = await bcrypt.compare(password, user.password);
         if (!isPasswordMatch) {
-            return res.status(401).render("user/login", { error: "Invalid email or password" });
+            return res.status(400).json({ success: false, message: "Invalid email or password." });
         }
 
         req.session.user = user;
-        res.redirect('/');
+        return res.status(200).json({ success: true, message: "Login successful!", redirect: "/" });
+
     } catch (error) {
-        console.error(`Login error for email ${req.body.email}:, error.message`);
-        res.status(500).render("user/login", { error: "Internal Server Error" });
+        console.error(`Login error for email ${req.body.email}: ${error.message}`);
+        return res.status(500).json({ success: false, message: "Internal Server Error" });
     }
 };
-
 
 
 // Load Signup Page
@@ -179,7 +181,7 @@ const signup = async (req, res) => {
         // Generate OTP
         const otp = generateOtp();
         const otpExpiry = new Date(Date.now() + 1 * 60 * 1000); 
-
+        console.log('Otp>>>>>>>>>>>>>>>>',otp);
         // Hash password
         const hashedPassword = await bcrypt.hash(password, 10);
 

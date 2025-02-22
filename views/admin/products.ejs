@@ -8,6 +8,15 @@
     .product-grid {
         display: none !important;
     }
+    .pagination-container {
+        @apply mt-8 flex flex-col sm:flex-row items-center justify-between gap-4;
+    }
+    .pagination-button {
+        @apply relative inline-flex items-center px-3 py-2 glass-effect text-sm text-gray-200 hover:bg-gray-700/50 transition-all duration-300;
+    }
+    .pagination-button.active {
+        @apply bg-cyan-500/20 text-cyan-400;
+    }
 </style>
 
 <div class="flex h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-violet-900">
@@ -38,6 +47,99 @@
                 </a>
             </div>
 
+            <!-- Search and Filters -->
+            <div class="mb-6 space-y-4">
+                <form id="filterForm" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4" method="GET">
+                    <!-- Search Bar -->
+                    <div class="col-span-full md:col-span-2">
+                        <div class="relative">
+                            <input type="text" 
+                                   name="search" 
+                                   value="<%= filters.search %>"
+                                   placeholder="Search products..." 
+                                   class="w-full px-4 py-2 pl-10 bg-gray-800/50 border border-gray-700 rounded-lg text-gray-200 placeholder-gray-400 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/50">
+                            <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                        </div>
+                    </div>
+
+                    <!-- Category Filter -->
+                    <div>
+                        <select name="category" 
+                                class="w-full px-4 py-2 bg-gray-800/50 border border-gray-700 rounded-lg text-gray-200 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/50">
+                            <option value="">All Categories</option>
+                            <% categories.forEach(category => { %>
+                                <option value="<%= category._id %>" 
+                                        <%= filters.category === category._id.toString() ? 'selected' : '' %>>
+                                    <%= category.name %>
+                                </option>
+                            <% }); %>
+                        </select>
+                    </div>
+
+                    <!-- Price Range Filter -->
+                    <div>
+                        <select name="priceRange" 
+                                class="w-full px-4 py-2 bg-gray-800/50 border border-gray-700 rounded-lg text-gray-200 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/50">
+                            <option value="">All Prices</option>
+                            <option value="0-1000" <%= filters.priceRange === '0-1000' ? 'selected' : '' %>>Under ₹1,000</option>
+                            <option value="1000-5000" <%= filters.priceRange === '1000-5000' ? 'selected' : '' %>>₹1,000 - ₹5,000</option>
+                            <option value="5000-10000" <%= filters.priceRange === '5000-10000' ? 'selected' : '' %>>₹5,000 - ₹10,000</option>
+                            <option value="10000-50000" <%= filters.priceRange === '10000-50000' ? 'selected' : '' %>>₹10,000 - ₹50,000</option>
+                            <option value="50000" <%= filters.priceRange === '50000' ? 'selected' : '' %>>Above ₹50,000</option>
+                        </select>
+                    </div>
+
+                    <!-- Stock Filter -->
+                    <div>
+                        <select name="stock" 
+                                class="w-full px-4 py-2 bg-gray-800/50 border border-gray-700 rounded-lg text-gray-200 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/50">
+                            <option value="">All Stock Levels</option>
+                            <option value="out" <%= filters.stock === 'out' ? 'selected' : '' %>>Out of Stock</option>
+                            <option value="low" <%= filters.stock === 'low' ? 'selected' : '' %>>Low Stock</option>
+                            <option value="available" <%= filters.stock === 'available' ? 'selected' : '' %>>In Stock</option>
+                        </select>
+                    </div>
+
+                    <!-- Status Filter -->
+                    <div>
+                        <select name="status" 
+                                class="w-full px-4 py-2 bg-gray-800/50 border border-gray-700 rounded-lg text-gray-200 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/50">
+                            <option value="">All Status</option>
+                            <option value="active" <%= filters.status === 'active' ? 'selected' : '' %>>Active</option>
+                            <option value="inactive" <%= filters.status === 'inactive' ? 'selected' : '' %>>Inactive</option>
+                            <option value="listed" <%= filters.status === 'listed' ? 'selected' : '' %>>Listed</option>
+                            <option value="unlisted" <%= filters.status === 'unlisted' ? 'selected' : '' %>>Unlisted</option>
+                        </select>
+                    </div>
+
+                    <!-- Sort By -->
+                    <div>
+                        <select name="sortBy" 
+                                class="w-full px-4 py-2 bg-gray-800/50 border border-gray-700 rounded-lg text-gray-200 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/50">
+                            <option value="-createdAt" <%= filters.sortBy === '-createdAt' ? 'selected' : '' %>>Newest First</option>
+                            <option value="createdAt" <%= filters.sortBy === 'createdAt' ? 'selected' : '' %>>Oldest First</option>
+                            <option value="-price" <%= filters.sortBy === '-price' ? 'selected' : '' %>>Price: High to Low</option>
+                            <option value="price" <%= filters.sortBy === 'price' ? 'selected' : '' %>>Price: Low to High</option>
+                            <option value="-stock" <%= filters.sortBy === '-stock' ? 'selected' : '' %>>Stock: High to Low</option>
+                            <option value="stock" <%= filters.sortBy === 'stock' ? 'selected' : '' %>>Stock: Low to High</option>
+                        </select>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="col-span-full flex justify-end space-x-4">
+                        <button type="reset" 
+                                onclick="window.location='/admin/products'"
+                                class="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-gray-200 rounded-lg transition-colors">
+                            Reset Filters
+                        </button>
+                        <button type="submit"
+                                class="px-4 py-2 bg-cyan-600 hover:bg-cyan-500 text-white rounded-lg transition-colors">
+                            Apply Filters
+                        </button>
+                    </div>
+                </form>
+            </div>
+
             <!-- Products Table Container -->
             <div class="products-container">
                 <div class="glass-effect rounded-xl overflow-hidden shadow-xl">
@@ -45,30 +147,14 @@
                         <table class="min-w-full divide-y divide-gray-700">
                             <thead>
                                 <tr class="bg-gray-800/50">
-                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                                        Product
-                                    </th>
-                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                                        Category
-                                    </th>
-                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                                        Stock
-                                    </th>
-                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                                        Price
-                                    </th>
-                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                                        Discount
-                                    </th>
-                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                                        Status
-                                    </th>
-                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                                        Listing Status
-                                    </th>
-                                    <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-300 uppercase tracking-wider">
-                                        Actions
-                                    </th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Product</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Category</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Stock</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Price</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Discount</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Status</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Listing Status</th>
+                                    <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-300 uppercase tracking-wider">Actions</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-gray-700 bg-opacity-50">
@@ -82,12 +168,8 @@
                                                          alt="<%= product.name %>">
                                                 </div>
                                                 <div class="ml-4">
-                                                    <div class="text-sm font-medium text-gray-100">
-                                                        <%= product.name %>
-                                                    </div>
-                                                    <div class="text-sm text-gray-400">
-                                                        <%= product.brand %>
-                                                    </div>
+                                                    <div class="text-sm font-medium text-gray-100"><%= product.name %></div>
+                                                    <div class="text-sm text-gray-400"><%= product.brand %></div>
                                                 </div>
                                             </div>
                                         </td>
@@ -114,7 +196,6 @@
                                                 <span class="text-sm text-gray-400">-</span>
                                             <% } %>
                                         </td>
-        
                                         <td class="px-6 py-4 whitespace-nowrap">
                                             <span class="<%= product.isDeleted ? 'text-red-400' : 'text-green-400' %>">
                                                 <%= product.isDeleted ? 'Inactive' : 'Active' %>
@@ -149,38 +230,68 @@
                 </div>
 
                 <!-- Pagination -->
-                <div class="flex items-center justify-between mt-8">
-                    <div class="text-sm text-gray-400">
-                        Showing <span class="font-medium"><%= ((currentPage - 1) * limit) + 1 %></span> to 
-                        <span class="font-medium"><%= Math.min(currentPage * limit, totalProducts) %></span> of 
-                        <span class="font-medium"><%= totalProducts %></span> results
-                    </div>
-                    <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
-                        <% if (currentPage > 1) { %>
-                            <a href="/admin/products?page=<%= currentPage - 1 %>&limit=<%= limit %>" 
-                               class="relative inline-flex items-center px-4 py-2 rounded-l-md glass-effect text-sm text-gray-200 hover:bg-gray-700/50 transition-all duration-300">
-                                <i class="fas fa-chevron-left mr-1"></i>
-                                Previous
-                            </a>
-                        <% } %>
-                        
-                        <% for(let i = 1; i <= totalPages; i++) { %>
-                            <a href="/admin/products?page=<%= i %>&limit=<%= limit %>"
-                               class="relative inline-flex items-center px-4 py-2 glass-effect text-sm
-                                    <%= currentPage === i ? 'bg-cyan-500/20 text-cyan-400' : 'text-gray-200 hover:bg-gray-700/50' %>
-                                    transition-all duration-300">
-                                <%= i %>
-                            </a>
-                        <% } %>
-                        
-                        <% if (currentPage < totalPages) { %>
-                            <a href="/admin/products?page=<%= currentPage + 1 %>&limit=<%= limit %>"
-                               class="relative inline-flex items-center px-4 py-2 rounded-r-md glass-effect text-sm text-gray-200 hover:bg-gray-700/50 transition-all duration-300">
-                                Next
-                                <i class="fas fa-chevron-right ml-1"></i>
-                            </a>
-                        <% } %>
-                    </nav>
+                <div class="flex flex-col sm:flex-row items-center justify-between gap-4 mt-8">
+                    <% if (pagination.totalPages > 1) { %>
+                        <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+                            <!-- Previous page -->
+                            <% if (pagination.hasPrevPage) { %>
+                                <a href="/admin/products?page=<%= pagination.currentPage - 1 %>&limit=<%= pagination.limit %>" 
+                                   class="relative inline-flex items-center px-3 py-2 rounded-l-md glass-effect text-sm text-gray-200 hover:bg-gray-700/50 transition-all duration-300">
+                                    <span class="sr-only">Previous</span>
+                                    <i class="fas fa-chevron-left"></i>
+                                </a>
+                            <% } %>
+                            
+                            <!-- Page numbers -->
+                            <% 
+                            let startPage = Math.max(1, pagination.currentPage - 2);
+                            let endPage = Math.min(pagination.totalPages, startPage + 4);
+                            startPage = Math.max(1, endPage - 4);
+                            %>
+
+                            <% if (startPage > 1) { %>
+                                <a href="/admin/products?page=1&limit=<%= pagination.limit %>" 
+                                   class="relative inline-flex items-center px-3 py-2 glass-effect text-sm text-gray-200 hover:bg-gray-700/50">
+                                    1
+                                </a>
+                                <% if (startPage > 2) { %>
+                                    <span class="relative inline-flex items-center px-3 py-2 glass-effect text-sm text-gray-400">
+                                        ...
+                                    </span>
+                                <% } %>
+                            <% } %>
+                                
+                            <% for(let i = startPage; i <= endPage; i++) { %>
+                                <a href="/admin/products?page=<%= i %>&limit=<%= pagination.limit %>"
+                                   class="relative inline-flex items-center px-3 py-2 glass-effect text-sm
+                                        <%= pagination.currentPage === i ? 'bg-cyan-500/20 text-cyan-400' : 'text-gray-200 hover:bg-gray-700/50' %>
+                                        transition-all duration-300">
+                                    <%= i %>
+                                </a>
+                            <% } %>
+                            
+                            <% if (endPage < pagination.totalPages) { %>
+                                <% if (endPage < pagination.totalPages - 1) { %>
+                                    <span class="relative inline-flex items-center px-3 py-2 glass-effect text-sm text-gray-400">
+                                        ...
+                                    </span>
+                                <% } %>
+                                <a href="/admin/products?page=<%= pagination.totalPages %>&limit=<%= pagination.limit %>"
+                                   class="relative inline-flex items-center px-3 py-2 glass-effect text-sm text-gray-200 hover:bg-gray-700/50">
+                                    <%= pagination.totalPages %>
+                                </a>
+                            <% } %>
+                            
+                            <!-- Next page -->
+                            <% if (pagination.hasNextPage) { %>
+                                <a href="/admin/products?page=<%= pagination.currentPage + 1 %>&limit=<%= pagination.limit %>"
+                                   class="relative inline-flex items-center px-3 py-2 rounded-r-md glass-effect text-sm text-gray-200 hover:bg-gray-700/50 transition-all duration-300">
+                                    <span class="sr-only">Next</span>
+                                    <i class="fas fa-chevron-right"></i>
+                                </a>
+                            <% } %>
+                        </nav>
+                    <% } %>
                 </div>
             </div>
         </div>
@@ -209,58 +320,56 @@
 </div>
 
 <script>
-function confirmDelete(productId) {
-    const modal = document.getElementById('deleteModal');
-    const confirmBtn = document.getElementById('confirmDeleteBtn');
-    
-    modal.classList.remove('hidden');
-    confirmBtn.onclick = async () => {
+    function confirmDelete(productId) {
+        const modal = document.getElementById('deleteModal');
+        const confirmBtn = document.getElementById('confirmDeleteBtn');
+        
+        modal.classList.remove('hidden');
+        confirmBtn.onclick = async () => {
+            try {
+                const response = await fetch(`/admin/deleteProduct/${productId}`, {
+                    method: 'DELETE'
+                });
+                
+                if (response.ok) {
+                    window.location.reload();
+                } else {
+                    console.error('Failed to delete product');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        };
+    }
+
+    function closeDeleteModal() {
+        const modal = document.getElementById('deleteModal');
+        modal.classList.add('hidden');
+    }
+
+    async function softDeleteProduct(productId) {
         try {
-            const response = await fetch(`/admin/deleteProduct/${productId}`, {
-                method: 'DELETE'
+            const response = await fetch(`/admin/softDeleteProduct/${productId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
             });
             
-            if (response.ok) {
+            const data = await response.json();
+            
+            if (data.success) {
                 window.location.reload();
             } else {
-                console.error('Failed to delete product');
+                console.error('Failed to soft delete product:', data.message);
+                alert('Failed to update product status. Please try again.');
             }
         } catch (error) {
             console.error('Error:', error);
+            alert('An error occurred. Please try again.');
         }
-    };
-}
-
-function closeDeleteModal() {
-    const modal = document.getElementById('deleteModal');
-    modal.classList.add('hidden');
-}
-
-async function softDeleteProduct(productId) {
-    try {
-        const response = await fetch(`/admin/softDeleteProduct/${productId}`, {
-            method: 'DELETE',
-            headers: {
-                'Content-Type': 'application/json'
-            }
-        });
-        
-        const data = await response.json();
-        
-        if (data.success) {
-            window.location.reload();
-        } else {
-            console.error('Failed to soft delete product:', data.message);
-            alert('Failed to update product status. Please try again.');
-        }
-    } catch (error) {
-        console.error('Error:', error);
-        alert('An error occurred. Please try again.');
     }
-}
-</script>
 
-<script>
     async function toggleListStatus(productId) {
         try {
             const response = await fetch(`/admin/products/${productId}/toggle-list`, {
@@ -279,56 +388,6 @@ async function softDeleteProduct(productId) {
             console.error('Error:', error);
         }
     }
-
-    async function softDeleteProduct(productId) {
-    // First confirmation
-    const result = await Swal.fire({
-        title: 'Are you sure?',
-        text: "You want to change this product's status?",
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#3085d6',
-        cancelButtonColor: '#d33',
-        confirmButtonText: 'Yes, change it!'
-    });
-
-    if (result.isConfirmed) {
-        try {
-            const response = await fetch(`/admin/softDeleteProduct/${productId}`, {
-                method: 'DELETE',
-                headers: {
-                    'Content-Type': 'application/json'
-                }
-            });
-            
-            const data = await response.json();
-            
-            if (data.success) {
-                await Swal.fire({
-                    title: 'Success!',
-                    text: data.message || 'Product status updated successfully',
-                    icon: 'success',
-                    timer: 2000,
-                    showConfirmButton: false
-                });
-                window.location.reload();
-            } else {
-                await Swal.fire({
-                    title: 'Error!',
-                    text: data.message || 'Failed to update product status',
-                    icon: 'error'
-                });
-            }
-        } catch (error) {
-            console.error('Error:', error);
-            await Swal.fire({
-                title: 'Error!',
-                text: 'An unexpected error occurred',
-                icon: 'error'
-            });
-        }
-    }
-}
 </script>
 
 <%- include('./partials/adminFooter.ejs') %>

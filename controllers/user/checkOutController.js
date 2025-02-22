@@ -4,7 +4,7 @@ const Address = require('../../models/addressSchema')
 
 
 
-exports.getCheckout =  async(req,res)=> {
+exports.getCheckout = async (req, res) => {
     try {
         // Get user's cart with populated product details
         const cart = await Cart.findOne({ user: req.user._id })
@@ -21,9 +21,18 @@ exports.getCheckout =  async(req,res)=> {
         const addressDoc = await Address.findOne({ userID: req.user._id });
         const addresses = addressDoc ? addressDoc.address : [];
 
+        // Identify the default address (assuming an 'isDefault' property exists)
+        let defaultAddressIndex = addresses.findIndex(addr => addr.isDefault);
+
+        // If no default address is found, set the first address as default
+        if (defaultAddressIndex === -1 && addresses.length > 0) {
+            defaultAddressIndex = 0;
+        }
+
         res.render('checkout', {
             cart,
-            addresses
+            addresses,
+            defaultAddressIndex
         });
     } catch (error) {
         console.error('Checkout page error:', error);
@@ -31,7 +40,8 @@ exports.getCheckout =  async(req,res)=> {
             message: 'Error loading checkout page'
         });
     }
-}
+};
+
 
 exports.placeOrder = async (req, res) => {
     try {

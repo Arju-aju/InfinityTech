@@ -6,40 +6,119 @@ const path = require('path');
 // Load Products Page with pagination
 const loadProduct = async (req, res) => {
     try {
-        const page = parseInt(req.query.page) || 1;
-        const limit = parseInt(req.query.limit) || 10;
+        // Get pagination parameters
+        let page = Math.max(1, parseInt(req.query.page) || 1);
+        let limit = 4
+        
+        // Get filter parameters
+        const search = req.query.search || '';
+        const category = req.query.category || '';
+        const priceRange = req.query.priceRange || '';
+        const stock = req.query.stock || '';
+        const sortBy = req.query.sortBy || '-createdAt';
+        const status = req.query.status || '';
+
+        // Build filter query
+        let filterQuery = {};
+        
+        // Search in name, brand, and description
+        if (search) {
+            filterQuery.$or = [
+                { name: { $regex: search, $options: 'i' } },
+                { brand: { $regex: search, $options: 'i' } },
+                { description: { $regex: search, $options: 'i' } }
+            ];
+        }
+
+        // Category filter
+        if (category) {
+            filterQuery.category = category;
+        }
+
+        // Price range filter
+        if (priceRange) {
+            const [min, max] = priceRange.split('-').map(Number);
+            filterQuery.price = {};
+            if (min) filterQuery.price.$gte = min;
+            if (max) filterQuery.price.$lte = max;
+        }
+
+        // Stock filter
+        if (stock) {
+            switch (stock) {
+                case 'out':
+                    filterQuery.stock = 0;
+                    break;
+                case 'low':
+                    filterQuery.stock = { $gt: 0, $lte: 10 };
+                    break;
+                case 'available':
+                    filterQuery.stock = { $gt: 10 };
+                    break;
+            }
+        }
+
+        // Status filter
+        if (status) {
+            if (status === 'active') filterQuery.isDeleted = false;
+            if (status === 'inactive') filterQuery.isDeleted = true;
+            if (status === 'listed') filterQuery.isListed = true;
+            if (status === 'unlisted') filterQuery.isListed = false;
+        }
+
+        // Calculate skip value for pagination
         const skip = (page - 1) * limit;
 
+        // Get categories for filter dropdown
+        const categories = await Category.find().lean();
+
+        // Execute queries
         const [products, totalProducts] = await Promise.all([
-            Product.find()
+            Product.find(filterQuery)
                 .populate('category', 'name')
+                .sort(sortBy)
                 .skip(skip)
                 .limit(limit)
-                .sort('-createdAt')
                 .lean(),
-            Product.countDocuments()
+            Product.countDocuments(filterQuery)
         ]);
 
         const totalPages = Math.ceil(totalProducts / limit);
 
+        // Adjust page if it exceeds total pages
+        if (page > totalPages && totalPages > 0) {
+            return res.redirect(`/admin/products?page=${totalPages}&limit=${limit}`);
+        }
+
         res.render('admin/products', {
             products,
-            currentPage: page,
-            totalPages,
-            limit,
-            totalProducts,
-            breadcrumbs: [
-                { text: 'Dashboard', url: '/admin/dashboard' },
-                { text: 'Products', url: '/admin/products', active: true }
-            ]
+            categories,
+            filters: {
+                search,
+                category,
+                priceRange,
+                stock,
+                sortBy,
+                status
+            },
+            pagination: {
+                currentPage: page,
+                totalPages,
+                limit,
+                totalProducts,
+                startIndex: skip + 1,
+                endIndex: Math.min(skip + limit, totalProducts),
+                hasPrevPage: page > 1,
+                hasNextPage: page < totalPages
+            }
         });
+
     } catch (error) {
         console.error('Error in loadProduct:', error);
         req.flash('error', 'Error loading products');
         res.redirect('/admin/dashboard');
     }
 };
-
 // Load Add Product Page
 const loadAddProduct = async (req, res) => {
     try {
@@ -484,59 +563,6 @@ const softDelete = async (req, res) => {
     }
 };
 
-// Delete Product Image
-const deleteProductImage = async (req, res) => {
-    try {
-        const { productId } = req.params;
-        const { imagePath } = req.body;
-
-        // Find product
-        const product = await Product.findById(productId);
-        if (!product) {
-            return res.status(404).json({
-                success: false,
-                message: 'Product not found'
-            });
-        }
-
-        // Check if image exists in product
-        if (!product.images.includes(imagePath)) {
-            return res.status(404).json({
-                success: false,
-                message: 'Image not found in product'
-            });
-        }
-
-        // Ensure at least one image remains
-        if (product.images.length <= 1) {
-            return res.status(400).json({
-                success: false,
-                message: 'Cannot delete the last image. Product must have at least one image.'
-            });
-        }
-
-        // Remove image from filesystem
-        const absolutePath = path.join(__dirname, '../../public', imagePath);
-        await fs.unlink(absolutePath).catch(err => {
-            console.warn('Warning: Could not delete image file:', err);
-        });
-
-        // Update product images array
-        product.images = product.images.filter(img => img !== imagePath);
-        await product.save();
-
-        res.json({
-            success: true,
-            message: 'Image deleted successfully'
-        });
-    } catch (error) {
-        console.error('Error in deleteProductImage:', error);
-        res.status(500).json({
-            success: false,
-            message: error.message || 'Error deleting image'
-        });
-    }
-};
 
 // Delete Product (complete removal)
 const deleteProduct = async (req, res) => {
@@ -612,16 +638,72 @@ const getProductDetails = async (req, res) => {
     }
 };
 
+const deleteProductImage = async (req, res) => {
+    try {
+        const { productId } = req.params;
+        const { imagePath } = req.body;
+
+        console.clear()
+
+        console.log('1>>>',productId,imagePath);
+        // Find product
+        const product = await Product.findById(productId);
+        if (!product) {
+            return res.status(404).json({
+                success: false,
+                message: 'Product not found'
+            });
+        }
+        console.log('2>>>',productId,imagePath);
+        // Check if image exists in product
+        if (!product.images.includes(imagePath)) {
+            return res.status(404).json({
+                success: false,
+                message: 'Image not found in product'
+            });
+        }
+        console.log('3>>>',productId,imagePath);
+        // Ensure at least one image remains
+        if (product.images.length <= 1) {
+            return res.status(400).json({
+                success: false,
+                message: 'Cannot delete the last image. Product must have at least one image.'
+            });
+        }
+        console.log('4>>>',productId,imagePath);
+        // Remove image from filesystem
+        const absolutePath = path.join(__dirname, '../../public', imagePath);
+        await fs.unlink(absolutePath).catch(err => {
+            console.warn('Warning: Could not delete image file:', err);
+        });
+        console.log('5>>>',productId,imagePath);
+        // Update product images array
+        product.images = product.images.filter(img => img !== imagePath);
+        await product.save();
+
+        res.json({
+            success: true,
+            message: 'Image deleted successfully'
+        });
+    } catch (error) {
+        console.error('Error in deleteProductImage:', error);
+        res.status(500).json({
+            success: false,
+            message: error.message || 'Error deleting image'
+        });
+    }
+};
+
 module.exports = {
     loadProduct,
     loadAddProduct,
     addProduct,
     loadEditProduct,
     updateProduct,
+    deleteProductImage,
     toggleListStatus,
     softDelete,
     deleteProduct,
-    deleteProductImage,
     getAllProducts,
     getProductDetails
 };

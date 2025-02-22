@@ -4,15 +4,46 @@ const Product = require('../../models/productSchema');
 // Load Categories Page
 const categoryInfo = async (req, res) => {
     try {
-        const categories = await Category.find({ isDeleted: false })
-            .sort('-createdAt');
-        res.render('admin/categories', { categories });
+        const { page = 1, search = "", status = "", sort = "date" } = req.query;
+        const perPage = 5;
+        const currentPage = parseInt(page);
+
+        let query = { isDeleted: false };
+
+        if (search) {
+            query.name = { $regex: search, $options: "i" };
+        }
+        if (status !== "") {
+            query.isActive = status === "true";
+        }
+
+        let sortOption = sort === "name" ? { name: 1 } : { createdAt: -1 };
+
+        const totalCategories = await Category.countDocuments(query);
+        const categories = await Category.find(query)
+            .sort(sortOption)
+            .skip((currentPage - 1) * perPage)
+            .limit(perPage);
+
+        res.render('admin/categories', { 
+            categories, 
+            currentPage,
+            totalPages: Math.ceil(totalCategories / perPage),
+            search,
+            status,
+            sort
+        });
+
     } catch (error) {
         console.error('Error in categoryInfo:', error);
         req.flash('error', 'Error loading categories');
         res.redirect('/admin/dashboard');
     }
 };
+
+
+
+
 
 // Load Add Category Page
 const loadCategory = async (req, res) => {
@@ -76,7 +107,7 @@ const addCategory = async (req, res) => {
             name: name.trim(),
             description: description.trim()
         });
-        
+
         await newCategory.save();
 
         return res.status(201).json({
@@ -97,16 +128,16 @@ const addCategory = async (req, res) => {
 const loadEditCategory = async (req, res) => {
     try {
         const categoryId = req.params.id;
-        
+
         // Ensure valid MongoDB ObjectId
         if (!categoryId.match(/^[0-9a-fA-F]{24}$/)) {
             req.flash('error', 'Invalid category ID');
             return res.redirect('/admin/categories');
         }
 
-        const category = await Category.findOne({ 
+        const category = await Category.findOne({
             _id: categoryId,
-            isDeleted: false 
+            isDeleted: false
         });
 
         if (!category) {
@@ -171,7 +202,7 @@ const updateCategory = async (req, res) => {
 
         const updatedCategory = await Category.findByIdAndUpdate(
             categoryId,
-            { 
+            {
                 name: name.trim(),
                 description: description.trim()
             },
@@ -249,6 +280,14 @@ const toggleCategoryStatus = async (req, res) => {
     try {
         const categoryId = req.params.id;
         
+        // Add validation for categoryId
+        if (!categoryId) {
+            return res.status(400).json({
+                success: false,
+                message: 'Category ID is required'
+            });
+        }
+
         const category = await Category.findById(categoryId);
         if (!category) {
             return res.status(404).json({
@@ -261,7 +300,10 @@ const toggleCategoryStatus = async (req, res) => {
         category.isActive = !category.isActive;
         await category.save();
 
-        res.json({
+        // Set proper headers
+        res.setHeader('Content-Type', 'application/json');
+        
+        return res.status(200).json({
             success: true,
             message: `Category ${category.isActive ? 'activated' : 'deactivated'} successfully`,
             isActive: category.isActive,
@@ -273,18 +315,20 @@ const toggleCategoryStatus = async (req, res) => {
         });
     } catch (error) {
         console.error('Error in toggleCategoryStatus:', error);
-        res.status(500).json({
+        return res.status(500).json({
             success: false,
             message: error.message || 'Error toggling category status'
         });
     }
 };
+
+
 const getCategoryDetails = async (req, res) => {
     try {
         const categoryId = req.params.id;
-        const category = await Category.findOne({ 
+        const category = await Category.findOne({
             _id: categoryId,
-            isDeleted: false 
+            isDeleted: false
         });
 
         if (!category) {

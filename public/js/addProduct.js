@@ -27,7 +27,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (file) {
                     // Validate file type
                     if (!file.type.match('image.*')) {
-                        showError(imageInput, 'Please select only image files (PNG, JPG, JPEG)');
+                        showError(imageInput, 'Please select only image files (PNG, JPG, JPEG, avif)');
                         return;
                     }
 
@@ -162,7 +162,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 errors.push('At least one product image is required');
             } else {
                 const maxSize = 5 * 1024 * 1024; // 5MB
-                const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+                const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp','image/avif '];
                 
                 for (const file of files) {
                     if (!allowedTypes.includes(file.type)) {

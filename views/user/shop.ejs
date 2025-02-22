@@ -1,337 +1,259 @@
-<!DOCTYPE html>
 <html lang="en">
-  <head>
+<head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Shop - InfinityTech</title>
     <script defer src="https://cdnjs.cloudflare.com/ajax/libs/alpinejs/3.13.5/cdn.min.js"></script>
-    <style>
-        .layout-container {
-            display: flex;
-            gap: 2rem;
-            padding: 1rem;
-            max-width: 1400px;
-            margin: 0 auto;
-        }
-
-        .sidebar {
-            width: 250px;
-            flex-shrink: 0;
-        }
-
-        .sidebar-filter {
-            position: sticky;
-            top: 20px;
-            background: white;
-            padding: 1rem;
-            border-radius: 8px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-        }
-
-        .product-container {
-            flex: 1;
-        }
-
-        .product-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-            gap: 1rem;
-        }
-
-        .product-card {
-            background: white;
-            border: 1px solid #eee;
-            border-radius: 8px;
-            overflow: hidden;
-            transition: transform 0.2s, box-shadow 0.2s;
-            cursor: pointer;
-        }
-
-        .product-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-        }
-
-        .product-image {
-            position: relative;
-            padding-top: 100%;
-        }
-
-        .product-image img {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            object-fit: contain;
-            padding: 0.5rem;
-        }
-
-        .sale-badge {
-            position: absolute;
-            top: 10px;
-            left: 10px;
-            background: #ff4444;
-            color: white;
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 14px;
-        }
-
-        .product-info {
-            padding: 1rem;
-        }
-
-        .category-select {
-            width: 100%;
-            padding: 8px;
-            border: 1px solid #ddd;
-            border-radius: 6px;
-            margin-bottom: 1rem;
-        }
-
-        /* Mobile Responsive */
-        @media (max-width: 768px) {
-            .layout-container {
-                flex-direction: column;
-            }
-
-            .sidebar {
-                width: 100%;
-            }
-
-            .sidebar-filter {
-                position: static;
-            }
-
-            .product-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
-        }
-
-        /* Filter Styles */
-        .filter-section {
-            margin-bottom: 1.5rem;
-        }
-
-        .filter-title {
-            font-weight: 600;
-            margin-bottom: 0.5rem;
-            color: #333;
-        }
-
-        .filter-options {
-            display: flex;
-            flex-direction: column;
-            gap: 0.5rem;
-        }
-    </style>
-  </head>
-  <body class="bg-gray-50">
-    <!-- Include the header -->
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-50">
     <%- include('../partials/header') %>
 
-    <!-- Main Content -->
-    <body class="bg-gray-50">
-        <div class="layout-container">
-            <!-- Left Sidebar -->
-            <aside class="sidebar">
-<!-- Inside the sidebar-filter div -->
-<div class="sidebar-filter">
-    <h2 class="text-xl font-bold mb-4">Categories</h2>
-    
-    <!-- Category Filter -->
-    <div class="filter-section">
-        <select class="form-select" id="categorySelect" onchange="filterByCategory(this.value)">
-            <option value="">All Categories</option>
-            <% categories.forEach(category => { %>
-                <option value="<%= category._id %>" 
-                    <%= selectedCategory && selectedCategory.toString() === category._id.toString() ? 'selected' : '' %>>
-                    <%= category.name %>
-                </option>
-            <% }) %>
-        </select>
-    </div>
+    <!-- Main container -->
+    <div class="min-h-screen bg-gray-50 flex flex-col items-center">
+        <!-- Search and Filter Bar -->
+        <div class="container mx-auto px-6 py-4 bg-white shadow-sm w-full">
+            <div class="flex flex-wrap items-center gap-4 justify-center">
+                <!-- Search Bar -->
+                <div class="flex-grow max-w-md">
+                    <form action="/shop" method="GET" id="searchForm" class="relative">
+                        <input 
+                            type="text" 
+                            name="search" 
+                            value="<%= locals.searchQuery || '' %>"
+                            placeholder="Search products..."
+                            class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500"
+                        >
+                        <button type="submit" class="absolute right-2 top-1/2 transform -translate-y-1/2">
+                            <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                            </svg>
+                        </button>
+                    </form>
+                </div>
 
-    <!-- Sorting Options -->
-    <div class="filter-section">
-        <h3 class="filter-title">Sort By</h3>
-        <select class="form-select" id="sortSelect" onchange="filterBySort(this.value)">
-            <option value="newest" <%= sortOption === 'newest' ? 'selected' : '' %>>New Arrivals</option>
-            <option value="popularity" <%= sortOption === 'popularity' ? 'selected' : '' %>>Popularity</option>
-            <option value="price_low_to_high" <%= sortOption === 'price_low_to_high' ? 'selected' : '' %>>Price: Low to High</option>
-            <option value="price_high_to_low" <%= sortOption === 'price_high_to_low' ? 'selected' : '' %>>Price: High to Low</option>
-            <option value="average_rating" <%= sortOption === 'average_rating' ? 'selected' : '' %>>Average Rating</option>
-            <option value="featured" <%= sortOption === 'featured' ? 'selected' : '' %>>Featured Products</option>
-            <option value="name_a_to_z" <%= sortOption === 'name_a_to_z' ? 'selected' : '' %>>Name: A to Z</option>
-            <option value="name_z_to_a" <%= sortOption === 'name_z_to_a' ? 'selected' : '' %>>Name: Z to A</option>
-        </select>
-    </div>
-</div>
-            </aside>
-
-        <main class="product-container">
-            <div class="product-grid">
-                <% products.forEach(product => { %>
-                    <div class="product-card" onclick="navigateToProduct('<%= product._id %>')">
-                    <div class="product-image">
-                        <% if (product.discountPercentage > 0) { %>
-                        <span class="sale-badge">-<%= product.discountPercentage %>%</span>
-                        <% } %>
-                        <img src="<%= product.images[0] %>" alt="<%= product.name %>" />
+                <!-- Category Dropdown -->
+                <div class="relative">
+                    <select 
+                        class="appearance-none bg-white border rounded-lg px-4 py-2 pr-8 focus:outline-none focus:ring-1 focus:ring-blue-500" 
+                        id="categorySelect" 
+                        onchange="filterByCategory(this.value)"
+                    >
+                        <option value="">All Categories</option>
+                        <% categories.forEach(category => { %>
+                            <option value="<%= category._id %>"><%= category.name %></option>
+                        <% }) %>
+                    </select>
+                    <div class="absolute right-2 top-1/2 transform -translate-y-1/2 pointer-events-none">
+                        <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                        </svg>
                     </div>
-                    <div class="product-info">
-                        <h3 class="text-lg font-semibold mb-2"><%= product.name %></h3>
-                        <div class="text-sm text-gray-600 mb-2"><%= product.b %></div>
-                        <div class="flex items-center justify-between">
-                            <div>
-                                <span class="text-xl font-bold text-blue-600"><%= product.discountedPrice.toFixed(2) %></span>
-                                <% if (product.discountPercentage > 0) { %>
-                                <span class="text-sm text-gray-500 line-through ml-2">₹<%= product.price.toFixed(2) %></span>
-                                <% } %>
+                </div>
+
+                <!-- Price Range -->
+                <div class="text-gray-700">
+                    <div class="relative" x-data="{ open: false }">
+                        <button 
+                            @click="open = !open" 
+                            class="bg-white border rounded-lg px-4 py-2 inline-flex items-center focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        >
+                            <span>Price Range</span>
+                            <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                            </svg>
+                        </button>
+                        <div 
+                            x-show="open" 
+                            @click.away="open = false" 
+                            class="absolute right-0 mt-2 w-64 bg-white border rounded-lg shadow-lg z-10 p-4"
+                        >
+                            <div class="space-y-4">
+                                <div class="flex space-x-4">
+                                    <input 
+                                        type="number" 
+                                        id="minPrice" 
+                                        value="<%= locals.selectedMinPrice || '' %>"
+                                        min="<%= locals.minPrice || 0 %>" 
+                                        max="<%= locals.maxPrice || 999999 %>"
+                                        placeholder="Min"
+                                        class="w-1/2 px-2 py-1 border rounded"
+                                    >
+                                    <input 
+                                        type="number" 
+                                        id="maxPrice" 
+                                        value="<%= locals.selectedMaxPrice || '' %>"
+                                        min="<%= locals.minPrice || 0 %>" 
+                                        max="<%= locals.maxPrice || 999999 %>"
+                                        placeholder="Max"
+                                        class="w-1/2 px-2 py-1 border rounded"
+                                    >
+                                </div>
+                                <button 
+                                    onclick="applyPriceFilter()"
+                                    class="w-full bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+                                >
+                                    Apply
+                                </button>
                             </div>
                         </div>
                     </div>
                 </div>
+
+                <!-- Sort Dropdown -->
+                <div class="relative">
+                    <select 
+                        class="appearance-none bg-white border rounded-lg px-4 py-2 pr-8 focus:outline-none focus:ring-1 focus:ring-blue-500" 
+                        id="sortSelect" 
+                        onchange="filterBySort(this.value)"
+                    >
+                        <option value="newest">New Arrivals</option>
+                        <option value="price_low_to_high">Price: Low to High</option>
+                        <option value="price_high_to_low">Price: High to Low</option>
+                    </select>
+                    <div class="absolute right-2 top-1/2 transform -translate-y-1/2 pointer-events-none">
+                        <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                        </svg>
+                    </div>
+                </div>
+
+                <!-- Reset Filters Button -->
+                <button 
+                    onclick="resetFilters()" 
+                    class="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500"
+                >
+                    Reset Filters
+                </button>
+            </div>
+        </div>
+
+        <!-- Product Grid -->
+
+        <div class="container mx-auto px-6 py-8">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <% products.forEach(product => { %>
+                    <div class="bg-white rounded-lg shadow hover:shadow-md transition-shadow duration-300" onclick="navigateToProduct('<%= product._id %>')">
+                        <div class="relative aspect-w-16 aspect-h-9">
+                            <img 
+                                src="<%= product.images[0] %>" 
+                                alt="<%= product.name %>" 
+                                class="w-full h-full object-cover rounded-t-lg"
+                                loading="lazy"
+                            />
+                            <% if (product.discountPercentage > 0) { %>
+                                <span class="absolute top-2 left-2  text-white text-sm px-2 py-1 rounded">
+                                    -<%= product.discountPercentage %>%
+                                </span>
+                            <% } %>
+                        </div>
+                        <div class="p-4">
+                            <h3 class="text-lg font-medium mb-2"><%= product.name %></h3>
+                            <div class="flex items-baseline gap-2">
+                                <span class="text-xl font-bold">₹<%= product.discountedPrice.toFixed(2) %></span>
+                                <% if (product.discountPercentage > 0) { %>
+                                    <span class="text-sm text-gray-500 line-through">₹<%= product.price.toFixed(2) %></span>
+                                <% } %>
+                            </div>
+                        </div>
+                    </div>
                 <% }) %>
             </div>
+        </div>
 
-            <!-- Pagination -->
-            <% if (totalPages > 1) { %>
-            <div class="mt-8 flex justify-center">
+        <!-- Pagination -->
+        <% if (totalPages > 1) { %>
+            <div class="container mx-auto mt-8 flex justify-center">
                 <nav class="inline-flex rounded-md shadow-sm">
                     <% if (currentPage > 1) { %>
-                    <a href="/shop?page=<%= currentPage - 1 %><%= selectedCategory ? `&category=₹{selectedCategory}` : '' %>" 
-                       class="px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-l-md hover:bg-gray-50">
-                        Previous
-                    </a>
+                        <a href="/shop?page=<%= currentPage - 1 %>" 
+                           class="px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-l-md hover:bg-gray-50">
+                            Previous
+                        </a>
                     <% } %>
                     
                     <% for (let i = 1; i <= totalPages; i++) { %>
-                    <a href="/shop?page=<%= i %><%= selectedCategory ? `&category=₹{selectedCategory}` : '' %>" 
-                       class="px-3 py-2 text-sm font-medium <%= currentPage === i ? 'bg-blue-600 text-white' : 'bg-white text-gray-700' %> border border-gray-300">
-                        <%= i %>
-                    </a>
+                        <a href="/shop?page=<%= i %>" 
+                           class="px-3 py-2 text-sm font-medium <%= currentPage === i ? 'bg-blue-600 text-white' : 'bg-white text-gray-700' %> border border-gray-300">
+                            <%= i %>
+                        </a>
                     <% } %>
                     
                     <% if (currentPage < totalPages) { %>
-                    <a href="/shop?page=<%= currentPage + 1 %><%= selectedCategory ? `&category=₹{selectedCategory}` : '' %>" 
-                       class="px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-r-md hover:bg-gray-50">
-                        Next
-                    </a>
+                        <a href="/shop?page=<%= currentPage + 1 %>" 
+                           class="px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-r-md hover:bg-gray-50">
+                            Next
+                        </a>
                     <% } %>
                 </nav>
             </div>
-            <% } %>
-        </main>
-        </div>
-    <!-- Include the footer -->
-    <%- include('../partials/footer') %>
+        <% } %>
+    </div>
 
     <script>
-        // Function to navigate to product page
         function navigateToProduct(productId) {
-    window.location.href = `/products/${productId}`;
-}
-
-        // Function to add to cart
-        async function addToCart(productId, event) {
-            event.stopPropagation(); // Prevent navigation when clicking add to cart
-            try {
-                const response = await fetch('/cart/add', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ productId, quantity: 1 }),
-                });
-                const result = await response.json();
-                if (result.success) {
-                    alert('Product added to cart successfully');
-                } else {
-                    alert(result.message);
-                }
-            } catch (error) {
-                console.error('Error:', error);
-                alert('Error adding product to cart');
-            }
+            window.location.href = `/product/${productId}`;
         }
-
-        // Preserve category filter when using pagination
-        function updatePaginationLinks() {
-            const categorySelect = document.querySelector('.category-select');
-            const selectedCategory = categorySelect.value;
-            const paginationLinks = document.querySelectorAll('.pagination a');
-            
-            paginationLinks.forEach(link => {
-                const url = new URL(link.href);
-                if (selectedCategory) {
-                    url.searchParams.set('category', selectedCategory);
-                    link.href = url.toString();
-                }
-            });
-        }
-
-        // Initialize
-        document.addEventListener('DOMContentLoaded', function() {
-            updatePaginationLinks();
-        });
-
-        function filterByCategory(categoryId) {
-        const url = new URL(window.location.href);
-        if (categoryId) {
-            url.searchParams.set('category', categoryId);
-            url.searchParams.set('page', '1'); // Reset to first page when changing category
-        } else {
-            url.searchParams.delete('category');
-        }
-        window.location.href = url.toString();
-    }
-
-    // Update your existing updatePaginationLinks function
-    function updatePaginationLinks() {
-        const categorySelect = document.getElementById('categorySelect');
-        const selectedCategory = categorySelect.value;
-        const paginationLinks = document.querySelectorAll('.pagination a');
-        
-        paginationLinks.forEach(link => {
-            const url = new URL(link.href);
-            if (selectedCategory) {
-                url.searchParams.set('category', selectedCategory);
-            }
-            link.href = url.toString();
-        });
-    }
-
-    // Initialize
-    document.addEventListener('DOMContentLoaded', function() {
-        updatePaginationLinks();
-    });
-
-    function filterByCategory(categoryId) {
-    const sortOption = document.getElementById('sortSelect').value;
-    const url = new URL(window.location.href);
-    if (categoryId) {
-        url.searchParams.set('category', categoryId);
-    } else {
-        url.searchParams.delete('category');
-    }
-    url.searchParams.set('sort', sortOption);
-    url.searchParams.set('page', '1'); // Reset to first page when changing filters
-    window.location.href = url.toString();
-}
-
-function filterBySort(sortOption) {
-    const categoryId = document.getElementById('categorySelect').value;
-    const url = new URL(window.location.href);
-    if (categoryId) {
-        url.searchParams.set('category', categoryId);
-    }
-    url.searchParams.set('sort', sortOption);
-    url.searchParams.set('page', '1'); // Reset to first page when changing filters
-    window.location.href = url.toString();
+    
+        function applyPriceFilter() {
+    const minPrice = document.getElementById('minPrice').value;
+    const maxPrice = document.getElementById('maxPrice').value;
+    const currentUrl = new URL(window.location.href);
+    
+    // Ensure the backend knows to filter by discounted price
+    currentUrl.searchParams.set('filterBy', 'discountedPrice');
+    
+    if (minPrice) currentUrl.searchParams.set('minPrice', minPrice);
+    if (maxPrice) currentUrl.searchParams.set('maxPrice', maxPrice);
+    
+    window.location.href = currentUrl.toString();
 }
     
+        function filterByCategory(category) {
+            const currentUrl = new URL(window.location.href);
+            if (category) {
+                currentUrl.searchParams.set('category', category);
+            } else {
+                currentUrl.searchParams.delete('category');
+            }
+            currentUrl.searchParams.set('page', '1');
+            window.location.href = currentUrl.toString();
+        }
+    
+        function filterBySort(sortOption) {
+            const currentUrl = new URL(window.location.href);
+            currentUrl.searchParams.set('sort', sortOption);
+            window.location.href = currentUrl.toString();
+        }
+    
+        // Reset all filters
+        function resetFilters() {
+            window.location.href = "/shop";
+        }
+    
+        // Preserve filters in pagination links
+        document.addEventListener('DOMContentLoaded', function() {
+            const paginationLinks = document.querySelectorAll('nav a');
+            const currentUrl = new URL(window.location.href);
+            const searchParams = currentUrl.searchParams;
+    
+            paginationLinks.forEach(link => {
+                const linkUrl = new URL(link.href);
+                
+                // Preserve all current filters
+                const filtersToPreserve = ['search', 'category', 'sort', 'minPrice', 'maxPrice'];
+                
+                filtersToPreserve.forEach(filter => {
+                    if (searchParams.has(filter)) {
+                        linkUrl.searchParams.set(filter, searchParams.get(filter));
+                    }
+                });
+                
+                link.href = linkUrl.toString();
+            });
+        });
     </script>
-  </body>
+    
+    <%- include('../partials/footer') %>
+</body>
 </html>

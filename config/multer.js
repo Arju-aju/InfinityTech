@@ -12,10 +12,10 @@ const createUploadDir = (dirPath) => {
 // File filter function
 const fileFilter = (req, file, cb) => {
     // Allowed file types
-    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp','image/avif'];
     
     if (!allowedTypes.includes(file.mimetype)) {
-        return cb(new Error('Only .jpg, .jpeg, .png, and .webp formats are allowed'), false);
+        return cb(new Error('Only .jpg, .jpeg, .png,.avif and .webp formats are allowed'), false);
     }
 
     cb(null, true);

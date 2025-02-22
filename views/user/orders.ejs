@@ -21,6 +21,7 @@
         }
     </style>
 </head>
+
 <body class="gradient-bg min-h-screen flex">
     <%- include('../partials/profileSideBar') %>
 
@@ -44,7 +45,7 @@
                             <!-- Product Image -->
                             <div class="mb-4">
                                 <img 
-                                    src="<%= order.products[0].productId.image %>" 
+                                    src="<%= order.products[0].productId.images[0] %>"
                                     alt="<%= order.products[0].productId.name %>"
                                     class="w-full h-48 object-cover rounded-lg"
                                 >
@@ -110,6 +111,7 @@
                         <div class="relative w-full max-w-2xl max-h-full">
                             <div class="relative bg-white rounded-lg shadow-lg">
                                 <!-- Modal Header -->
+                               
                                 <div class="flex items-start justify-between p-4 border-b">
                                     <h3 class="text-xl font-semibold text-gray-900">
                                         Order Details #<%= order._id.toString().slice(-6) %>
@@ -125,7 +127,7 @@
                                     <div class="space-y-6">
                                         <% order.products.forEach(product => { %>
                                             <div class="flex items-center space-x-4 border-b pb-4">
-                                                <img src="<%= product.productId.image %>" alt="<%= product.productId.name %>" class="w-20 h-20 object-cover rounded-md">
+                                                <img src="<%= product.productId.images %>" alt="<%= product.productId.name %>" class="w-20 h-20 object-cover rounded-md">
                                                 <div class="flex-1">
                                                     <h4 class="text-lg font-medium text-gray-900"><%= product.productId.name %></h4>
                                                     <div class="mt-1 space-y-1">
@@ -142,6 +144,7 @@
                                                 </span>
                                             </div>
                                         <% }) %>
+                                        <%- include('../partials/footer') %>
                                     </div>
                                     
                                     <!-- Order Summary -->

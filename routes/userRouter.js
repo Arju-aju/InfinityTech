@@ -49,7 +49,7 @@ router.post('/resetPassword', password.resetPassword);
 // Product routes
 router.get('/',userController.loadHomePage);
 router.get('/shop', productController.loadShop);
-router.get('/products/:id',auth, productController.getSingleProduct);
+router.get('/product/:id',auth, productController.getSingleProduct);
 router.get('/categories',auth, productController.getAllCategories);
 router.get('/category/:id', productController.getCategoryProducts);
 router.get('/search', productController.searchProducts);

@@ -90,6 +90,36 @@
                         <% } %>
                     </tbody>
                 </table>
+
+                <div class="text-center text-gray-400 mb-4">
+                    Showing page <%= pagination.currentPage %> of <%= pagination.totalPages %>
+                </div>
+
+                <div class="mt-6 flex justify-center items-center space-x-4">
+                    <% if (pagination.hasPrevPage) { %>
+                        <a href="?<%= new URLSearchParams({...filters, page: pagination.currentPage - 1}).toString() %>"
+                           class="px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg transition">
+                            Previous
+                        </a>
+                    <% } %>
+                
+                    <div class="flex items-center space-x-2">
+                        <% for(let i = 1; i <= pagination.totalPages; i++) { %>
+                            <a href="?<%= new URLSearchParams({...filters, page: i}).toString() %>"
+                               class="px-4 py-2 rounded-lg transition <%= pagination.currentPage === i ? 'bg-blue-600' : 'bg-gray-700 hover:bg-gray-600' %>">
+                                <%= i %>
+                            </a>
+                        <% } %>
+                    </div>
+                
+                    <% if (pagination.hasNextPage) { %>
+                        <a href="?<%= new URLSearchParams({...filters, page: pagination.currentPage + 1}).toString() %>"
+                           class="px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg transition">
+                            Next
+                        </a>
+                    <% } %>
+                </div>
+
             </div>
         </div>
     </main>
@@ -246,5 +276,31 @@
             }
         });
     </script>
+    <script>
+        // Update form submission to reset pagination when filters change
+        document.getElementById('filterForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+            formData.set('page', '1'); // Reset to first page when filters change
+            const params = new URLSearchParams(formData);
+            window.location.href = `/admin/orders?${params.toString()}`;
+        });
+        
+        // Update reset filters function
+        function resetFilters() {
+            window.location.href = '/admin/orders?page=1';
+        }
+        
+        // Update debounce handler for search
+        const searchInput = document.querySelector('input[name="search"]');
+        if (searchInput) {
+            searchInput.addEventListener('input', debounce(function(e) {
+                const formData = new FormData(document.getElementById('filterForm'));
+                formData.set('page', '1'); // Reset to first page when search changes
+                const params = new URLSearchParams(formData);
+                window.location.href = `/admin/orders?${params.toString()}`;
+            }, 500));
+        }
+        </script>
 </body>
 </html>

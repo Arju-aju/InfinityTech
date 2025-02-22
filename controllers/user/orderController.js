@@ -5,14 +5,19 @@ exports.getOrdersList = async (req, res) => {
         // Get the logged-in user's ID
         const userId = req.user._id;
 
-        const orders = await Order.find({user:userId})
-        .populate({
-            path: 'products.productId',
-            select: 'name image price'
-        })
-        .sort({createdAt:-1})
-        console.log('orders details varu>>>>>>>>>>>>',orders);
-        res.render('user/orders',{orders})
+        // Fetch orders and populate product details
+        const orders = await Order.find({ user: userId })
+            .populate({
+                path: 'products.productId',
+                select: 'name images price'
+            })
+            .sort({ createdAt: -1 });
+
+        // Debugging to check product details
+        console.log('Orders:', JSON.stringify(orders, null, 2));
+
+        // Render orders page
+        res.render('user/orders', { orders });
 
     } catch (error) {
         console.error('Get orders list error:', error);
@@ -21,6 +26,7 @@ exports.getOrdersList = async (req, res) => {
         });
     }
 };
+
 
 exports.getOrderDetails = async (req, res) => {
     try {
@@ -32,8 +38,12 @@ exports.getOrderDetails = async (req, res) => {
             .populate('user', 'name email phone')
             .populate({
                 path: 'products.productId',
-                select: 'name image price'
+                select: 'name images price'
             });
+        
+        console.log('1>>>>>>>>',order.products[0].productId.images[0]);
+
+        
 
         if (!order) {
             return res.status(404).render('error', {
