@@ -26,9 +26,14 @@
             <span>Orders</span>
         </a>
         <a href="/admin/offers
-        " class="block py-2.5 px-4 rounded transition duration-200 <%= (typeof path !== 'undefined' && path === '/admin/orders') ? 'bg-gray-800 text-white' : 'text-gray-400 hover:bg-gray-800 hover:text-white' %>">
+        " class="block py-2.5 px-4 rounded transition duration-200 <%= (typeof path !== 'undefined' && path === '/admin/offers') ? 'bg-gray-800 text-white' : 'text-gray-400 hover:bg-gray-800 hover:text-white' %>">
             <i class="fas fa-shopping-cart w-6"></i>
             <span>Offer</span>
+        </a>
+        <a href="/admin/coupon
+        " class="block py-2.5 px-4 rounded transition duration-200 <%= (typeof path !== 'undefined' && path === '/admin/coupon') ? 'bg-gray-800 text-white' : 'text-gray-400 hover:bg-gray-800 hover:text-white' %>">
+            <i class="fas fa-shopping-cart w-6"></i>
+            <span>Coupon</span>
         </a>
     </nav>
 </div>

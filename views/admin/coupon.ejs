@@ -1,0 +1,69 @@
+<%- include('./partials/adminHeader.ejs') %>
+
+<div class="flex min-h-screen bg-gray-900 text-white">
+    <!-- Sidebar -->
+    <%- include('./partials/adminSidebar.ejs') %>
+        
+        
+
+    <!-- Main Content -->
+    <div class="flex-1 p-8 bg-gray-900 text-white">
+        <div class="bg-gray-800 shadow-md rounded-lg p-6">
+            <div class="flex justify-between items-center mb-6">
+                <div>
+                    <h1 class="text-2xl font-bold">Coupon Management</h1>
+                    <p class="text-sm text-gray-400">Manage all discount coupons from here</p>
+                </div>
+                <a href="/coupons/create" class="px-4 py-2 bg-indigo-600 text-white rounded-lg shadow-md hover:bg-indigo-700">
+                    <i class="fas fa-plus mr-2"></i> Create Coupon
+                </a>
+            </div>
+
+            <!-- Coupons Table -->
+            <div class="overflow-x-auto">
+                <% if (coupons.length === 0) { %>
+                    <div class="text-center py-12">
+                        <i class="fas fa-ticket-alt text-gray-400 text-5xl mb-4"></i>
+                        <p class="text-gray-500">No coupons found. Create your first coupon to get started.</p>
+                    </div>
+                <% } else { %>
+                    <table class="min-w-full bg-gray-800 border border-gray-700 rounded-lg overflow-hidden">
+                        <thead class="bg-gray-700">
+                            <tr class="text-left">
+                                <th class="px-6 py-3 text-xs font-medium text-gray-300 uppercase">Code</th>
+                                <th class="px-6 py-3 text-xs font-medium text-gray-300 uppercase">Discount</th>
+                                <th class="px-6 py-3 text-xs font-medium text-gray-300 uppercase">Min Purchase</th>
+                                <th class="px-6 py-3 text-xs font-medium text-gray-300 uppercase">Expiration</th>
+                                <th class="px-6 py-3 text-xs font-medium text-gray-300 uppercase">Usage</th>
+                                <th class="px-6 py-3 text-xs font-medium text-gray-300 uppercase">Status</th>
+                                <th class="px-6 py-3 text-xs font-medium text-gray-300 uppercase">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-700">
+                            <% coupons.forEach(coupon => { %>
+                                <tr class="hover:bg-gray-700">
+                                    <td class="px-6 py-4"><%= coupon.code %></td>
+                                    <td class="px-6 py-4"><%= coupon.discountValue %> <%= coupon.discountType === 'percentage' ? '%' : '$' %></td>
+                                    <td class="px-6 py-4">$<%= coupon.minPurchase %></td>
+                                    <td class="px-6 py-4"><%= new Date(coupon.expirationDate).toLocaleDateString() %></td>
+                                    <td class="px-6 py-4"><%= coupon.usedCount %> / <%= coupon.usageLimit || 'Unlimited' %></td>
+                                    <td class="px-6 py-4">
+                                        <span class="px-2 py-1 text-xs rounded-full font-semibold <%= coupon.status === 'active' ? 'bg-green-500 text-white' : 'bg-red-500 text-white' %>">
+                                            <%= coupon.status.charAt(0).toUpperCase() + coupon.status.slice(1) %>
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-4 flex space-x-2">
+                                        <a href="/coupons/edit/<%= coupon._id %>" class="text-indigo-400 hover:text-indigo-500"><i class="fas fa-edit"></i></a>
+                                        <a href="/coupons/delete/<%= coupon._id %>" class="text-red-400 hover:text-red-500" onclick="return confirm('Are you sure?')"><i class="fas fa-trash"></i></a>
+                                    </td>
+                                </tr>
+                            <% }) %>
+                        </tbody>
+                    </table>
+                <% } %>
+            </div>
+        </div>
+    </div>
+</div>
+
+<%- include('./partials/adminFooter.ejs') %>

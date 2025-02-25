@@ -1,14 +1,17 @@
 const express = require('express');
+const router = express.Router();
+
 const adminControllers = require('../controllers/Admin/adminController');
-const admin = require('../middleware/adminAuth')
 const customerController = require('../controllers/Admin/customerController');
 const categoryController = require('../controllers/Admin/categoryController')
 const productController = require('../controllers/Admin/productController')
 const orderController = require('../controllers/Admin/orderControllers')
 const offerController = require('../controllers/Admin/offerController')
-const router = express.Router();
+const couponController = require('../controllers/Admin/couponController')
+
 const { upload } = require('../config/multer');
 const validationMiddleware = require('../middleware/validation');
+const admin = require('../middleware/adminAuth')
 
 // Admin Authentication Routes
 router.get('/pageerror', adminControllers.pageerror);
@@ -56,6 +59,11 @@ router.get('/offers/add',admin.isAdmin,offerController.getAddOffer)
 router.post('/offers/add',admin.isAdmin,offerController.postAddOffer)
 router.get('/offers/edit/:id',admin.isAdmin, offerController.getEditOffer);
 router.post('/offers/edit/:id', offerController.postEditOffer);
+
+
+//coupoun Management
+
+router.get('/coupon',admin.isAdmin,couponController.getAllCoupon)
 
 
 

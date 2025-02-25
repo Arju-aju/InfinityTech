@@ -1,0 +1,144 @@
+<%- include('./partials/adminHeader.ejs') %>
+
+
+<div class="flex min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-violet-900">
+    <%- include('./partials/adminSidebar.ejs') %>
+
+    <div class="bg-white shadow overflow-hidden sm:rounded-lg">
+        <div class="px-4 py-5 sm:px-6 flex justify-between items-center">
+          <div>
+            <h1 class="text-2xl font-bold text-gray-900">Edit Coupon: <%= coupon.code %></h1>
+            <p class="mt-1 text-sm text-gray-500">Update the details for this coupon</p>
+          </div>
+        </div>
+        
+        <div class="border-t border-gray-200 px-4 py-5 sm:p-6">
+          <form action="/coupons/update/<%= coupon._id %>" method="POST">
+            <div class="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
+              <div class="sm:col-span-3">
+                <label for="code" class="block text-sm font-medium text-gray-700">Coupon Code*</label>
+                <div class="mt-1">
+                  <input type="text" name="code" id="code" required value="<%= coupon.code %>"
+                         class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md uppercase">
+                </div>
+              </div>
+      
+              <div class="sm:col-span-3">
+                <label for="discountType" class="block text-sm font-medium text-gray-700">Discount Type*</label>
+                <div class="mt-1">
+                  <select id="discountType" name="discountType" required
+                          class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md">
+                    <option value="percentage" <%= coupon.discountType === 'percentage' ? 'selected' : '' %>>Percentage Discount (%)</option>
+                    <option value="fixed" <%= coupon.discountType === 'fixed' ? 'selected' : '' %>>Fixed Amount ($)</option>
+                  </select>
+                </div>
+              </div>
+      
+              <div class="sm:col-span-3">
+                <label for="discountValue" class="block text-sm font-medium text-gray-700">
+                  Discount Value* <span class="discount-type-label">(<%= coupon.discountType === 'percentage' ? 'in %' : 'in $' %>)</span>
+                </label>
+                <div class="mt-1">
+                  <input type="number" name="discountValue" id="discountValue" min="0" step="0.01" required
+                         value="<%= coupon.discountValue %>"
+                         class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md">
+                </div>
+              </div>
+      
+              <div class="sm:col-span-3 max-discount-container <%= coupon.discountType === 'fixed' ? 'hidden' : '' %>">
+                <label for="maxDiscount" class="block text-sm font-medium text-gray-700">Maximum Discount ($)</label>
+          <div class="mt-1">
+            <input type="number" name="maxDiscount" id="maxDiscount" min="0" step="0.01"
+                   value="<%= coupon.maxDiscount || '' %>"
+                   class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md">
+          </div>
+          <p class="mt-1 text-xs text-gray-500">Leave empty for no maximum (for percentage discounts)</p>
+        </div>
+
+        <div class="sm:col-span-3">
+          <label for="minPurchase" class="block text-sm font-medium text-gray-700">Minimum Purchase ($)</label>
+          <div class="mt-1">
+            <input type="number" name="minPurchase" id="minPurchase" min="0" step="0.01"
+                   value="<%= coupon.minPurchase %>"
+                   class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md">
+          </div>
+          <p class="mt-1 text-xs text-gray-500">Minimum order amount required to use this coupon</p>
+        </div>
+
+        <div class="sm:col-span-3">
+          <label for="expirationDate" class="block text-sm font-medium text-gray-700">Expiration Date*</label>
+          <div class="mt-1">
+            <input type="date" name="expirationDate" id="expirationDate" required
+                   value="<%= coupon.expirationDate %>"
+                   class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md">
+          </div>
+        </div>
+
+        <div class="sm:col-span-3">
+          <label for="usageLimit" class="block text-sm font-medium text-gray-700">Usage Limit</label>
+          <div class="mt-1">
+            <input type="number" name="usageLimit" id="usageLimit" min="1" step="1"
+                   value="<%= coupon.usageLimit || '' %>"
+                   class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                   placeholder="Leave empty for unlimited">
+          </div>
+          <p class="mt-1 text-xs text-gray-500">Maximum number of times this coupon can be used</p>
+        </div>
+
+        <div class="sm:col-span-2">
+          <label for="usedCount" class="block text-sm font-medium text-gray-700">Used Count</label>
+          <div class="mt-1">
+            <div class="py-2 text-sm text-gray-900">
+              <%= coupon.usedCount %> times
+            </div>
+          </div>
+        </div>
+
+        <div class="sm:col-span-4">
+          <label for="status" class="block text-sm font-medium text-gray-700">Status</label>
+          <div class="mt-1">
+            <select id="status" name="status"
+                    class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md">
+              <option value="active" <%= coupon.status === 'active' ? 'selected' : '' %>>Active</option>
+              <option value="disabled" <%= coupon.status === 'disabled' ? 'selected' : '' %>>Disabled</option>
+              <option value="expired" <%= coupon.status === 'expired' ? 'selected' : '' %>>Expired</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="mt-8 flex justify-end">
+        <a href="/coupons" class="inline-flex justify-center py-2 px-4 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 mr-3">
+          Cancel
+        </a>
+        <button type="submit" class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+          Update Coupon
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<%- include('./partials/adminFooter.ejs') %>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const discountTypeSelect = document.getElementById('discountType');
+    const discountValueLabel = document.querySelector('.discount-type-label');
+    const maxDiscountContainer = document.querySelector('.max-discount-container');
+    
+    // Toggle max discount visibility based on discount type
+    function updateDiscountFields() {
+      if (discountTypeSelect.value === 'percentage') {
+        discountValueLabel.textContent = '(in %)';
+        maxDiscountContainer.classList.remove('hidden');
+      } else {
+        discountValueLabel.textContent = '(in $)';
+        maxDiscountContainer.classList.add('hidden');
+      }
+    }
+    
+    discountTypeSelect.addEventListener('change', updateDiscountFields);
+  });
+</script>
+                
