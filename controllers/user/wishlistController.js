@@ -62,3 +62,40 @@ exports.toggleWishlist = async (req, res) => {
         res.status(500).json({ success: false, message: 'Internal server error' });
     }
 };
+
+
+exports.removeFromWishlist = async(req,res)=>{
+    try {
+        
+        const {wishlistItemId} = req.params
+
+        if(!wishlistItemId){
+            return res.status(404).json({
+                sucess:false,
+                message:'Wishlist id is required'
+            })
+        }
+
+        const deleteItem = await Wishlist.findByIdAndDelete(wishlistItemId)
+
+        if(!deleteItem){
+            return res.status(404).json({
+                sucess:false,
+                message:'Wishlist item not found'
+            })
+        }
+
+        return res.status(200).json({
+            success:true,
+            message:'Item removed from wishlist Sucessfully'
+        })
+
+    } catch (error) {
+        console.error('Error removing item from wishlist:', error);
+        return res.status(500).json({ 
+            success: false, 
+            message: 'Server error while removing item from wishlist',
+            error: process.env.NODE_ENV === 'development' ? error.message : undefined
+        });
+    }
+}

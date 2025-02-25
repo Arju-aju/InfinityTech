@@ -17,14 +17,19 @@
                             <h3 class="text-xl font-semibold"><%= item.product.name %></h3>
                             <p class="text-gray-700 mt-2 text-lg font-medium">₹<%= item.product.price %></p>
                             <div class="mt-4 flex justify-between">
-                                <button 
+                            <button 
                                 onclick="addToCart('<%= item.product._id %>')" 
-                                class="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 py-2 px-3 rounded-md text-sm font-medium transition duration-200"
-                            >
+                                class="flex-1 mr-2 bg-gray-200 hover:bg-gray-300 text-gray-800 py-2 px-3 rounded-md text-sm font-medium transition duration-200">
                                 Add to Cart
                             </button>
                             
-                                <a href="/wishlist/remove/<%= item._id %>" class="text-red-500 hover:underline text-lg">Remove</a>
+                            <button 
+                                onclick="confirmRemoveFromWishlist('<%= item._id %>', '<%= item.product.name %>')" 
+                                class="flex-1 ml-2 bg-primary hover:bg-primary-dark text-white py-2 px-3 rounded-md text-sm font-medium transition duration-200">
+                                ❌ Remove
+                            </button>
+                            
+                            
                             </div>
                         </div>
                     </div>
@@ -105,12 +110,60 @@
             color: '#fff', // Ensures text is visible on all backgrounds
         });
     }
+    
     document.querySelectorAll('.add-to-cart-btn').forEach(button => {
-            button.addEventListener('click', function() {
-                const productId = this.getAttribute('data-product-id');
-                if (productId) {
-                    addToCart(productId);
-                }
-            });
+        button.addEventListener('click', function() {
+            const productId = this.getAttribute('data-product-id');
+            if (productId) {
+                addToCart(productId);
+            }
         });
+    });
+
+    function confirmRemoveFromWishlist(wishlistItemId, productName) {
+        Swal.fire({
+            title: 'Remove from Wishlist?',
+            text: `Are you sure you want to remove "${productName}" from your wishlist?`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Yes, remove it!',
+            cancelButtonText: 'Cancel'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                removeFromWishlist(wishlistItemId);
+            }
+        });
+    }
+
+    function removeFromWishlist(wishlistItemId) {
+        showNotification('Removing from wishlist...', 'info');
+
+        fetch(`/api/wishlist/remove/${wishlistItemId}`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            credentials: 'same-origin'
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.success) {
+                showNotification('Item removed from wishlist!', 'success');
+                location.reload(); // Refresh the page to update the wishlist
+            } else {
+                showNotification('Failed to remove item. Please try again.', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error removing from wishlist:', error);
+            showNotification('Failed to remove item. Please try again.', 'error');
+        });
+    }
 </script>

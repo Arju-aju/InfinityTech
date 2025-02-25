@@ -95,6 +95,7 @@ router.delete('/delete-address/:id', addressController.deleteAddress);
 //Wishlist
 router.get('/wishlist',auth,wishlist.getWishlist)
 router.post('/api/wishlist/toggle', auth, wishlist.toggleWishlist);
+router.delete('/api/wishlist/remove/:wishlistItemId',auth, wishlist.removeFromWishlist)
 
 
 module.exports = router;
