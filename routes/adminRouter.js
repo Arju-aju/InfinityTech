@@ -63,7 +63,11 @@ router.post('/offers/edit/:id', offerController.postEditOffer);
 
 //coupoun Management
 
-router.get('/coupon',admin.isAdmin,couponController.getAllCoupon)
+// Route to display all coupons
+router.get('/coupon', admin.isAdmin, couponController.getAllCoupon);
+// Route to display the create coupon form
+router.get('/createCoupon', admin.isAdmin, couponController.getCreateCouponForm);
+router.post('/createCoupon', admin.isAdmin, couponController.postCreateCoupon);
 
 
 

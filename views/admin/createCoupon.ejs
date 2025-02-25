@@ -1,105 +1,114 @@
 <%- include('./partials/adminHeader.ejs') %>
 
-
 <div class="flex min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-violet-900">
     <%- include('./partials/adminSidebar.ejs') %>
     
-    <div class="bg-white shadow overflow-hidden sm:rounded-lg">
+    <div class="bg-gray-800 shadow overflow-hidden sm:rounded-lg text-white mx-auto mt-10 p-6 w-3/4">
         <div class="px-4 py-5 sm:px-6">
-          <h1 class="text-2xl font-bold text-gray-900">Create New Coupon</h1>
-          <p class="mt-1 text-sm text-gray-500">Enter the details for the new coupon</p>
+          <h1 class="text-2xl font-bold text-white">Create New Coupon</h1>
+          <p class="mt-1 text-sm text-gray-300">Enter the details for the new coupon</p>
         </div>
         
-        <div class="border-t border-gray-200 px-4 py-5 sm:p-6">
-          <form action="/coupons/create" method="POST">
+        <% if (locals.errors && errors.length > 0) { %>
+        <div class="border-t border-gray-600 px-4 py-3 sm:px-6">
+          <div class="bg-red-900 text-white px-4 py-3 rounded relative" role="alert">
+            <strong class="font-bold">Please correct the following errors:</strong>
+            <ul class="mt-1 ml-4 list-disc list-inside">
+              <% errors.forEach(error => { %>
+                <li><%= error %></li>
+              <% }) %>
+            </ul>
+          </div>
+        </div>
+        <% } %>
+        
+        <div class="border-t border-gray-600 px-4 py-5 sm:p-6">
+          <form action="/admin/createCoupon" method="POST">
             <div class="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
               <div class="sm:col-span-3">
-                <label for="code" class="block text-sm font-medium text-gray-700">Coupon Code*</label>
+                <label for="code" class="block text-sm font-medium text-gray-300">Coupon Code*</label>
                 <div class="mt-1">
-                  <input type="text" name="code" id="code" required 
-                         class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md uppercase"
-                         placeholder="SUMMER2025">
+                    <input type="text" name="code" id="code" 
+                    class="bg-gray-700 text-white focus:ring-violet-500 focus:border-violet-500 block w-full sm:text-sm border-gray-500 rounded-md uppercase p-2"
+                    placeholder="SUMMER2025" value="<%= locals.formData ? formData.code : '' %>">
                 </div>
-                <p class="mt-1 text-xs text-gray-500">Unique code that customers will enter (e.g. SUMMER25)</p>
               </div>
       
               <div class="sm:col-span-3">
-                <label for="discountType" class="block text-sm font-medium text-gray-700">Discount Type*</label>
+                <label for="discountType" class="block text-sm font-medium text-gray-300">Discount Type*</label>
                 <div class="mt-1">
-                  <select id="discountType" name="discountType" required
-                          class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md">
-                    <option value="percentage">Percentage Discount (%)</option>
-                    <option value="fixed">Fixed Amount ($)</option>
+                  <select id="discountType" name="discountType" 
+                          class="bg-gray-700 text-white focus:ring-violet-500 focus:border-violet-500 block w-full sm:text-sm border-gray-500 rounded-md p-2">
+                    <option value="percentage" <%= locals.formData && formData.discountType === 'percentage' ? 'selected' : '' %>>Percentage Discount (%)</option>
+                    <option value="fixed" <%= locals.formData && formData.discountType === 'fixed' ? 'selected' : '' %>>Fixed Amount ($)</option>
                   </select>
                 </div>
               </div>
       
               <div class="sm:col-span-3">
-                <label for="discountValue" class="block text-sm font-medium text-gray-700">
+                <label for="discountValue" class="block text-sm font-medium text-gray-300">
                   Discount Value* <span class="discount-type-label">(in %)</span>
                 </label>
                 <div class="mt-1">
-                  <input type="number" name="discountValue" id="discountValue" min="0" step="0.01" required
-                         class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
-                         placeholder="10">
+                  <input type="number" name="discountValue" id="discountValue" min="0" step="0.01" 
+                         class="bg-gray-700 text-white focus:ring-violet-500 focus:border-violet-500 block w-full sm:text-sm border-gray-500 rounded-md p-2"
+                         placeholder="10" value="<%= locals.formData ? formData.discountValue : '' %>">
                 </div>
               </div>
       
               <div class="sm:col-span-3 max-discount-container">
-                <label for="maxDiscount" class="block text-sm font-medium text-gray-700">Maximum Discount ($)</label>
+                <label for="maxDiscount" class="block text-sm font-medium text-gray-300">Maximum Discount ($)</label>
                 <div class="mt-1">
                   <input type="number" name="maxDiscount" id="maxDiscount" min="0" step="0.01"
-                         class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
-                         placeholder="50">
+                         class="bg-gray-700 text-white focus:ring-violet-500 focus:border-violet-500 block w-full sm:text-sm border-gray-500 rounded-md p-2"
+                         placeholder="50" value="<%= locals.formData ? formData.maxDiscount : '' %>">
                 </div>
-                <p class="mt-1 text-xs text-gray-500">Leave empty for no maximum (for percentage discounts)</p>
               </div>
       
               <div class="sm:col-span-3">
-                <label for="minPurchase" class="block text-sm font-medium text-gray-700">Minimum Purchase ($)</label>
+                <label for="minPurchase" class="block text-sm font-medium text-gray-300">Minimum Purchase ($)</label>
                 <div class="mt-1">
                   <input type="number" name="minPurchase" id="minPurchase" min="0" step="0.01"
-                         class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
-                         placeholder="0" value="0">
+                         class="bg-gray-700 text-white focus:ring-violet-500 focus:border-violet-500 block w-full sm:text-sm border-gray-500 rounded-md p-2"
+                         placeholder="0" value="<%= locals.formData ? formData.minPurchase : '0' %>">
                 </div>
-                <p class="mt-1 text-xs text-gray-500">Minimum order amount required to use this coupon</p>
               </div>
       
               <div class="sm:col-span-3">
-                <label for="expirationDate" class="block text-sm font-medium text-gray-700">Expiration Date*</label>
+                <label for="expirationDate" class="block text-sm font-medium text-gray-300">Expiration Date*</label>
                 <div class="mt-1">
-                  <input type="date" name="expirationDate" id="expirationDate" required
-                         class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md">
+                  <input type="date" name="expirationDate" id="expirationDate" 
+                         class="bg-gray-700 text-white focus:ring-violet-500 focus:border-violet-500 block w-full sm:text-sm border-gray-500 rounded-md p-2"
+                         value="<%= locals.formData ? formData.expirationDate : '' %>">
                 </div>
               </div>
       
               <div class="sm:col-span-3">
-                <label for="usageLimit" class="block text-sm font-medium text-gray-700">Usage Limit</label>
+                <label for="usageLimit" class="block text-sm font-medium text-gray-300">Usage Limit</label>
                 <div class="mt-1">
                   <input type="number" name="usageLimit" id="usageLimit" min="1" step="1"
-                         class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
-                         placeholder="Leave empty for unlimited">
+                         class="bg-gray-700 text-white focus:ring-violet-500 focus:border-violet-500 block w-full sm:text-sm border-gray-500 rounded-md p-2"
+                         placeholder="Leave empty for unlimited" value="<%= locals.formData ? formData.usageLimit : '' %>">
                 </div>
-                <p class="mt-1 text-xs text-gray-500">Maximum number of times this coupon can be used</p>
               </div>
       
               <div class="sm:col-span-3">
-                <label for="status" class="block text-sm font-medium text-gray-700">Status</label>
+                <label for="status" class="block text-sm font-medium text-gray-300">Status</label>
                 <div class="mt-1">
                   <select id="status" name="status"
-                          class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md">
-                    <option value="active">Active</option>
-                    <option value="disabled">Disabled</option>
+                          class="bg-gray-700 text-white focus:ring-violet-500 focus:border-violet-500 block w-full sm:text-sm border-gray-500 rounded-md p-2">
+                    <option value="active" <%= locals.formData && formData.status === 'active' ? 'selected' : '' %>>Active</option>
+                    <option value="disabled" <%= locals.formData && formData.status === 'disabled' ? 'selected' : '' %>>Disabled</option>
                   </select>
                 </div>
               </div>
             </div>
       
             <div class="mt-8 flex justify-end">
-              <a href="/coupons" class="inline-flex justify-center py-2 px-4 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 mr-3">
+              <a href="/admin/coupon" class="inline-flex justify-center py-2 px-4 border border-gray-500 shadow-sm text-sm font-medium rounded-md text-gray-300 bg-gray-700 hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-violet-500 mr-3">
                 Cancel
               </a>
-              <button type="submit" class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+              <button type="submit" class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-violet-600 hover:bg-violet-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-violet-500">
                 Create Coupon
               </button>
             </div>
@@ -115,16 +124,16 @@
       const discountValueLabel = document.querySelector('.discount-type-label');
       const maxDiscountContainer = document.querySelector('.max-discount-container');
       
-      // Set today as the minimum date for expiration
       const today = new Date().toISOString().split('T')[0];
       document.getElementById('expirationDate').min = today;
       
-      // Default to tomorrow for expiration date
-      const tomorrow = new Date();
-      tomorrow.setDate(tomorrow.getDate() + 1);
-      document.getElementById('expirationDate').value = tomorrow.toISOString().split('T')[0];
+      // Set default date if no date was provided
+      if (!document.getElementById('expirationDate').value) {
+        const tomorrow = new Date();
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        document.getElementById('expirationDate').value = tomorrow.toISOString().split('T')[0];
+      }
       
-      // Toggle max discount visibility based on discount type
       function updateDiscountFields() {
         if (discountTypeSelect.value === 'percentage') {
           discountValueLabel.textContent = '(in %)';
@@ -136,6 +145,6 @@
       }
       
       discountTypeSelect.addEventListener('change', updateDiscountFields);
-      updateDiscountFields(); // Call once on page load
+      updateDiscountFields();
     });
-  </script>
+</script>
