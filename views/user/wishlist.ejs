@@ -1,0 +1,116 @@
+<%- include("partials/header") %>
+
+<div class="min-h-screen flex flex-col">
+    <div class="max-w-7xl mx-auto px-4 sm:px-9 lg:px-9">
+        <h2 class="text-3xl font-bold text-center mb-8">Your Wishlist</h2>
+    
+        <% if (wishlistItems.length === 0) { %>
+            <div class="">
+                <p class="text-center text-gray-500">Your wishlist is empty.</p>
+            </div>
+        <% } else { %>
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-9">
+                <% wishlistItems.forEach(item => { %>
+                    <div class="bg-white shadow-lg rounded-xl overflow-hidden transform transition duration-300 hover:scale-105">
+                        <img src="<%= item.product.images[0] %>" alt="<%= item.product.name %>" class="w-full h-48 object-cover">
+                        <div class="p-6">
+                            <h3 class="text-xl font-semibold"><%= item.product.name %></h3>
+                            <p class="text-gray-700 mt-2 text-lg font-medium">₹<%= item.product.price %></p>
+                            <div class="mt-4 flex justify-between">
+                                <button 
+                                onclick="addToCart('<%= item.product._id %>')" 
+                                class="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 py-2 px-3 rounded-md text-sm font-medium transition duration-200"
+                            >
+                                Add to Cart
+                            </button>
+                            
+                                <a href="/wishlist/remove/<%= item._id %>" class="text-red-500 hover:underline text-lg">Remove</a>
+                            </div>
+                        </div>
+                    </div>
+                <% }); %>
+            </div>
+        <% } %>
+    </div>
+    
+
+</div>
+
+<%- include("partials/footer") %>
+
+<script>
+        function addToCart(productId) {
+        showNotification('Adding to cart...', 'info');
+    
+        fetch('/api/cart/add', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ 
+                productId: productId,
+                quantity: 1
+            }),
+            credentials: 'same-origin'
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(data => {
+            const cartCounter = document.getElementById('cart-counter');
+            if (cartCounter && data.totalItems) {
+                cartCounter.textContent = data.totalItems;
+                cartCounter.classList.remove('hidden');
+            }
+            showNotification('Product added to cart!', 'success');
+        })
+        .catch(error => {
+            console.error('Error adding to cart:', error);
+            showNotification('Failed to add product to cart. Please try again.', 'error');
+        });
+    }
+
+    function showNotification(message, type = 'info') {
+        let bgColor;
+    
+        switch (type) {
+            case 'success':
+                bgColor = '#28a745'; // Green
+                break;
+            case 'error':
+                bgColor = '#dc3545'; // Red
+                break;
+            case 'info':
+                bgColor = '#007bff'; // Blue
+                break;
+            case 'warning':
+                bgColor = '#ffc107'; // Yellow
+                break;
+            default:
+                bgColor = '#6c757d'; // Gray (fallback)
+        }
+    
+        Swal.fire({
+            text: message,
+            icon: type, // Matches Swal's built-in icons (success, error, warning, info)
+            toast: true,
+            position: 'bottom-end',
+            timer: 3000,
+            timerProgressBar: true,
+            showConfirmButton: false,
+            background: bgColor,
+            color: '#fff', // Ensures text is visible on all backgrounds
+        });
+    }
+    document.querySelectorAll('.add-to-cart-btn').forEach(button => {
+            button.addEventListener('click', function() {
+                const productId = this.getAttribute('data-product-id');
+                if (productId) {
+                    addToCart(productId);
+                }
+            });
+        });
+</script>

@@ -66,127 +66,81 @@ const getCart = async (req, res) => {
 
 const addToCart = async (req, res) => {
     try {
-        const { productId, quantity = 1 } = req.body;
+        const { productId, quantity = 1, buyNow = false } = req.body;
         const userId = req.session.user?._id;
 
         if (!userId) {
-            return res.redirect('/login');
+            return res.status(401).json({ success: false, message: 'User not authenticated' });
         }
 
         if (!mongoose.Types.ObjectId.isValid(productId)) {
-            return res.status(400).json({ 
-                success: false, 
-                message: 'Invalid product ID' 
-            });
+            return res.status(400).json({ success: false, message: 'Invalid product ID' });
         }
 
         // Find the product
-        const product = await Product.findOne({
-            _id: productId,
-            isListed: true,
-            isDeleted: false
-        });
-
+        const product = await Product.findOne({ _id: productId, isListed: true, isDeleted: false });
         if (!product) {
-            return res.status(404).json({
-                success: false,
-                message: 'Product not found or unavailable'
-            });
+            return res.status(404).json({ success: false, message: 'Product not found or unavailable' });
         }
 
-        if(product.stock < 6) {
-            return res.status(400).json({
-                success:false,
-                 message: 'Out of stock'
-            })
-        }
-        // Check if quantity exceeds 10
-        if (quantity > 10) {
-            return res.status(400).json({
-                success: false,
-                message: 'You cannot add more than 10 quantities of this product.'
-            });
-        }
-
-        // Check if there's enough stock
         if (product.stock < quantity) {
-            return res.status(400).json({
-                success: false,
-                message: `Only ${product.stock} items available in stock`
-            });
+            return res.status(400).json({ success: false, message: `Only ${product.stock} items available in stock` });
+        }
+
+        if (quantity > 10) {
+            return res.status(400).json({ success: false, message: 'You cannot add more than 10 quantities of this product.' });
         }
 
         // Calculate discounted price
         const discountedPrice = product.price * (1 - (product.discountPercentage / 100));
 
-        // Find or create cart for the user
-        let cart = await Cart.findOne({ user: new mongoose.Types.ObjectId(userId) });
+        if (buyNow) {
+            // If "Buy Now" is triggered, create a temporary cart session
+            req.session.buyNow = [{
+                product: productId,
+                quantity: quantity,
+                price: discountedPrice
+            }];
+            return res.json({ success: true, redirect: '/checkout?source=buy_now' });
+        }
 
+        // Find or create user's cart
+        let cart = await Cart.findOne({ user: new mongoose.Types.ObjectId(userId) });
         if (!cart) {
             cart = new Cart({ user: userId, items: [] });
         }
 
         // Check if product already exists in cart
-        const existingItemIndex = cart.items.findIndex(
-            item => item.product.toString() === productId.toString()
-        );
+        const existingItemIndex = cart.items.findIndex(item => item.product.toString() === productId.toString());
 
         if (existingItemIndex > -1) {
-            // Calculate new quantity for existing item
             let newQuantity = cart.items[existingItemIndex].quantity + parseInt(quantity);
-            
-            // Check if new total quantity exceeds 10
             if (newQuantity > 10) {
-                return res.status(400).json({
-                    success: false,
-                    message: 'You cannot add more than 10 quantities of this product.'
-                });
+                return res.status(400).json({ success: false, message: 'You cannot add more than 10 quantities of this product.' });
             }
-
-            // Check if new total quantity exceeds stock
             if (newQuantity > product.stock) {
-                return res.status(400).json({
-                    success: false,
-                    message: `Cannot add more items. Only ${product.stock} available in stock`
-                });
+                return res.status(400).json({ success: false, message: `Cannot add more items. Only ${product.stock} available in stock` });
             }
-
-            // Update existing item quantity
             cart.items[existingItemIndex].quantity = newQuantity;
         } else {
-            // Add new item to cart
-            newQuantity = parseInt(quantity);
-            cart.items.push({
-                product: productId,
-                quantity: newQuantity,
-                price: discountedPrice
-            });
+            cart.items.push({ product: productId, quantity: parseInt(quantity), price: discountedPrice });
         }
 
-        // Reduce the product stock
         product.stock -= parseInt(quantity);
         await product.save();
-
-        // Save the cart
         await cart.save();
-        
-        // Populate product details for response
         await cart.populate('items.product');
 
         res.json({
             success: true,
             message: 'Product added to cart successfully',
             cart: cart,
-            newQuantity: newQuantity,
+            totalItems: cart.items.reduce((sum, item) => sum + item.quantity, 0),
             remainingStock: product.stock
         });
-
     } catch (error) {
         console.error('Error in addToCart:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Error adding product to cart'
-        });
+        res.status(500).json({ success: false, message: 'Error adding product to cart' });
     }
 };
 

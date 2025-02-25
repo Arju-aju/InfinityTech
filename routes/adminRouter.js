@@ -5,6 +5,7 @@ const customerController = require('../controllers/Admin/customerController');
 const categoryController = require('../controllers/Admin/categoryController')
 const productController = require('../controllers/Admin/productController')
 const orderController = require('../controllers/Admin/orderControllers')
+const offerController = require('../controllers/Admin/offerController')
 const router = express.Router();
 const { upload } = require('../config/multer');
 const validationMiddleware = require('../middleware/validation');
@@ -48,7 +49,13 @@ router.patch('/orders/:orderId/toggle-status', admin.isAdmin, orderController.to
 router.get('/viewdetails/:orderId',admin.isAdmin, orderController.viewOrderDetails);
 
 
+//Offer Management
 
+router.get('/offers',admin.isAdmin,offerController.getAllOffers)
+router.get('/offers/add',admin.isAdmin,offerController.getAddOffer)
+router.post('/offers/add',admin.isAdmin,offerController.postAddOffer)
+router.get('/offers/edit/:id',admin.isAdmin, offerController.getEditOffer);
+router.post('/offers/edit/:id', offerController.postEditOffer);
 
 
 

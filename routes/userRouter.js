@@ -1,6 +1,8 @@
 // userRoute.js
 const express = require('express');
 const router = express.Router();
+
+
 const userController = require('../controllers/user/userControllers');
 const profileController = require('../controllers/user/userProfileController');
 const productController = require('../controllers/user/productController');
@@ -9,6 +11,9 @@ const cartController = require('../controllers/user/cartController')
 const checkoutController = require('../controllers/user/checkOutController')
 const orderController = require('../controllers/user/orderController')
 const password =  require('../controllers/user/password')
+const wishlist = require('../controllers/user/wishlistController')
+
+
 const { isAuthenticated, isNotAuthenticated, auth ,authMiddleware} = require('../middleware/auth');
 const passport = require('passport');
 const User = require('../models/userSchema');
@@ -40,12 +45,6 @@ router.post('/forgotOtp', password.verifyOTP);
 router.get('/resetPassword', password.getResetPassword);
 router.post('/resetPassword', password.resetPassword);
 
-
-
-
-
-
-
 // Product routes
 router.get('/',userController.loadHomePage);
 router.get('/shop', productController.loadShop);
@@ -56,7 +55,7 @@ router.get('/search', productController.searchProducts);
 
 // Cart routes
 router.get('/cart',auth,cartController.getCart);
-router.post('/cart/add',auth, cartController.addToCart);
+router.post('/api/cart/add',auth, cartController.addToCart);
 router.put('/cart/update/:productId',auth, cartController.updateCartQuantity);
 router.delete('/cart/remove/:productId',auth, cartController.removeFromCart);
 
@@ -86,13 +85,16 @@ router.post("/edit-profile", profileController.postEditProfile);
 
 
 //Address Mangament
-
 router.get('/address', addressController.getAddress);
 router.post('/add-address', addressController.addAddress);
 router.get('/edit-address/:id', addressController.editAddress);
 router.post('/edit-address/:id', addressController.updateAddress);
 router.post('/set-default-address/:id', addressController.setDefaultAddress);
 router.delete('/delete-address/:id', addressController.deleteAddress);
+
+//Wishlist
+router.get('/wishlist',auth,wishlist.getWishlist)
+router.post('/api/wishlist/toggle', auth, wishlist.toggleWishlist);
 
 
 module.exports = router;
