@@ -36,6 +36,7 @@ const couponSchema = new Schema({
         default: null // Null means unlimited usage
     },
     usedCount: {
+    
         type: Number,
         default: 0 // Tracks how many times the coupon has been used
     },
