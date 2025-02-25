@@ -68,6 +68,9 @@ router.get('/coupon', admin.isAdmin, couponController.getAllCoupon);
 // Route to display the create coupon form
 router.get('/createCoupon', admin.isAdmin, couponController.getCreateCouponForm);
 router.post('/createCoupon', admin.isAdmin, couponController.postCreateCoupon);
+// In your routes file
+router.delete('/admin/coupons/delete/:id', couponController.deleteCoupon);
+
 
 
 
