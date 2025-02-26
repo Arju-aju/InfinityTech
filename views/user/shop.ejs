@@ -380,9 +380,7 @@
     
     // Initialize functionality when DOM is loaded
     document.addEventListener('DOMContentLoaded', function() {
-        setTimeout(() => {
-            showNotification('Notification system initialized', 'info');
-        }, 1000);
+      
     
         document.querySelectorAll('.wishlist-btn').forEach(button => {
             button.addEventListener('click', function(event) {

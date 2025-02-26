@@ -24,23 +24,24 @@ exports.getAllCoupon = async (req, res) => {
 };
 
 
+
 // Render the create coupon form
 exports.getCreateCouponForm = async (req, res) => {
     try {
-        const couponCode = generateCouponCode()
-        res.render('createCoupon',{
-            formData: req.session.formData || {},
+        const couponCode = generateCouponCode(); // Generate a new coupon code
+        res.render('createCoupon', {
+            formData: req.session.formData || { code: couponCode }, // Set code as default
             errors: []
-        }); 
+        });
 
         delete req.session.formData;
-
     } catch (error) {
         console.error("Error rendering createCoupon:", error);
         req.flash('error', 'Failed to load the create coupon form');
-        res.redirect('/coupon');
+        res.redirect('/admin/coupon');
     }
 };
+
 
 exports.postCreateCoupon = async (req,res) => {
     try {
@@ -132,11 +133,19 @@ exports.postCreateCoupon = async (req,res) => {
 exports.deleteCoupon = async (req, res) => {
     try {
         const couponId = req.params.id;
-        console.log('coupoun>>>>>>>>>>>.',couponId);
-        await Coupon.findByIdAndDelete(couponId);
+        console.log('Coupon ID received:', couponId);
+
+        const deletedCoupon = await Coupon.findByIdAndDelete(couponId);
+
+        if (!deletedCoupon) {
+            return res.status(404).json({ error: 'Coupon not found' });
+        }
+
         res.status(200).json({ message: 'Coupon deleted successfully' });
     } catch (error) {
+        console.error('Error deleting coupon:', error);
         res.status(500).json({ error: 'Failed to delete coupon' });
     }
 };
+
 
