@@ -56,7 +56,7 @@ exports.auth = async (req, res, next) => {
         console.log('req.session.user>>',req.session.user);
         
         if (!req.session.user) {
-            return res.status(401).json({ message: "Authentication required>>>>" });
+            return res.redirect('/')
         }
 
         // Find the user in the database

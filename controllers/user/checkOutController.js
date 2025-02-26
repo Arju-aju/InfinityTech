@@ -1,7 +1,7 @@
+
 const Cart =  require('../../models/cartSchema')
 const Order = require('../../models/orderSchema')
 const Address = require('../../models/addressSchema')
-
 
 
 exports.getCheckout = async (req, res) => {
@@ -21,18 +21,24 @@ exports.getCheckout = async (req, res) => {
         const addressDoc = await Address.findOne({ userID: req.user._id });
         const addresses = addressDoc ? addressDoc.address : [];
 
-        // Identify the default address (assuming an 'isDefault' property exists)
+        // Identify the default address
         let defaultAddressIndex = addresses.findIndex(addr => addr.isDefault);
-
-        // If no default address is found, set the first address as default
         if (defaultAddressIndex === -1 && addresses.length > 0) {
             defaultAddressIndex = 0;
         }
 
+        // Calculate total price including shipping charge
+        const subtotal = cart.calculateTotal();
+        const shippingCharge = 30; // Fixed shipping charge
+        const totalAmount = subtotal + shippingCharge;
+
         res.render('checkout', {
             cart,
             addresses,
-            defaultAddressIndex
+            defaultAddressIndex,
+            subtotal,
+            shippingCharge,
+            totalAmount
         });
     } catch (error) {
         console.error('Checkout page error:', error);
@@ -71,6 +77,11 @@ exports.placeOrder = async (req, res) => {
             });
         }
 
+        // Calculate total price including shipping charge
+        const subtotal = cart.calculateTotal();
+        const shippingCharge = 30;
+        const totalAmount = subtotal + shippingCharge;
+
         // Create order products array
         const orderProducts = cart.items.map(item => ({
             productId: item.product._id,
@@ -85,7 +96,8 @@ exports.placeOrder = async (req, res) => {
             user: req.user._id,
             products: orderProducts,
             deliveryAddress: selectedAddress,
-            orderAmount: cart.calculateTotal(),
+            orderAmount: totalAmount, // Including shipping charge
+            shippingCharge: shippingCharge,
             paymentMethod: paymentMethod
         });
 
@@ -97,7 +109,6 @@ exports.placeOrder = async (req, res) => {
         // Redirect based on payment method
         res.redirect(`/orders/${order._id}?success=true`);
 
-
     } catch (error) {
         console.error('Order placement error:', error);
         res.status(500).json({
@@ -105,4 +116,4 @@ exports.placeOrder = async (req, res) => {
             message: 'Error placing order'
         });
     }
-}
+};

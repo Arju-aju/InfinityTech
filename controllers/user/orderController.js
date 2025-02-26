@@ -40,11 +40,7 @@ exports.getOrderDetails = async (req, res) => {
                 path: 'products.productId',
                 select: 'name images price'
             });
-        
-        console.log('1>>>>>>>>',order.products[0].productId.images[0]);
-
-        
-
+    
         if (!order) {
             return res.status(404).render('error', {
                 message: 'Order not found'
@@ -66,52 +62,72 @@ exports.getOrderDetails = async (req, res) => {
 
 exports.cancelOrder = async (req, res) => {
     try {
-        const { reason } = req.body;
 
-        // Input validation
-        if (!reason || reason.trim().length === 0) {
-            return res.status(400).json({ 
-                success: false, 
-                message: 'Cancellation reason is required' 
-            });
+      const orderId = req.params.id;
+
+      const { reason } = req.body;
+
+          if (!reason) {
+        return res.status(400).json({ message: 'Cancellation reason is required' });
+      }
+      
+      // Find the order in the database
+      const order = await Order.findById(orderId);
+
+
+      if (!order) {
+            return res.status(404).json({ message: 'Order not found' });
         }
 
-        // Find order with authentication check
-        const order = await Order.findOne({ 
-            _id: req.params.id, 
-            user: req.user._id 
-        });
 
-        if (!order) {
-            return res.status(404).json({ 
-                success: false, 
-                message: 'Order not found' 
-            });
+        // Check if the order can be cancelled
+        const cancellableStatuses = ['Pending', 'Processing', 'Shipped', 'Out for Delivery'];
+        console.log('Order Status:', order.status);
+        if (!cancellableStatuses.includes(order.status)) {
+            return res.status(400).json({ message: 'This order cannot be cancelled' });
         }
 
-        // Check if order can be cancelled (Pending, Processing, Shipped)
-        const allowedStatuses = ['Pending', 'Processing', 'Shipped'];
-        if (!allowedStatuses.includes(order.status)) {
-            return res.status(400).json({ 
-                success: false, 
-                message: 'Only orders that are Pending, Processing, or Shipped can be cancelled' 
-            });
-        }
-
-        // Update order status
+        // Update the order status and save the reason
         order.status = 'Cancelled';
-        order.cancellationReason = reason.trim();
+        order.cancellationReason = reason;
+        order.cancelledAt = new Date();
+
+        await order.save();
+        console.log('Order cancelled successfully');
+
+        return res.status(200).json({ message: 'Order cancelled successfully' });
+    } catch (error) {
+        console.error('Error cancelling order:', error);
+        return res.status(500).json({ message: 'Server error' });
+    }
+};
+
+
+exports.returnOrder = async (req, res) => {
+    try {
+        console.log('1>>>>>>>>>>>>> chayiyan pokuvattoo');
+        const { id } = req.params;
+        const { reason } = req.body;
+        console.log('2>>>>>>>>>>>>>',id);
+        console.log('3>>>>>>>>>>>',reason);
+        const order = await Order.findById(id);
+        console.log('4>>>>>>>>>>>',order);
+        if (!order) {
+            return res.status(404).json({ message: 'Order not found' });
+        }
+
+        if (order.status !== 'Delivered') {
+            return res.status(400).json({ message: 'Only delivered orders can be returned' });
+        }
+
+        // Update order status to 'Return Requested'
+        order.status = 'Return Requested';
+        order.returnReason = reason; // Store return reason
         await order.save();
 
-        // Redirect to orders page after successful cancellation
-        return res.redirect('/user/orders'); // <-- Redirects to orders page
-
+        res.status(200).json({ message: 'Return request submitted successfully' });
     } catch (error) {
-        console.error('Cancel order error:', error);
-        return res.status(500).json({ 
-            success: false, 
-            message: 'An internal server error occurred',
-            error: error.message
-        });
+        console.error('Return Request Error:', error);
+        res.status(500).json({ message: 'Internal Server Error' });
     }
 };

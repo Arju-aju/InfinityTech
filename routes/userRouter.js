@@ -69,8 +69,8 @@ router.post('/checkout/place-order',auth, checkoutController.placeOrder);
 router.get('/orders',auth,orderController.getOrdersList)
 router.get('/orders/:id', auth, orderController.getOrderDetails);
 router.get('/orders/:id',auth, orderController.getOrdersList);
-
-router.post('/orders/:id/cancel', auth, orderController.cancelOrder);
+router.post('/api/orders/:id/cancel', auth, orderController.cancelOrder);
+router.post('/api/orders/:id/return', auth,orderController.returnOrder);
 
 // Static pages
 router.get('/about', userController.loadAboutPage);

@@ -103,7 +103,7 @@ exports.toggleOrderStatus = async (req, res) => {
             return res.status(400).json({ success: false, message: 'Order ID and status are required' });
         }
 
-        const validStatuses = ["Pending", "Processing", "Shipped", "Delivered", "Cancelled"];
+        const validStatuses = ["Pending", "Processing", "Shipped", "Out for Delivery", "Delivered", "Cancelled"];
         if (!validStatuses.includes(status)) {
             return res.status(400).json({ success: false, message: 'Invalid status value' });
         }
@@ -134,7 +134,6 @@ exports.toggleOrderStatus = async (req, res) => {
         res.status(500).json({ success: false, message: 'Error updating order status' });
     }
 };
-
 
 exports.viewOrderDetails = async (req, res) => {
     try {

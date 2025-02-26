@@ -48,7 +48,7 @@ router.delete('/softDeleteProduct/:id', productController.softDelete);
 //Order Management
 
 router.get('/orders', admin.isAdmin, orderController.getOrders);
-router.patch('/orders/:orderId/toggle-status', admin.isAdmin, orderController.toggleOrderStatus); // Use PATCH
+router.patch('/orders/:orderId/toggle-status', admin.isAdmin, orderController.toggleOrderStatus); 
 router.get('/viewdetails/:orderId',admin.isAdmin, orderController.viewOrderDetails);
 
 

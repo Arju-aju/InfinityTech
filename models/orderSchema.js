@@ -30,7 +30,7 @@ const orderSchema = new Schema({
     }],
     status: {
         type: String,
-        enum: ["Pending", "Processing", "Shipped", "Delivered", "Cancelled"],
+        enum: ["Pending", "Processing", "Shipped","Out for Delivery","Delivered","Cancelled","Returned"],
         default: "Pending",
     },
     deliveryAddress: {
@@ -53,7 +53,7 @@ const orderSchema = new Schema({
         type: Date,
         default: Date.now,
         required: true
-    },
+    }
 }, { timestamps: true });
 
 const Order = mongoose.model("Order", orderSchema);
