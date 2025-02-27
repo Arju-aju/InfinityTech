@@ -8,6 +8,7 @@ const productController = require('../controllers/Admin/productController')
 const orderController = require('../controllers/Admin/orderControllers')
 const offerController = require('../controllers/Admin/offerController')
 const couponController = require('../controllers/Admin/couponController')
+const returnController = require('../controllers/Admin/returnOrderController')
 
 const { upload } = require('../config/multer');
 const validationMiddleware = require('../middleware/validation');
@@ -63,14 +64,17 @@ router.post('/offers/edit/:id', offerController.postEditOffer);
 
 //coupoun Management
 
-// Route to display all coupons
 router.get('/coupon', admin.isAdmin, couponController.getAllCoupon);
-// Route to display the create coupon form
 router.get('/createCoupon', admin.isAdmin, couponController.getCreateCouponForm);
 router.post('/createCoupon', admin.isAdmin, couponController.postCreateCoupon);
-// In your routes file
 router.delete('/coupon/delete/:id', couponController.deleteCoupon);
 
+//returnRequest
+
+router.get('/return/requests',admin.isAdmin,returnController.getReturnRequest)
+router.get('/return/order-details/:returnId',admin.isAdmin,returnController.getReturnDetails)
+router.post('/return/approve/:returnId', admin.isAdmin, returnController.approveReturn);
+router.post('/return/reject/:returnId', admin.isAdmin, returnController.rejectReturn);
 
 
 

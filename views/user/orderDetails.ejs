@@ -5,62 +5,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Order Status</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Add SweetAlert2 CDN -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
-        .status-bar {
-            transition: width 0.5s ease-in-out;
-        }
-        
-        .status-point {
-            transition: all 0.3s ease-in-out;
-        }
-        
-        .status-point.active {
-            background-color: #4F46E5;
-            border-color: #4F46E5;
-        }
-        
-        .status-point.completed {
-            background-color: #10B981;
-            border-color: #10B981;
-        }
-        
-        .status-point.cancelled {
-            background-color: #EF4444;
-            border-color: #EF4444;
-        }
-        
-        .status-point.returned {
-            background-color: #F59E0B;
-            border-color: #F59E0B;
-        }
-        
-        .status-line {
-            transition: background-color 0.3s ease-in-out;
-        }
-        
-        /* Modal styles */
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.5);
-            z-index: 50;
-            overflow: auto;
-        }
-        
-        .modal-content {
-            animation: modalFadeIn 0.3s;
-        }
-        
-        @keyframes modalFadeIn {
-            from { opacity: 0; transform: translateY(-20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
+        .status-bar { transition: width 0.5s ease-in-out; }
+        .status-point { transition: all 0.3s ease-in-out; }
+        .status-point.active { background-color: #4F46E5; border-color: #4F46E5; }
+        .status-point.completed { background-color: #10B981; border-color: #10B981; }
+        .status-point.cancelled { background-color: #EF4444; border-color: #EF4444; }
+        .status-point.returned { background-color: #F59E0B; border-color: #F59E0B; }
+        .status-line { transition: background-color 0.3s ease-in-out; }
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.5); z-index: 50; overflow: auto; }
+        .modal-content { animation: modalFadeIn 0.3s; }
+        @keyframes modalFadeIn { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body class="bg-gray-50">
@@ -72,24 +28,19 @@
                 <i class="fas fa-arrow-left mr-2"></i>Back to Orders
             </a>
         </div>
+
         <!-- Order Status Bar -->
         <div class="mb-8">
             <div class="relative">
                 <div class="flex justify-between items-center">
                     <% const statuses = ['Pending', 'Processing', 'Shipped', 'Out for Delivery', 'Delivered']; %>
                     <% let displayStatuses = statuses; %>
-                    
-                    <% if (order.status === 'Cancelled') { %>
-                        <% displayStatuses = ['Pending', 'Cancelled']; %>
-                    <% } else if (order.status === 'Return Requested' || order.status === 'Return Approved' || order.status === 'Return Completed' || order.status === 'Return Rejected') { %>
-                        <% displayStatuses = ['Pending', 'Processing', 'Shipped', 'Out for Delivery', 'Delivered', order.status]; %>
-                    <% } %>
-                    
+                    <% if (order.status === 'Cancelled') { displayStatuses = ['Pending', 'Cancelled']; } %>
+                    <% if (order.status.includes('Return')) { displayStatuses = ['Pending', 'Processing', 'Shipped', 'Out for Delivery', 'Delivered', order.status]; } %>
                     <% displayStatuses.forEach((status, index) => { %>
                         <div class="flex flex-col items-center relative z-10">
                             <div class="status-point w-8 h-8 rounded-full border-2 border-gray-300 bg-white flex items-center justify-center 
-                                <%= status === 'Cancelled' ? 'cancelled' : '' %>
-                                <%= status.includes('Return') ? 'returned' : '' %>"
+                                <%= status === 'Cancelled' ? 'cancelled' : status.includes('Return') ? 'returned' : '' %>"
                                 data-status="<%= status %>">
                                 <% if (order.status === status || 
                                       (order.status !== 'Cancelled' && !order.status.includes('Return') && statuses.indexOf(order.status) > index) || 
@@ -101,10 +52,7 @@
                                 <% } %>
                             </div>
                             <span class="mt-2 text-sm font-medium 
-                                <%= order.status === status ? 
-                                    (status === 'Cancelled' ? 'text-red-600' : 
-                                     status.includes('Return') ? 'text-yellow-600' : 'text-indigo-600') : 
-                                    'text-gray-500' %>">
+                                <%= order.status === status ? (status === 'Cancelled' ? 'text-red-600' : status.includes('Return') ? 'text-yellow-600' : 'text-indigo-600') : 'text-gray-500' %>">
                                 <%= status %>
                             </span>
                         </div>
@@ -133,7 +81,6 @@
                     <p class="text-gray-600">Date: <%= new Date(order.date).toLocaleDateString() %></p>
                     <p class="text-gray-600">Payment Method: <%= order.paymentMethod %></p>
                     <p class="text-gray-600">Total Amount: $<%= order.orderAmount.toFixed(2) %></p>
-                    
                     <% if (order.status === 'Cancelled' && order.cancellationReason) { %>
                         <p class="text-red-600 mt-2">Cancellation Reason: <%= order.cancellationReason %></p>
                         <p class="text-gray-600">Cancelled On: <%= new Date(order.cancelledAt).toLocaleDateString() %></p>
@@ -157,7 +104,7 @@
                     <p class="text-gray-600">Address Type: <%= order.deliveryAddress.addressType %></p>
                     <p class="text-gray-600">Customer Name: <%= order.deliveryAddress.name %></p>
                     <p class="text-gray-600">Address: <%= order.deliveryAddress.address %></p>
-                    <p class="text-gray-600">Landmark: <%= order.deliveryAddress.landmark%></p>
+                    <p class="text-gray-600">Landmark: <%= order.deliveryAddress.landmark %></p>
                     <p class="text-gray-600">City: <%= order.deliveryAddress.city %>, <%= order.deliveryAddress.state %></p>
                     <p class="text-gray-600">Pincode: <%= order.deliveryAddress.pincode %></p>
                 </div>
@@ -172,9 +119,9 @@
                     <div class="flex items-center border-b pb-4">
                         <div class="flex-grow">
                             <img src="<%= product.productId.images[0] %>" 
-                         alt="<%= product.productId.name %>" 
-                         class="w-20 h-20 object-cover rounded-lg"
-                         loading="lazy">
+                                 alt="<%= product.productId.name %>" 
+                                 class="w-20 h-20 object-cover rounded-lg"
+                                 loading="lazy">
                             <h3 class="text-lg font-medium"><%= product.productId.name %></h3>
                             <p class="text-gray-600">Quantity: <%= product.quantity %></p>
                             <p class="text-gray-600">Price: ₹<%= product.price.toFixed(2) %></p>
@@ -215,34 +162,13 @@
                 <p class="mb-4 text-gray-700">Please provide a reason for cancellation:</p>
                 <form id="cancellationForm">
                     <div class="space-y-4">
+                        <div><label class="block text-sm font-medium text-gray-700"><input type="radio" name="cancellationReason" value="Changed my mind" class="mr-2">Changed my mind</label></div>
+                        <div><label class="block text-sm font-medium text-gray-700"><input type="radio" name="cancellationReason" value="Found better price elsewhere" class="mr-2">Found better price elsewhere</label></div>
+                        <div><label class="block text-sm font-medium text-gray-700"><input type="radio" name="cancellationReason" value="Ordered by mistake" class="mr-2">Ordered by mistake</label></div>
+                        <div><label class="block text-sm font-medium text-gray-700"><input type="radio" name="cancellationReason" value="Shipping time is too long" class="mr-2">Shipping time is too long</label></div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700">
-                                <input type="radio" name="cancellationReason" value="Changed my mind" class="mr-2">
-                                Changed my mind
-                            </label>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700">
-                                <input type="radio" name="cancellationReason" value="Found better price elsewhere" class="mr-2">
-                                Found better price elsewhere
-                            </label>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700">
-                                <input type="radio" name="cancellationReason" value="Ordered by mistake" class="mr-2">
-                                Ordered by mistake
-                            </label>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700">
-                                <input type="radio" name="cancellationReason" value="Shipping time is too long" class="mr-2">
-                                Shipping time is too long
-                            </label>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700">
-                                <input type="radio" name="cancellationReason" value="Other" class="mr-2" id="otherReason">
-                                Other
+                                <input type="radio" name="cancellationReason" value="Other" class="mr-2" id="otherReason">Other
                             </label>
                             <div id="otherReasonContainer" class="mt-2 hidden">
                                 <textarea id="otherReasonText" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" rows="3" placeholder="Please specify your reason"></textarea>
@@ -250,12 +176,8 @@
                         </div>
                     </div>
                     <div class="mt-6 flex justify-end space-x-3">
-                        <button type="button" id="cancelModalBtn" class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                            Cancel
-                        </button>
-                        <button type="submit" class="px-4 py-2 border border-transparent rounded-md shadow-sm text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
-                            Submit
-                        </button>
+                        <button type="button" id="cancelModalBtn" class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">Cancel</button>
+                        <button type="submit" class="px-4 py-2 border border-transparent rounded-md shadow-sm text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">Submit</button>
                     </div>
                 </form>
             </div>
@@ -277,34 +199,13 @@
                 <p class="mb-4 text-gray-700">Please provide a reason for returning this order:</p>
                 <form id="returnForm">
                     <div class="space-y-4">
+                        <div><label class="block text-sm font-medium text-gray-700"><input type="radio" name="returnReason" value="Damaged product" class="mr-2">Damaged product</label></div>
+                        <div><label class="block text-sm font-medium text-gray-700"><input type="radio" name="returnReason" value="Wrong item received" class="mr-2">Wrong item received</label></div>
+                        <div><label class="block text-sm font-medium text-gray-700"><input type="radio" name="returnReason" value="Item doesn't match description" class="mr-2">Item doesn't match description</label></div>
+                        <div><label class="block text-sm font-medium text-gray-700"><input type="radio" name="returnReason" value="Product defective" class="mr-2">Product defective</label></div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700">
-                                <input type="radio" name="returnReason" value="Damaged product" class="mr-2">
-                                Damaged product
-                            </label>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700">
-                                <input type="radio" name="returnReason" value="Wrong item received" class="mr-2">
-                                Wrong item received
-                            </label>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700">
-                                <input type="radio" name="returnReason" value="Item doesn't match description" class="mr-2">
-                                Item doesn't match description
-                            </label>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700">
-                                <input type="radio" name="returnReason" value="Product defective" class="mr-2">
-                                Product defective
-                            </label>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700">
-                                <input type="radio" name="returnReason" value="Other" class="mr-2" id="otherReturnReason">
-                                Other
+                                <input type="radio" name="returnReason" value="Other" class="mr-2" id="otherReturnReason">Other
                             </label>
                             <div id="otherReturnReasonContainer" class="mt-2 hidden">
                                 <textarea id="otherReturnReasonText" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" rows="3" placeholder="Please specify your reason"></textarea>
@@ -312,12 +213,8 @@
                         </div>
                     </div>
                     <div class="mt-6 flex justify-end space-x-3">
-                        <button type="button" id="cancelReturnModalBtn" class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                            Cancel
-                        </button>
-                        <button type="submit" class="px-4 py-2 border border-transparent rounded-md shadow-sm text-white bg-yellow-600 hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500">
-                            Submit
-                        </button>
+                        <button type="button" id="cancelReturnModalBtn" class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">Cancel</button>
+                        <button type="submit" class="px-4 py-2 border border-transparent rounded-md shadow-sm text-white bg-yellow-600 hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500">Submit</button>
                     </div>
                 </form>
             </div>
@@ -325,46 +222,33 @@
     </div>
 
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Update status bar based on current status
+        document.addEventListener('DOMContentLoaded', () => {
+            // Status Bar Logic
             const statusPoints = document.querySelectorAll('.status-point');
             const statusBar = document.querySelector('.status-bar');
             const currentStatus = '<%= order.status %>';
-            const statuses = ['Pending', 'Processing', 'Shipped','Out for Delivery', 'Delivered'];
-            
-            if (currentStatus === 'Cancelled') {
-                // If cancelled, the status bar is already set to 100% width and red color in the HTML
-            } else if (currentStatus.includes('Return')) {
-                // If return-related status, the status bar is already set to 100% width and yellow color in the HTML
-            } else {
+            const statuses = ['Pending', 'Processing', 'Shipped', 'Out for Delivery', 'Delivered'];
+
+            if (currentStatus !== 'Cancelled' && !currentStatus.includes('Return')) {
                 const currentIndex = statuses.indexOf(currentStatus);
                 const progressPercentage = (currentIndex / (statuses.length - 1)) * 100;
-                
-                // Animate status bar
                 setTimeout(() => {
                     statusBar.style.width = `${progressPercentage}%`;
                 }, 100);
-
-                // Update status points
                 statusPoints.forEach((point, index) => {
-                    if (index <= currentIndex) {
-                        point.classList.add('completed');
-                    }
-                    if (index === currentIndex) {
-                        point.classList.add('active');
-                    }
+                    if (index <= currentIndex) point.classList.add('completed');
+                    if (index === currentIndex) point.classList.add('active');
                 });
             }
 
-            // Cancellation Modal elements
-            const modal = document.getElementById('cancellationModal');
+            // Modal Elements
+            const cancellationModal = document.getElementById('cancellationModal');
             const cancellationForm = document.getElementById('cancellationForm');
             const closeModalBtn = document.getElementById('closeModal');
             const cancelModalBtn = document.getElementById('cancelModalBtn');
             const otherReason = document.getElementById('otherReason');
             const otherReasonContainer = document.getElementById('otherReasonContainer');
 
-            // Return Modal elements
             const returnModal = document.getElementById('returnModal');
             const returnForm = document.getElementById('returnForm');
             const closeReturnModalBtn = document.getElementById('closeReturnModal');
@@ -372,112 +256,90 @@
             const otherReturnReason = document.getElementById('otherReturnReason');
             const otherReturnReasonContainer = document.getElementById('otherReturnReasonContainer');
 
-            // Toggle the "Other" reason textarea for cancellation
+            // Toggle "Other" Reason Textarea
             if (otherReason) {
-                otherReason.addEventListener('change', function() {
-                    otherReasonContainer.classList.toggle('hidden', !this.checked);
+                otherReason.addEventListener('change', () => {
+                    otherReasonContainer.classList.toggle('hidden', !otherReason.checked);
                 });
             }
-
-            // Toggle the "Other" reason textarea for return
             if (otherReturnReason) {
-                otherReturnReason.addEventListener('change', function() {
-                    otherReturnReasonContainer.classList.toggle('hidden', !this.checked);
+                otherReturnReason.addEventListener('change', () => {
+                    otherReturnReasonContainer.classList.toggle('hidden', !otherReturnReason.checked);
                 });
             }
 
-            // Cancel Order Button - Show Modal
+            // Cancellation Modal Functions
+            const openCancellationModal = () => {
+                cancellationModal.style.display = 'block';
+                document.body.style.overflow = 'hidden';
+            };
+            const closeCancellationModal = () => {
+                cancellationModal.style.display = 'none';
+                document.body.style.overflow = '';
+            };
+
+            // Return Modal Functions
+            const openReturnModal = () => {
+                returnModal.style.display = 'block';
+                document.body.style.overflow = 'hidden';
+            };
+            const closeReturnModal = () => {
+                returnModal.style.display = 'none';
+                document.body.style.overflow = '';
+            };
+
+            // Button Event Listeners
             const cancelOrderBtn = document.getElementById('cancelOrder');
             if (cancelOrderBtn) {
-                cancelOrderBtn.addEventListener('click', () => {
-                    modal.style.display = 'block';
-                    document.body.style.overflow = 'hidden'; // Prevent scrolling
-                });
+                cancelOrderBtn.addEventListener('click', openCancellationModal);
             }
 
-            // Return Order Button - Show Modal
             const returnOrderBtn = document.getElementById('returnOrder');
             if (returnOrderBtn) {
-                returnOrderBtn.addEventListener('click', () => {
-                    returnModal.style.display = 'block';
-                    document.body.style.overflow = 'hidden'; // Prevent scrolling
-                });
+                returnOrderBtn.addEventListener('click', openReturnModal);
+            } else {
+                console.warn('Return Order button not found. Check order.status condition.');
             }
 
-            // Close Cancellation Modal
-            function closeModal() {
-                modal.style.display = 'none';
-                document.body.style.overflow = ''; // Re-enable scrolling
-            }
-
-            // Close Return Modal
-            function closeReturnModal() {
-                returnModal.style.display = 'none';
-                document.body.style.overflow = ''; // Re-enable scrolling
-            }
-
-            if (closeModalBtn) closeModalBtn.addEventListener('click', closeModal);
-            if (cancelModalBtn) cancelModalBtn.addEventListener('click', closeModal);
+            // Close Modal Buttons
+            if (closeModalBtn) closeModalBtn.addEventListener('click', closeCancellationModal);
+            if (cancelModalBtn) cancelModalBtn.addEventListener('click', closeCancellationModal);
             if (closeReturnModalBtn) closeReturnModalBtn.addEventListener('click', closeReturnModal);
             if (cancelReturnModalBtn) cancelReturnModalBtn.addEventListener('click', closeReturnModal);
 
-            // Close modal when clicking outside - Cancellation
-            if (modal) {
-                modal.addEventListener('click', function(event) {
-                    if (event.target === modal) {
-                        closeModal();
-                    }
+            // Close Modal on Outside Click
+            if (cancellationModal) {
+                cancellationModal.addEventListener('click', (e) => {
+                    if (e.target === cancellationModal) closeCancellationModal();
                 });
             }
-
-            // Close modal when clicking outside - Return
             if (returnModal) {
-                returnModal.addEventListener('click', function(event) {
-                    if (event.target === returnModal) {
-                        closeReturnModal();
-                    }
+                returnModal.addEventListener('click', (e) => {
+                    if (e.target === returnModal) closeReturnModal();
                 });
             }
 
-            // Handle cancellation form submission
+            // Cancellation Form Submission
             if (cancellationForm) {
-                cancellationForm.addEventListener('submit', async function(e) {
+                cancellationForm.addEventListener('submit', async (e) => {
                     e.preventDefault();
-                    
                     const formData = new FormData(cancellationForm);
                     let reason = formData.get('cancellationReason');
-                    
-                    // If "Other" is selected, use the text from the textarea
-                    if (reason === 'Other' && otherReasonContainer.classList.contains('hidden') === false) {
+                    if (reason === 'Other') {
                         const otherText = document.getElementById('otherReasonText').value.trim();
-                        if (otherText) {
-                            reason = otherText;
-                        } else {
-                            Swal.fire({
-                                title: 'Error',
-                                text: 'Please specify your reason',
-                                icon: 'error',
-                                confirmButtonColor: '#3085d6'
-                            });
+                        if (!otherText) {
+                            Swal.fire('Error', 'Please specify your reason', 'error');
                             return;
                         }
+                        reason = otherText;
                     }
-                    
                     if (!reason) {
-                        Swal.fire({
-                            title: 'Error',
-                            text: 'Please select a reason for cancellation',
-                            icon: 'error',
-                            confirmButtonColor: '#3085d6'
-                        });
+                        Swal.fire('Error', 'Please select a reason for cancellation', 'error');
                         return;
                     }
-                    
-                    // Close the modal first
-                    closeModal();
-                    
-                    // Show confirmation using SweetAlert2
-                    Swal.fire({
+
+                    closeCancellationModal();
+                    const result = await Swal.fire({
                         title: 'Are you sure?',
                         text: "You won't be able to revert this cancellation!",
                         icon: 'warning',
@@ -485,159 +347,65 @@
                         confirmButtonColor: '#d33',
                         cancelButtonColor: '#3085d6',
                         confirmButtonText: 'Yes, cancel order!'
-                    }).then(async (result) => {
-                        if (result.isConfirmed) {
-                            try {
-                                // Make sure this URL matches exactly with your backend route
-                                const response = await fetch(`/api/orders/<%= order._id %>/cancel`, {
-                                    method: 'POST',
-                                    headers: {
-                                        'Content-Type': 'application/json'
-                                    },
-                                    body: JSON.stringify({ reason: reason })
-                                });
-                                
-                                if (response.ok) {
-                                    Swal.fire({
-                                        title: 'Cancelled!',
-                                        text: 'Your order has been cancelled successfully.',
-                                        icon: 'success',
-                                        confirmButtonColor: '#3085d6'
-                                    }).then(() => {
-                                        window.location.reload();
-                                    });
-                                } else {
-                                    // Try to parse the error response
-                                    try {
-                                        const errorData = await response.json();
-                                        Swal.fire({
-                                            title: 'Error',
-                                            text: `Failed to cancel order: ${errorData.message || 'Unknown error'}`,
-                                            icon: 'error',
-                                            confirmButtonColor: '#3085d6'
-                                        });
-                                    } catch (jsonError) {
-                                        // If the response isn't JSON, show a generic error
-                                        Swal.fire({
-                                            title: 'Error',
-                                            text: 'Failed to cancel order: The server returned an invalid response',
-                                            icon: 'error',
-                                            confirmButtonColor: '#3085d6'
-                                        });
-                                    }
-                                }
-                            } catch (error) {
-                                console.error('Error:', error);
-                                Swal.fire({
-                                    title: 'Error',
-                                    text: 'Failed to cancel order: Network or server error',
-                                    icon: 'error',
-                                    confirmButtonColor: '#3085d6'
-                                });
-                            }
-                        }
                     });
+
+                    if (result.isConfirmed) {
+                        try {
+                            const response = await fetch(`/api/orders/<%= order._id %>/cancel`, {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ reason })
+                            });
+                            const data = await response.json();
+                            if (response.ok) {
+                                await Swal.fire('Cancelled!', 'Your order has been cancelled successfully.', 'success');
+                                window.location.reload();
+                            } else {
+                                throw new Error(data.message || 'Failed to cancel order');
+                            }
+                        } catch (error) {
+                            Swal.fire('Error', error.message || 'Network or server error', 'error');
+                        }
+                    }
                 });
             }
 
-            // Handle return form submission
+            // Return Form Submission
             if (returnForm) {
-                returnForm.addEventListener('submit', async function(e) {
+                returnForm.addEventListener('submit', async (e) => {
                     e.preventDefault();
-                    
                     const formData = new FormData(returnForm);
                     let reason = formData.get('returnReason');
-                    
-                    // If "Other" is selected, use the text from the textarea
-                    if (reason === 'Other' && otherReturnReasonContainer.classList.contains('hidden') === false) {
+                    if (reason === 'Other') {
                         const otherText = document.getElementById('otherReturnReasonText').value.trim();
-                        if (otherText) {
-                            reason = otherText;
-                        } else {
-                            Swal.fire({
-                                title: 'Error',
-                                text: 'Please specify your return reason',
-                                icon: 'error',
-                                confirmButtonColor: '#3085d6'
-                            });
+                        if (!otherText) {
+                            Swal.fire('Error', 'Please specify your return reason', 'error');
                             return;
                         }
+                        reason = otherText;
                     }
-                    
                     if (!reason) {
-                        Swal.fire({
-                            title: 'Error',
-                            text: 'Please select a reason for returning the order',
-                            icon: 'error',
-                            confirmButtonColor: '#3085d6'
-                        });
+                        Swal.fire('Error', 'Please select a reason for returning the order', 'error');
                         return;
                     }
-                    
-                    // Close the modal first
+
                     closeReturnModal();
-                    
-                    // Show confirmation using SweetAlert2
-                    Swal.fire({
-                        title: 'Return this order?',
-                        text: "Your return request will be sent for admin approval",
-                        icon: 'warning',
-                        showCancelButton: true,
-                        confirmButtonColor: '#f59e0b',
-                        cancelButtonColor: '#3085d6',
-                        confirmButtonText: 'Yes, submit return request'
-                    }).then(async (result) => {
-                        if (result.isConfirmed) {
-                            try {
-                                // Make API call to return order
-                                const response = await fetch(`/api/orders/<%= order._id %>/return`, {
-                                    method: 'POST',
-                                    headers: {
-                                        'Content-Type': 'application/json'
-                                    },
-                                    body: JSON.stringify({ reason: reason })
-                                });
-                                
-                                if (response.ok) {
-                                    Swal.fire({
-                                        title: 'Return Requested',
-                                        text: 'Your return request has been submitted successfully and is awaiting admin approval.',
-                                        icon: 'success',
-                                        confirmButtonColor: '#3085d6'
-                                    }).then(() => {
-                                        window.location.reload();
-                                    });
-                                } else {
-                                    // Try to parse the error response
-                                    try {
-                                        const errorData = await response.json();
-                                        Swal.fire({
-                                            title: 'Error',
-                                            text: `Failed to submit return request: ${errorData.message || 'Unknown error'}`,
-                                            icon: 'error',
-                                            confirmButtonColor: '#3085d6'
-                                        });
-                                    } catch (jsonError) {
-                                        // If the response isn't JSON, show a generic error
-                                        Swal.fire({
-                                            title: 'Error',
-                                            text: 'Failed to submit return request: The server returned an invalid response',
-                                            icon: 'error',
-                                            confirmButtonColor: '#3085d6'
-                                        });
-                                    }
-                                }
-                            } catch (error) {
-                                console.error('Error:', error);
-                                Swal.fire({
-                                    title: 'Error',
-                                    text: 'Failed to submit return request: Network or server error',
-                                    icon: 'error',
-                                    confirmButtonColor: '#3085d6'
-                                });
-                            }
+                    try {
+                        const response = await fetch(`/api/orders/<%= order._id %>/return`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ reason })
+                        });
+                        const data = await response.json();
+                        if (response.ok) {
+                            await Swal.fire('Return Requested', 'Your return request has been submitted successfully.', 'success');
+                            window.location.reload();
+                        } else {
+                            throw new Error(data.message || 'Failed to submit return request');
                         }
-                    });
+                    } catch (error) {
+                        Swal.fire('Error', error.message || 'An unexpected error occurred', 'error');
+                    }
                 });
             }
         });

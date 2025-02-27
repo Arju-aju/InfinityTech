@@ -30,7 +30,7 @@ const orderSchema = new Schema({
     }],
     status: {
         type: String,
-        enum: ["Pending", "Processing", "Shipped","Out for Delivery","Delivered","Cancelled","Returned"],
+        enum: ["Pending", "Processing", "Shipped","Out for Delivery","Delivered","Cancelled","Return Requested","Return Approved","Returned Rejected","Returned",],
         default: "Pending",
     },
     deliveryAddress: {
@@ -43,16 +43,37 @@ const orderSchema = new Schema({
     },
     paymentMethod: {
         type: String,
+        enum: ['Credit Card', 'Debit Card','cod','razorpay', 'cash'],
         required: true
     },
     cancellationReason: {
         type: String,
         default: null
     },
-    date: {
+    returnReason: {
+        type: String,
+        default: null
+    },
+    returnRequestedAt: {
         type: Date,
-        default: Date.now,
-        required: true
+        default: null
+    },
+    orderDate: {
+        type: Date,
+        default: Date.now
+    },
+    couponApplied: {
+        type: Schema.Types.ObjectId,
+        ref: 'Coupoun',
+        default: null
+    },
+    offerApplied: {
+        type: Number,
+        default: 0
+    },
+    cancelDate: {
+        type: String,
+        default: null
     }
 }, { timestamps: true });
 

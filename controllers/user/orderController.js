@@ -1,4 +1,5 @@
 const Order = require('../../models/orderSchema');
+const Return = require('../../models/returnSchema')
 
 exports.getOrdersList = async (req, res) => {
     try {
@@ -105,29 +106,42 @@ exports.cancelOrder = async (req, res) => {
 
 exports.returnOrder = async (req, res) => {
     try {
-        console.log('1>>>>>>>>>>>>> chayiyan pokuvattoo');
-        const { id } = req.params;
+        console.log('return request came...');
+        const { orderId } = req.params;
         const { reason } = req.body;
-        console.log('2>>>>>>>>>>>>>',id);
-        console.log('3>>>>>>>>>>>',reason);
-        const order = await Order.findById(id);
-        console.log('4>>>>>>>>>>>',order);
+
+        console.log('1>>>>>>>>>>>>>>>',orderId);
+        console.log('2>>>>>>>>>>>>>>>',reason);
+
+        const order = await Order.findById(orderId);
+
+        console.log('3>>>>>>>>>>>>>',order);
+
         if (!order) {
-            return res.status(404).json({ message: 'Order not found' });
+            return res.status(404).json({ success: false, message: 'Order not found' });
         }
 
         if (order.status !== 'Delivered') {
-            return res.status(400).json({ message: 'Only delivered orders can be returned' });
+            return res.status(400).json({ success: false, message: 'Only delivered orders can be returned' });
         }
 
-        // Update order status to 'Return Requested'
         order.status = 'Return Requested';
-        order.returnReason = reason; // Store return reason
+        order.returnReason = reason;
+        order.returnRequestedAt = new Date();
         await order.save();
 
-        res.status(200).json({ message: 'Return request submitted successfully' });
+        console.log('4>>>>>>>>>>>>>savedddddddddddddddddd');
+        const returnDoc = new Return({
+            orderId,
+            user: req.user._id, // Assuming auth middleware sets req.user
+            reason,
+            items: order.products.map(p => ({ productId: p.productId, quantity: p.quantity }))
+        });
+        await returnDoc.save();
+
+        res.json({ success: true, message: 'Return request submitted successfully' });
     } catch (error) {
-        console.error('Return Request Error:', error);
-        res.status(500).json({ message: 'Internal Server Error' });
+        console.error('Error in returnOrder:', error);
+        res.status(500).json({ success: false, message: 'Server error' });
     }
 };

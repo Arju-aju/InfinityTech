@@ -70,7 +70,7 @@ router.get('/orders',auth,orderController.getOrdersList)
 router.get('/orders/:id', auth, orderController.getOrderDetails);
 router.get('/orders/:id',auth, orderController.getOrdersList);
 router.post('/api/orders/:id/cancel', auth, orderController.cancelOrder);
-router.post('/api/orders/:id/return', auth,orderController.returnOrder);
+router.post('/api/orders/:orderId/return', auth,orderController.returnOrder);
 
 // Static pages
 router.get('/about', userController.loadAboutPage);
