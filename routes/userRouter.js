@@ -12,7 +12,8 @@ const checkoutController = require('../controllers/user/checkOutController')
 const orderController = require('../controllers/user/orderController')
 const password =  require('../controllers/user/password')
 const wishlist = require('../controllers/user/wishlistController')
-
+const walletController =  require('../controllers/user/walletController')
+const paymentController = require('../controllers/user/paymentController')
 
 const { isAuthenticated, isNotAuthenticated, auth ,authMiddleware} = require('../middleware/auth');
 const passport = require('passport');
@@ -61,8 +62,11 @@ router.delete('/cart/remove/:productId',auth, cartController.removeFromCart);
 
 // checkout routes
 
-router.get('/checkout',auth,checkoutController.getCheckout)
-router.post('/checkout/place-order',auth, checkoutController.placeOrder);
+router.get('/checkout', auth, checkoutController.getCheckout);
+router.post('/place-order', auth, checkoutController.placeOrder);
+router.post('/apply-coupon', auth, checkoutController.applyCoupon);
+router.post('/checkout/create-razorpay-order', auth, paymentController.createRazorpayOrder);
+router.post('/verify-payment', auth, paymentController.verifyPayment);
 
 
 //order route
@@ -96,6 +100,13 @@ router.delete('/delete-address/:id', addressController.deleteAddress);
 router.get('/wishlist',auth,wishlist.getWishlist)
 router.post('/api/wishlist/toggle', auth, wishlist.toggleWishlist);
 router.delete('/api/wishlist/remove/:wishlistItemId',auth, wishlist.removeFromWishlist)
+
+
+//wallet Management
+
+router.get('/wallet',auth, walletController.getWallet);
+router.get('/wallet', auth, walletController.getWalletDetails);
+router.get('/wallet/history',auth, walletController.getTransactionHistory);
 
 
 module.exports = router;

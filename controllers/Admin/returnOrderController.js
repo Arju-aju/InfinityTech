@@ -99,52 +99,56 @@ exports.getReturnDetails = async (req, res) => {
 };
 
 
-exports.approveReturn = async(req,res)=>{
+exports.approveReturn = async (req, res) => {
     try {
-        const returnOrder = await Return.findById(req.params.returnId);
-        if (!returnOrder) {
-            return res.status(404).json({ message: 'Return request not found' });
-        }
-
-        // Update return request status
-        returnOrder.returnStatus = 'Approved';
-        await returnOrder.save();
-
-        // Update the corresponding order status in orderSchema
-        await Order.findByIdAndUpdate(returnOrder.orderId, {
-            status: 'Return Approved',
-            returnReason: returnOrder.reason,
-            returnRequestedAt: returnOrder.requestDate
-        });
-
-        res.redirect('/admin/return/requests');
+      const returnId = req.params.id;
+      const returnRequest = await Return.findById(returnId).populate('orderId');
+      if (!returnRequest) {
+        req.flash('error_msg', 'Return request not found');
+        return res.redirect('/admin/return/requests');
+      }
+  
+      const order = returnRequest.orderId;
+      order.status = 'Returned';
+      await order.save();
+  
+      returnRequest.returnStatus = 'Approved';
+      await returnRequest.save();
+  
+      // Refund to wallet
+      const refundAmount = order.orderAmount;
+      await refundToWallet(order._id, order.user, refundAmount, `Refund for returned order #${order._id}`);
+  
+      req.flash('success_msg', 'Return approved and amount refunded to wallet');
+      res.redirect('/admin/return/requests');
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: 'Error approving return request' });
+      console.error('Error approving return:', error);
+      req.flash('error_msg', 'Server error while approving return');
+      res.redirect('/admin/return/requests');
     }
-}
+  };
 
-exports.rejectReturn = async(req,res)=>{
+  exports.rejectReturn = async (req, res) => {
     try {
-        const returnOrder = await Return.findById(req.params.returnId);
-        if (!returnOrder) {
-            return res.status(404).json({ message: 'Return request not found' });
-        }
-
-        // Update return request status
-        returnOrder.returnStatus = 'Rejected';
-        await returnOrder.save();
-
-        // Update the corresponding order status in orderSchema
-        await Order.findByIdAndUpdate(returnOrder.orderId, {
-            status: 'Returned Rejected',
-            returnReason: returnOrder.reason,
-            returnRequestedAt: returnOrder.requestDate
-        });
-
-        res.redirect('/admin/return/requests');
+      const returnId = req.params.id;
+      const returnRequest = await Return.findById(returnId).populate('orderId');
+      if (!returnRequest) {
+        req.flash('error_msg', 'Return request not found');
+        return res.redirect('/admin/return/requests');
+      }
+  
+      const order = returnRequest.orderId;
+      order.status = 'Return Rejected';
+      await order.save();
+  
+      returnRequest.returnStatus = 'Rejected';
+      await returnRequest.save();
+  
+      req.flash('success_msg', 'Return request rejected');
+      res.redirect('/admin/return/requests');
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: 'Error rejecting return request' });
+      console.error('Error rejecting return:', error);
+      req.flash('error_msg', 'Server error while rejecting return');
+      res.redirect('/admin/return/requests');
     }
-}
+  };

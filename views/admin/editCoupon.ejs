@@ -5,60 +5,65 @@
 
     <div class="flex-1 p-6 lg:p-10 flex items-center justify-center">
         <div class="bg-gray-800 rounded-xl shadow-2xl p-8 w-full max-w-2xl transform transition-all duration-300 hover:shadow-indigo-500/30">
-            <h1 class="text-3xl font-extrabold text-white mb-2">Create New Coupon</h1>
-            <p class="text-sm text-gray-300 mb-6">Fill in the details to craft a new discount</p>
+            <h1 class="text-3xl font-extrabold text-white mb-2">Edit Coupon: <%= coupon.code %></h1>
+            <p class="text-sm text-gray-300 mb-6">Update the coupon details below</p>
 
-            <form action="/admin/createCoupon" method="POST" id="createCouponForm" class="space-y-6">
+            <form action="/admin/coupon/update/<%= coupon._id %>" method="POST" id="editCouponForm" class="space-y-6">
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
                     <div>
                         <label for="code" class="block text-sm font-medium text-gray-300">Coupon Code*</label>
-                        <input type="text" name="code" id="code" value="<%= locals.formData?.code || '' %>" readonly
-                               class="mt-1 w-full bg-gray-700 text-white border border-gray-600 rounded-lg p-3 focus:ring-indigo-500 focus:border-indigo-500 uppercase">
+                        <input type="text" name="code" id="code" value="<%= coupon.code %>"
+                               class="mt-1 w-full bg-gray-700 text-white border border-gray-600 rounded-lg p-3 focus:ring-indigo-500 focus:border-indigo-500 uppercase" required>
                     </div>
                     <div>
                         <label for="discountType" class="block text-sm font-medium text-gray-300">Discount Type*</label>
                         <select id="discountType" name="discountType" class="mt-1 w-full bg-gray-700 text-white border border-gray-600 rounded-lg p-3 focus:ring-indigo-500 focus:border-indigo-500">
-                            <option value="percentage" <%= locals.formData?.discountType === 'percentage' ? 'selected' : '' %>>Percentage (%)</option>
-                            <option value="fixed" <%= locals.formData?.discountType === 'fixed' ? 'selected' : '' %>>Fixed Amount ($)</option>
+                            <option value="percentage" <%= coupon.discountType === 'percentage' ? 'selected' : '' %>>Percentage (%)</option>
+                            <option value="fixed" <%= coupon.discountType === 'fixed' ? 'selected' : '' %>>Fixed Amount ($)</option>
                         </select>
                     </div>
                     <div>
-                        <label for="discountValue" class="block text-sm font-medium text-gray-300">Discount Value* <span class="discount-type-label">(in %)</span></label>
-                        <input type="number" name="discountValue" id="discountValue" min="0" step="0.01" value="<%= locals.formData?.discountValue || '' %>"
+                        <label for="discountValue" class="block text-sm font-medium text-gray-300">Discount Value* <span class="discount-type-label">(<%= coupon.discountType === 'percentage' ? 'in %' : 'in $' %>)</span></label>
+                        <input type="number" name="discountValue" id="discountValue" min="0" step="0.01" value="<%= coupon.discountValue %>"
                                class="mt-1 w-full bg-gray-700 text-white border border-gray-600 rounded-lg p-3 focus:ring-indigo-500 focus:border-indigo-500" required>
                     </div>
-                    <div class="max-discount-container">
+                    <div class="max-discount-container <%= coupon.discountType === 'fixed' ? 'hidden' : '' %>">
                         <label for="maxDiscount" class="block text-sm font-medium text-gray-300">Max Discount ($)</label>
-                        <input type="number" name="maxDiscount" id="maxDiscount" min="0" step="0.01" value="<%= locals.formData?.maxDiscount || '' %>"
+                        <input type="number" name="maxDiscount" id="maxDiscount" min="0" step="0.01" value="<%= coupon.maxDiscount || '' %>"
                                class="mt-1 w-full bg-gray-700 text-white border border-gray-600 rounded-lg p-3 focus:ring-indigo-500 focus:border-indigo-500">
                     </div>
                     <div>
                         <label for="minPurchase" class="block text-sm font-medium text-gray-300">Min Purchase ($)</label>
-                        <input type="number" name="minPurchase" id="minPurchase" min="0" step="0.01" value="<%= locals.formData?.minPurchase || '0' %>"
+                        <input type="number" name="minPurchase" id="minPurchase" min="0" step="0.01" value="<%= coupon.minPurchase %>"
                                class="mt-1 w-full bg-gray-700 text-white border border-gray-600 rounded-lg p-3 focus:ring-indigo-500 focus:border-indigo-500">
                     </div>
                     <div>
                         <label for="expirationDate" class="block text-sm font-medium text-gray-300">Expiration Date*</label>
-                        <input type="date" name="expirationDate" id="expirationDate" value="<%= locals.formData?.expirationDate || '' %>"
+                        <input type="date" name="expirationDate" id="expirationDate" value="<%= coupon.expirationDate.toISOString().split('T')[0] %>"
                                class="mt-1 w-full bg-gray-700 text-white border border-gray-600 rounded-lg p-3 focus:ring-indigo-500 focus:border-indigo-500" required>
                     </div>
                     <div>
                         <label for="usageLimit" class="block text-sm font-medium text-gray-300">Usage Limit</label>
-                        <input type="number" name="usageLimit" id="usageLimit" min="1" step="1" value="<%= locals.formData?.usageLimit || '' %>"
+                        <input type="number" name="usageLimit" id="usageLimit" min="1" step="1" value="<%= coupon.usageLimit || '' %>"
                                class="mt-1 w-full bg-gray-700 text-white border border-gray-600 rounded-lg p-3 focus:ring-indigo-500 focus:border-indigo-500" placeholder="Unlimited">
                     </div>
                     <div>
                         <label for="status" class="block text-sm font-medium text-gray-300">Status</label>
                         <select id="status" name="status" class="mt-1 w-full bg-gray-700 text-white border border-gray-600 rounded-lg p-3 focus:ring-indigo-500 focus:border-indigo-500">
-                            <option value="active" <%= locals.formData?.status === 'active' ? 'selected' : '' %>>Active</option>
-                            <option value="disabled" <%= locals.formData?.status === 'disabled' ? 'selected' : '' %>>Disabled</option>
+                            <option value="active" <%= coupon.status === 'active' ? 'selected' : '' %>>Active</option>
+                            <option value="disabled" <%= coupon.status === 'disabled' ? 'selected' : '' %>>Disabled</option>
+                            <option value="expired" <%= coupon.status === 'expired' ? 'selected' : '' %>>Expired</option>
                         </select>
+                    </div>
+                    <div class="sm:col-span-2">
+                        <label class="block text-sm font-medium text-gray-300">Used Count</label>
+                        <p class="mt-1 text-gray-400"><%= coupon.usedCount %> times</p>
                     </div>
                 </div>
 
                 <div class="flex justify-end space-x-4">
                     <a href="/admin/coupon" class="px-5 py-2 bg-gray-600 text-gray-200 rounded-lg hover:bg-gray-500 transition-all duration-200">Cancel</a>
-                    <button type="submit" class="px-5 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-all duration-200">Create Coupon</button>
+                    <button type="submit" class="px-5 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-all duration-200">Update Coupon</button>
                 </div>
             </form>
         </div>
@@ -103,15 +108,9 @@
         const discountType = document.getElementById('discountType');
         const discountLabel = document.querySelector('.discount-type-label');
         const maxDiscountContainer = document.querySelector('.max-discount-container');
-        const form = document.getElementById('createCouponForm');
+        const form = document.getElementById('editCouponForm');
         const today = new Date().toISOString().split('T')[0];
         document.getElementById('expirationDate').min = today;
-
-        if (!document.getElementById('expirationDate').value) {
-            const tomorrow = new Date();
-            tomorrow.setDate(tomorrow.getDate() + 1);
-            document.getDate('expirationDate').value = tomorrow.toISOString().split('T')[0];
-        }
 
         function updateDiscountFields() {
             discountLabel.textContent = discountType.value === 'percentage' ? '(in %)' : '(in $)';

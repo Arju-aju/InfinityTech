@@ -1,118 +1,316 @@
 <%- include('../partials/header') %>
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 bg-gray-50">
-  <h2 class="text-center text-3xl font-extrabold text-gray-900 mb-8">Checkout</h2>
-  
-  <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-    <!-- Order Summary -->
-    <div class="bg-white rounded-lg shadow-md overflow-hidden border border-gray-200">
-      <div class="px-6 py-4 bg-gray-50 border-b border-gray-200">
-        <h3 class="text-xl font-semibold text-gray-800">Order Summary</h3>
-      </div>
-      <div class="divide-y divide-gray-200">
-        <% cart.items.forEach(item => { %>
-          <div class="flex items-center p-4 hover:bg-gray-50 transition-colors">
-            <div class="flex-shrink-0">
-              <img class="h-16 w-16 object-cover rounded-md shadow-sm" src="<%= item.product.images[0] %>" alt="<%= item.product.name %>">
+<main class="container mx-auto px-4 py-8 mt-16 bg-gray-100">
+  <!-- Breadcrumbs -->
+  <nav aria-label="Breadcrumb" class="hidden lg:block container mx-auto px-4 py-4">
+    <ol class="flex items-center space-x-1 text-sm">
+      <li class="breadcrumb-item">
+        <a href="/" class="text-gray-500 hover:text-red-500 transition duration-300">
+          <i class="fas fa-home mr-1"></i>Home
+        </a>
+      </li>
+      <li class="breadcrumb-item">
+        <a href="/products" class="text-gray-500 hover:text-red-500 transition duration-300">Products</a>
+      </li>
+      <li class="breadcrumb-item">
+        <a href="/cart" class="text-gray-500 hover:text-red-500 transition duration-300">Cart</a>
+      </li>
+      <li class="breadcrumb-item">
+        <span class="text-gray-900 font-medium">Checkout</span>
+      </li>
+    </ol>
+  </nav>
+
+  <h1 class="text-4xl font-bold mb-8 text-center text-gray-800">Checkout</h1>
+
+  <div class="flex flex-wrap -mx-4">
+    <!-- Shipping Information -->
+    <div class="w-full lg:w-2/3 px-4 mb-8">
+      <div class="bg-white p-6 rounded-lg shadow-md">
+        <h2 class="text-2xl font-semibold mb-4 text-gray-800">Shipping Information</h2>
+        <div id="savedAddresses" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <% addresses.forEach((address, index) => { %>
+            <div class="saved-address-card rounded-lg cursor-pointer p-5 border border-gray-200 hover:border-indigo-200 hover:bg-indigo-50 transition-colors" 
+                 data-address='<%= JSON.stringify(address) %>'>
+              <h3 class="font-semibold text-lg"><%= address.addressType || 'Home' %></h3>
+              <p class="text-sm text-gray-600 mt-2">
+                <%= address.fullName %>, <%= address.street %>, <%= address.city %>, <%= address.state %> <%= address.pincode %>
+              </p>
+              <p class="text-sm text-gray-600 mt-1">Phone: <%= address.phone %></p>
             </div>
-            <div class="ml-4 flex-1">
-              <p class="font-medium text-gray-900"><%= item.product.name %></p>
-              <p class="text-sm text-gray-500">Qty: <%= item.quantity %></p>
-            </div>
-            <div class="font-semibold text-gray-900">₹<%= (item.price * item.quantity).toFixed(2) %></div>
-          </div>
-        <% }); %>
-      </div>
-      <div class="bg-gray-50 p-4">
-        <div class="flex justify-between py-2">
-          <span class="text-gray-600">Subtotal</span>
-          <span class="font-medium">₹<%= subtotal.toFixed(2) %></span>
+          <% }); %>
         </div>
-        <div class="flex justify-between py-2">
-          <span class="text-gray-600">Shipping Charge</span>
-          <span class="font-medium">₹30.00</span>
-        </div>
-        <div class="flex justify-between py-2 border-t border-gray-200 mt-2">
-          <span class="text-lg font-semibold text-gray-900">Total</span>
-          <span class="text-lg font-semibold text-indigo-600">₹<%= totalAmount.toFixed(2) %></span>
-        </div>
+        <a href="/address" class="inline-flex items-center mt-4 text-sm font-medium text-indigo-600 hover:text-indigo-500">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clip-rule="evenodd" />
+          </svg>
+          Add New Address
+        </a>
       </div>
     </div>
-    
-    <!-- Shipping Information -->
-    <div class="bg-white rounded-lg shadow-md overflow-hidden border border-gray-200">
-      <div class="px-6 py-4 bg-gray-50 border-b border-gray-200">
-        <h3 class="text-xl font-semibold text-gray-800">Shipping Information</h3>
-      </div>
-      <div class="p-6">
-        <form action="/checkout/place-order" method="POST">
-          <div class="space-y-4">
-            <% addresses.forEach((address, index) => { %>
-              <div class="relative flex items-start p-4 rounded-md border border-gray-200 hover:border-indigo-200 hover:bg-indigo-50 transition-colors">
-                <div class="flex items-center h-5">
-                  <input 
-                    id="address_<%= index %>" 
-                    name="addressId" 
-                    type="radio" 
-                    value="<%= address._id %>" 
-                    required 
-                    <%= index === defaultAddressIndex ? 'checked' : '' %>
-                    class="h-4 w-4 text-indigo-600 border-gray-300 focus:ring-indigo-500"
-                  >
+
+    <!-- Order Summary -->
+    <div class="w-full lg:w-1/3 px-4">
+      <div class="bg-white p-6 rounded-lg shadow-md">
+        <h2 class="text-2xl font-semibold mb-4 text-gray-800">Order Summary</h2>
+        <div id="orderItems">
+          <% cart.items.forEach(item => { %>
+            <div class="flex justify-between items-center mb-4 p-3 hover:bg-gray-50 rounded-lg transition-all duration-300 group">
+              <div class="flex items-center flex-1">
+                <div class="relative">
+                  <img src="<%= item.product.images[0] %>" alt="<%= item.product.name %>" class="w-16 h-16 object-cover rounded-lg mr-4 float-animation">
+                  <span class="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold w-6 h-6 rounded-full flex items-center justify-center transform scale-0 group-hover:scale-100 transition-transform duration-300">
+                    <%= item.quantity %>
+                  </span>
                 </div>
-                <div class="ml-3 flex-1">
-                  <label for="address_<%= index %>" class="font-medium text-gray-900 block cursor-pointer">
-                    <%= address.fullName %>
-                  </label>
-                  <p class="text-gray-600"><%= address.street %>, <%= address.city %>, <%= address.state %> <%= address.pincode %></p>
-                  <p class="text-gray-600">Phone: <%= address.phone %></p>
+                <div class="flex flex-col">
+                  <span class="text-sm font-medium text-gray-800"><%= item.product.name %></span>
+                  <span class="text-xs text-gray-500">Qty: <%= item.quantity %></span>
                 </div>
               </div>
-            <% }); %>
+              <span class="font-semibold text-gray-900">₹<%= (item.price * item.quantity).toFixed(2) %></span>
+            </div>
+          <% }); %>
+        </div>
+
+        <div class="border-t pt-4">
+          <div class="flex justify-between mb-2">
+            <span>Subtotal:</span>
+            <span class="font-semibold">₹<%= subtotal.toFixed(2) %></span>
           </div>
-          
-          <a href="/address" class="inline-flex items-center mt-4 text-sm font-medium text-indigo-600 hover:text-indigo-500">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
-              <path fill-rule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clip-rule="evenodd" />
-            </svg>
-            Add New Address
-          </a>
-          
-          <div class="mt-8">
-            <h3 class="text-xl font-semibold text-gray-800 mb-4">Payment Method</h3>
-            <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
-              <div class="flex items-center">
-                <input 
-                  id="cod" 
-                  name="paymentMethod" 
-                  type="radio" 
-                  value="cod" 
-                  required 
-                  checked 
-                  class="h-4 w-4 text-indigo-600 border-gray-300 focus:ring-indigo-500"
-                >
-                <label for="cod" class="ml-3 block text-gray-700 font-medium">
-                  Cash on Delivery
-                </label>
-              </div>
+          <div class="flex justify-between mb-2">
+            <span>Shipping Charge:</span>
+            <span class="font-semibold">₹<%= shippingCharge.toFixed(2) %></span>
+          </div>
+          <div class="flex justify-between mb-2">
+            <span>Coupon Discount:</span>
+            <span class="font-semibold text-green-500" id="couponDiscount">₹0</span>
+          </div>
+          <div class="flex justify-between font-semibold text-lg mt-4">
+            <span>Total:</span>
+            <span id="cartTotal">₹<%= totalAmount.toFixed(2) %></span>
+          </div>
+        </div>
+
+        <!-- Coupon Section -->
+        <div class="mt-6">
+          <div class="flex">
+            <input id="coupon" type="text" name="couponCode" placeholder="Enter coupon code" 
+                   class="flex-grow px-4 py-3 rounded-l-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+            <button id="applyCouponBtn" class="bg-indigo-500 text-white px-6 py-3 rounded-r-lg hover:bg-indigo-600 transition-all duration-300">
+              Apply
+            </button>
+          </div>
+        </div>
+
+        <!-- Payment Methods -->
+        <div class="mt-6">
+          <h3 class="font-semibold text-gray-800 mb-3">Payment Method</h3>
+          <div class="space-y-4">
+            <div class="relative">
+              <input type="radio" id="cod" name="paymentMethod" value="cod" class="absolute w-0 h-0 opacity-0 peer" checked>
+              <label for="cod" class="flex items-center p-4 border rounded-lg cursor-pointer transition-all duration-300 peer-checked:border-indigo-500 peer-checked:bg-indigo-100 hover:bg-gray-50 block">
+                <i class="fas fa-money-bill-wave text-xl mr-3 text-gray-600"></i>
+                <div class="flex flex-col">
+                  <span class="font-medium text-gray-800">Cash on Delivery</span>
+                  <span class="text-sm text-gray-500">Pay when you receive your order</span>
+                </div>
+              </label>
+            </div>
+            <div class="relative">
+              <input type="radio" id="razorpay" name="paymentMethod" value="razorpay" class="absolute w-0 h-0 opacity-0 peer">
+              <label for="razorpay" class="flex items-center p-4 border rounded-lg cursor-pointer transition-all duration-300 peer-checked:border-indigo-500 peer-checked:bg-indigo-100 hover:bg-gray-50 block">
+                <i class="fas fa-credit-card text-xl mr-3 text-gray-600"></i>
+                <div class="flex flex-col">
+                  <span class="font-medium text-gray-800">Pay Online (Razorpay)</span>
+                  <span class="text-sm text-gray-500">Pay securely with Razorpay</span>
+                </div>
+              </label>
             </div>
           </div>
-          =
-          <div class="mt-8">
-           
-              
-            <button 
-  type="submit" 
-  class="w-full bg-indigo-500 hover:bg-fuchsia-500 border border-transparent rounded-md shadow-sm py-4 px-4 text-lg font-bold text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
->
-  Place Order
-</button>
+        </div>
 
-          </div>
-        </form>
+        <!-- Place Order Button -->
+        <button id="placeOrderBtn" class="w-full bg-indigo-500 text-white py-4 px-6 rounded-lg hover:bg-indigo-600 transition-all duration-300 text-lg font-semibold mt-6">
+          Place Order
+        </button>
       </div>
     </div>
   </div>
-</div>
+</main>
 
 <%- include('../partials/footer') %>
+
+<style>
+  /* Add your custom styles from the sample template here */
+  .saved-address-card {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .saved-address-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  }
+  .saved-address-card.selected {
+    border-color: #4F46E5;
+    box-shadow: 0 0 0 2px #4F46E5;
+  }
+  .float-animation {
+    animation: float 3s ease-in-out infinite;
+  }
+  @keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
+  }
+</style>
+
+<script>
+  const orderState = {
+    selectedAddress: null,
+    paymentMethod: 'cod',
+    items: <%- JSON.stringify(cart.items) %>,
+    totalAmount: <%= totalAmount %>
+  };
+
+  const userData = {
+    name: '<%= user.name %>',
+    email: '<%= user.email %>',
+    phone: '<%= user.phone %>'
+  };
+
+  document.addEventListener('DOMContentLoaded', () => {
+    const placeOrderBtn = document.getElementById('placeOrderBtn');
+    const addressCards = document.querySelectorAll('.saved-address-card');
+    const paymentMethods = document.querySelectorAll('input[name="paymentMethod"]');
+    const applyCouponBtn = document.getElementById('applyCouponBtn');
+    const couponInput = document.getElementById('coupon');
+
+    // Address Selection
+    addressCards.forEach(card => {
+      card.addEventListener('click', () => {
+        addressCards.forEach(c => c.classList.remove('selected'));
+        card.classList.add('selected');
+        orderState.selectedAddress = JSON.parse(card.dataset.address);
+        validateOrderState();
+      });
+    });
+
+    // Payment Method Selection
+    paymentMethods.forEach(method => {
+      method.addEventListener('change', (e) => {
+        orderState.paymentMethod = e.target.value;
+        placeOrderBtn.innerHTML = e.target.value === 'razorpay' ? 'Proceed to Payment' : 'Place Order';
+        validateOrderState();
+      });
+    });
+
+    // Coupon Application
+    applyCouponBtn.addEventListener('click', async () => {
+      const couponCode = couponInput.value.trim();
+      if (!couponCode) return alert('Please enter a coupon code');
+
+      try {
+        const response = await fetch('/apply-coupon', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ couponCode })
+        });
+        const result = await response.json();
+        if (response.ok) {
+          document.getElementById('couponDiscount').textContent = `-₹${result.discount.toFixed(2)}`;
+          orderState.totalAmount = result.discountedTotal;
+          document.getElementById('cartTotal').textContent = `₹${result.discountedTotal.toFixed(2)}`;
+          couponInput.disabled = true;
+          applyCouponBtn.disabled = true;
+        } else {
+          alert(result.message);
+        }
+      } catch (error) {
+        alert('Error applying coupon');
+      }
+    });
+
+    // Place Order
+    placeOrderBtn.addEventListener('click', async () => {
+      if (!orderState.selectedAddress) return alert('Please select a delivery address');
+
+      if (orderState.paymentMethod === 'cod') {
+        await handleCashOrder();
+      } else {
+        await handleRazorpayOrder();
+      }
+    });
+
+    function validateOrderState() {
+      placeOrderBtn.disabled = !orderState.selectedAddress;
+    }
+
+    async function handleCashOrder() {
+      try {
+        const response = await fetch('/checkout/place-order', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            addressId: orderState.selectedAddress._id,
+            paymentMethod: 'cod',
+            totalAmount: orderState.totalAmount
+          })
+        });
+        const result = await response.json();
+        if (result.success) {
+          window.location.href = `/orders/${result.orderId}`;
+        }
+      } catch (error) {
+        alert('Error placing order');
+      }
+    }
+
+    async function handleRazorpayOrder() {
+      try {
+        const response = await fetch('/checkout/create-razorpay-order', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            amount: orderState.totalAmount,
+            addressId: orderState.selectedAddress._id
+          })
+        });
+        const order = await response.json();
+
+        const options = {
+          key: '<%= process.env.Test_Key_ID %>',
+          amount: order.amount,
+          currency: 'INR',
+          order_id: order.orderId,
+          handler: async (response) => {
+            const verifyResponse = await fetch('/checkout/verify-payment', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_signature: response.razorpay_signature,
+                addressId: orderState.selectedAddress._id,
+                totalAmount: orderState.totalAmount
+              })
+            });
+            const verifyResult = await verifyResponse.json();
+            if (verifyResult.success) {
+              window.location.href = `/orders/${verifyResult.orderId}`;
+            }
+          },
+          prefill: {
+            name: userData.name,
+            email: userData.email,
+            contact: userData.phone
+          },
+          theme: { color: '#4F46E5' }
+        };
+        const rzp = new Razorpay(options);
+        rzp.open();
+      } catch (error) {
+        alert('Error processing payment');
+      }
+    }
+  });
+</script>

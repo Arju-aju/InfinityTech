@@ -68,6 +68,8 @@ router.get('/coupon', admin.isAdmin, couponController.getAllCoupon);
 router.get('/createCoupon', admin.isAdmin, couponController.getCreateCouponForm);
 router.post('/createCoupon', admin.isAdmin, couponController.postCreateCoupon);
 router.delete('/coupon/delete/:id', couponController.deleteCoupon);
+router.get('/coupon/edit/:id', admin.isAdmin, couponController.getEditCouponForm); 
+router.post('/coupon/update/:id', admin.isAdmin, couponController.updateCoupon);
 
 //returnRequest
 
@@ -75,6 +77,10 @@ router.get('/return/requests',admin.isAdmin,returnController.getReturnRequest)
 router.get('/return/order-details/:returnId',admin.isAdmin,returnController.getReturnDetails)
 router.post('/return/approve/:returnId', admin.isAdmin, returnController.approveReturn);
 router.post('/return/reject/:returnId', admin.isAdmin, returnController.rejectReturn);
+
+
+
+
 
 
 
