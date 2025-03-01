@@ -80,11 +80,10 @@ router.get('/deleteCoupon/:Id', admin.isAdmin, couponController.deleteCoupon);
 
 //returnRequest
 
-router.get('/return/requests',admin.isAdmin,returnController.getReturnRequest)
-router.get('/return/order-details/:returnId',admin.isAdmin,returnController.getReturnDetails)
-router.post('/return/approve/:returnId', admin.isAdmin, returnController.approveReturn);
-router.post('/return/reject/:returnId', admin.isAdmin, returnController.rejectReturn);
-
+router.get('/return/requests',  returnController.getReturnRequests);
+router.post('/return/approve/:id', returnController.approveReturnRequest);
+router.post('/return/reject/:id', returnController.rejectReturnRequest);
+router.get('/return/order-details/:id',  returnController.getReturnRequestDetails);
 
 
 
