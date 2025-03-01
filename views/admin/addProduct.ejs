@@ -152,113 +152,182 @@
 </div>
 
 <script>
-    // DOM Elements
-    const form = document.getElementById('addProductForm');
-    const priceInput = document.getElementById('price');
-    const discountInput = document.getElementById('discountPercentage');
-    const originalPrice = document.getElementById('originalPrice');
-    const discountAmount = document.getElementById('discountAmount');
-    const finalPrice = document.getElementById('finalPrice');
-    const imageInput = document.getElementById('images');
-    const imagePreviewContainer = document.getElementById('imagePreviewContainer');
-    const submitBtn = document.getElementById('submitBtn');
-    const imageError = document.getElementById('imageError');
+// DOM Elements
+const form = document.getElementById('addProductForm');
+const priceInput = document.getElementById('price');
+const discountInput = document.getElementById('discountPercentage');
+const originalPrice = document.getElementById('originalPrice');
+const discountAmount = document.getElementById('discountAmount');
+const finalPrice = document.getElementById('finalPrice');
+const imageInput = document.getElementById('images');
+const imagePreviewContainer = document.getElementById('imagePreviewContainer');
+const submitBtn = document.getElementById('submitBtn');
+const imageError = document.getElementById('imageError');
 
-    let selectedFiles = [];
+// Required fields to validate
+const requiredInputs = [
+    document.getElementById('name'),
+    document.getElementById('brand'),
+    document.getElementById('description'),
+    document.getElementById('category'),
+    document.getElementById('price'),
+    document.getElementById('stock'),
+    document.getElementById('processor'),
+    document.getElementById('ram'),
+    document.getElementById('storage'),
+    document.getElementById('graphics')
+];
 
-    // Animation Function
-    function fadeIn(element) {
-        element.style.opacity = '0';
-        element.classList.remove('hidden');
-        requestAnimationFrame(() => {
-            element.style.transition = 'opacity 0.5s ease-in';
-            element.style.opacity = '1';
-        });
-    }
+let selectedFiles = [];
 
-    function fadeOut(element, callback) {
-        element.style.transition = 'opacity 0.5s ease-out';
-        element.style.opacity = '0';
-        element.addEventListener('transitionend', function handler() {
-            element.remove();
-            if (callback) callback();
-            element.removeEventListener('transitionend', handler);
-        }, { once: true });
-    }
+// Animation Functions
+function fadeIn(element) {
+    element.style.opacity = '0';
+    element.classList.remove('hidden');
+    requestAnimationFrame(() => {
+        element.style.transition = 'opacity 0.5s ease-in';
+        element.style.opacity = '1';
+    });
+}
 
-    // Price Calculation
-    function updatePrice() {
-        const price = parseFloat(priceInput.value) || 0;
-        const discount = parseFloat(discountInput.value) || 0;
-        const discountValue = price * (discount / 100);
-        const final = price - discountValue;
+function fadeOut(element, callback) {
+    element.style.transition = 'opacity 0.5s ease-out';
+    element.style.opacity = '0';
+    element.addEventListener('transitionend', function handler() {
+        element.remove();
+        if (callback) callback();
+        element.removeEventListener('transitionend', handler);
+    }, { once: true });
+}
 
-        originalPrice.textContent = `₹${price.toFixed(2)}`;
-        discountAmount.textContent = `₹${discountValue.toFixed(2)}`;
-        finalPrice.textContent = `₹${final.toFixed(2)}`;
-        fadeIn(originalPrice.parentElement);
-    }
+// Price Calculation
+function updatePrice() {
+    const price = parseFloat(priceInput.value) || 0;
+    const discount = parseFloat(discountInput.value) || 0;
+    const discountValue = price * (discount / 100);
+    const final = price - discountValue;
 
-    priceInput.addEventListener('input', updatePrice);
-    discountInput.addEventListener('input', updatePrice);
+    originalPrice.textContent = `₹${price.toFixed(2)}`;
+    discountAmount.textContent = `₹${discountValue.toFixed(2)}`;
+    finalPrice.textContent = `₹${final.toFixed(2)}`;
+    fadeIn(originalPrice.parentElement);
+}
 
-    // Image Preview and Validation
-    function updateImagePreview() {
-        imagePreviewContainer.innerHTML = '';
-        selectedFiles.forEach((file, index) => {
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                const div = document.createElement('div');
-                div.className = 'image-preview';
-                div.innerHTML = `
-                    <img src="${e.target.result}" class="w-24 h-24 object-cover rounded-lg">
-                    <span class="remove-btn" data-index="${index}">×</span>
-                `;
-                imagePreviewContainer.appendChild(div);
-                fadeIn(div);
+// Image Preview and Validation
+function updateImagePreview() {
+    imagePreviewContainer.innerHTML = '';
+    selectedFiles.forEach((file, index) => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const div = document.createElement('div');
+            div.className = 'image-preview';
+            div.innerHTML = `
+                <img src="${e.target.result}" class="w-24 h-24 object-cover rounded-lg">
+                <span class="remove-btn" data-index="${index}">×</span>
+            `;
+            imagePreviewContainer.appendChild(div);
+            fadeIn(div);
 
-                // Remove Image
-                div.querySelector('.remove-btn').addEventListener('click', () => {
-                    fadeOut(div, () => {
-                        selectedFiles.splice(index, 1);
-                        updateImagePreview();
-                        validateImages();
-                    });
+            div.querySelector('.remove-btn').addEventListener('click', () => {
+                fadeOut(div, () => {
+                    selectedFiles.splice(index, 1);
+                    updateImagePreview();
+                    validateForm();
                 });
-            };
-            reader.readAsDataURL(file);
-        });
-        validateImages();
-    }
+            });
+        };
+        reader.readAsDataURL(file);
+    });
+    validateForm(); // Validate after updating preview
+}
 
-    function validateImages() {
-        if (selectedFiles.length === 0) {
-            submitBtn.disabled = true;
+// Form Validation
+function validateForm() {
+    const allFieldsFilled = requiredInputs.every(input => {
+        if (input.tagName === 'SELECT') {
+            return input.value !== '';
+        }
+        return input.value.trim() !== '';
+    });
+
+    const hasImages = selectedFiles.length > 0;
+
+    if (allFieldsFilled && hasImages) {
+        submitBtn.disabled = false;
+        imageError.classList.add('hidden');
+    } else {
+        submitBtn.disabled = true;
+        if (!hasImages) {
             imageError.classList.remove('hidden');
         } else {
-            submitBtn.disabled = false;
             imageError.classList.add('hidden');
         }
     }
+}
 
-    imageInput.addEventListener('change', () => {
-        selectedFiles = Array.from(imageInput.files);
-        updateImagePreview();
-    });
-
-    // Form Submission
-    form.addEventListener('submit', (e) => {
-        if (selectedFiles.length === 0) {
-            e.preventDefault();
-            imageError.classList.remove('hidden');
-            return;
-        }
-        submitBtn.disabled = true;
-        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Saving...';
-    });
-
-    // Initial Price Update
+// Event Listeners
+priceInput.addEventListener('input', () => {
     updatePrice();
+    validateForm();
+});
+discountInput.addEventListener('input', () => {
+    updatePrice();
+    validateForm();
+});
+
+imageInput.addEventListener('change', () => {
+    selectedFiles = Array.from(imageInput.files);
+    updateImagePreview();
+    validateForm(); // Explicitly call validation here
+});
+
+// Add input listeners to all required fields
+requiredInputs.forEach(input => {
+    input.addEventListener('input', validateForm);
+    input.addEventListener('change', validateForm); // For select elements
+});
+
+// Form Submission
+form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    if (selectedFiles.length === 0) {
+        imageError.classList.remove('hidden');
+        return;
+    }
+
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Saving...';
+
+    try {
+        const formData = new FormData(form);
+        const response = await fetch('/admin/addProduct', {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'Accept': 'application/json'
+            }
+        });
+
+        const data = await response.json();
+        if (response.ok) {
+            alert('Product added successfully!');
+            window.location.href = '/admin/products';
+        } else {
+            throw new Error(data.message || 'Error adding product');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        imageError.textContent = error.message;
+        imageError.classList.remove('hidden');
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<i class="fas fa-plus mr-2"></i>Add Product';
+    }
+});
+
+// Initial Setup
+updatePrice();
+validateForm(); // Check initial state
 </script>
 
 <%- include('./partials/adminFooter.ejs') %>

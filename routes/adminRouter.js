@@ -10,7 +10,7 @@ const offerController = require('../controllers/Admin/offerController')
 const couponController = require('../controllers/Admin/couponController')
 const returnController = require('../controllers/Admin/returnOrderController')
 
-const { upload } = require('../config/multer');
+const { upload, handleMulterError } = require('../config/multer');
 const validationMiddleware = require('../middleware/validation');
 const admin = require('../middleware/adminAuth')
 
@@ -20,6 +20,9 @@ router.get('/login',adminControllers.loadLogin);
 router.post('/login',  adminControllers.login);
 router.get('/dashboard', admin.isAdmin , adminControllers.loadDashboard);
 router.get('/logout', adminControllers.logout);
+
+router.get('/sales-report', admin.isAdmin , adminControllers.getSalesReport);
+router.get('/top-sellers', admin.isAdmin , adminControllers.getTopSellers);
 
 // User Management Routes
 router.get('/users', admin.isAdmin , customerController.customerInfo); 
@@ -40,15 +43,14 @@ router.get('/addProduct', admin.isAdmin, productController.loadAddProduct);
 router.post(
     '/addProduct',
     admin.isAdmin,
-    upload.array('images', 5),
-    validationMiddleware.validateProduct,
+    upload.array('images',5), handleMulterError,
     productController.addProduct
   );
   router.get('/editProduct/:id', admin.isAdmin, productController.loadEditProduct);
-  router.post('/editProduct/:id',admin.isAdmin,upload.array('images', 5),validationMiddleware.validateProduct,productController.updateProduct);
+  router.post('/editProduct/:id', admin.isAdmin, upload.array('images', 5), validationMiddleware.validateProduct, productController.updateProduct);
   router.post('/deleteProductImage/:productId', admin.isAdmin, productController.deleteProductImage);
-  router.post('/products/:id/toggle-list', admin.isAdmin, productController.toggleListStatus);
-  router.post('/softDeleteProduct/:id', admin.isAdmin, productController.softDelete);
+  router.post('/products/:id/toggle-list', productController.toggleListStatus);
+  router.post('/softDeleteProduct/:id', productController.softDeleteProduct);
 
 
 //Order Management
