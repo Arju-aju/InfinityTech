@@ -35,15 +35,20 @@ router.put('/updateCategory/:id', admin.isAdmin ,   categoryController.updateCat
 router.put('/toggleCategoryStatus/:id', admin.isAdmin ,   categoryController.toggleCategoryStatus);
 
 // Product Management 
-router.get('/products', admin.isAdmin ,   productController.loadProduct);
-router.get('/addProduct', admin.isAdmin ,   productController.loadAddProduct);
-router.post('/addProduct', admin.isAdmin ,   upload.array('images', 5), validationMiddleware.validateProduct, productController.addProduct);
-router.get('/editProduct/:id', admin.isAdmin ,  admin.isAdmin ,  productController.loadEditProduct);
-router.post('/editProduct/:id',  admin.isAdmin ,  upload.array('images', 5), validationMiddleware.validateProduct, productController.updateProduct);
-router.delete('/deleteProductImage/:productId',   productController.deleteProductImage);
-router.delete('/deleteProduct/:id', admin.isAdmin ,   productController.deleteProduct);
-router.patch('/products/:id/toggle-list',   productController.toggleListStatus)
-router.delete('/softDeleteProduct/:id', productController.softDelete);
+router.get('/products', admin.isAdmin, productController.loadProduct);
+router.get('/addProduct', admin.isAdmin, productController.loadAddProduct);
+router.post(
+    '/addProduct',
+    admin.isAdmin,
+    upload.array('images', 5),
+    validationMiddleware.validateProduct,
+    productController.addProduct
+  );
+  router.get('/editProduct/:id', admin.isAdmin, productController.loadEditProduct);
+  router.post('/editProduct/:id',admin.isAdmin,upload.array('images', 5),validationMiddleware.validateProduct,productController.updateProduct);
+  router.post('/deleteProductImage/:productId', admin.isAdmin, productController.deleteProductImage);
+  router.post('/products/:id/toggle-list', admin.isAdmin, productController.toggleListStatus);
+  router.post('/softDeleteProduct/:id', admin.isAdmin, productController.softDelete);
 
 
 //Order Management
@@ -64,12 +69,12 @@ router.post('/offers/edit/:id', offerController.postEditOffer);
 
 //coupoun Management
 
-router.get('/coupon', admin.isAdmin, couponController.getAllCoupon);
-router.get('/createCoupon', admin.isAdmin, couponController.getCreateCouponForm);
-router.post('/createCoupon', admin.isAdmin, couponController.postCreateCoupon);
-router.delete('/coupon/delete/:id', couponController.deleteCoupon);
-router.get('/coupon/edit/:id', admin.isAdmin, couponController.getEditCouponForm); 
-router.post('/coupon/update/:id', admin.isAdmin, couponController.updateCoupon);
+router.get('/coupons', admin.isAdmin, couponController.getAllCoupon);
+router.get('/add-coupon', admin.isAdmin, couponController.getCreateCouponForm);
+router.post('/addCoupon', admin.isAdmin, couponController.postCreateCoupon);
+router.get('/editCoupon/:Id', admin.isAdmin, couponController.getEditCouponForm);
+router.post('/editCoupon/:Id', admin.isAdmin, couponController.updateCoupon);
+router.get('/deleteCoupon/:Id', admin.isAdmin, couponController.deleteCoupon);
 
 //returnRequest
 

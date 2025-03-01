@@ -8,9 +8,17 @@ const { default: mongoose } = require('mongoose')
 exports.getAllOffers = async (req, res) => {
     try {
         const offers = await offer.find();
-        res.render('offers', {
+        const categories = await Categories.find(); // Fetch categories for the form
+        const products = await Product.find();      // Fetch products for the form
+
+        res.render('offer', {
             offers,
-            editing: false 
+            categories,          // Pass categories
+            products,           // Pass products
+            editing: false,
+            success: req.flash('success'), // Pass success message
+            error: req.flash('error'),     // Pass error message
+            oldInput: {}        // Provide default empty oldInput
         });
     } catch (error) {
         console.error('Error fetching offers:', error);

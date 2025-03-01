@@ -13,11 +13,6 @@ const laptopCategorySchema = new Schema({
         required: true,
         trim: true,
     },
-    parentCategory: {
-        type: Schema.Types.ObjectId,
-        ref: 'LaptopCategory',
-        default: null,
-    },
     thumbnail: {
         type: String,
         required: false
@@ -33,6 +28,10 @@ const laptopCategorySchema = new Schema({
     isDeleted: {
         type: Boolean,
         default: false
+    },
+    categoryOffer: {
+        type: Number,
+        default: 0
     },
     isAvailable: {
         type: Boolean,

@@ -27,10 +27,12 @@ const productSchema = new Schema({
         required: [true, 'Price is required'],
         min: [0, 'Price cannot be negative']
     },
-    discountPercentage: {
+    salePrice: {
         type: Number,
-        min: [0, 'Discount cannot be negative'],
-        max: [100, 'Discount cannot exceed 100%'],
+        required: false
+    },
+    productOffer: {
+        type: Number,
         default: 0
     },
     stock: {
@@ -77,11 +79,7 @@ const productSchema = new Schema({
     timestamps: true
 });
 
-// Add virtual field for discounted price
-productSchema.virtual('discountedPrice').get(function() {
-    if (!this.discountPercentage) return this.price;
-    return this.price * (1 - this.discountPercentage / 100);
-});
+
 
 // Ensure virtuals are included in JSON output
 productSchema.set('toJSON', { virtuals: true });

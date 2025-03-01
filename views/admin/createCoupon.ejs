@@ -1,160 +1,346 @@
-<%- include('./partials/adminHeader.ejs') %>
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>InfinityTech - Add Coupons</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <style>
+        :root {
+            --primary-dark: #1f2937;
+            --secondary-dark: #111827;
+            --accent-blue: #3b82f6;
+            --text-primary: #e5e7eb;
+            --text-secondary: #9ca3af;
+        }
 
-<div class="flex min-h-screen bg-gradient-to-br from-gray-900 via-indigo-900 to-purple-900 text-white">
-    <%- include('./partials/adminSidebar.ejs') %>
+        body {
+            background-color: var(--secondary-dark);
+            color: var(--text-primary);
+            margin: 0;
+            padding: 0;
+        }
 
-    <div class="flex-1 p-6 lg:p-10 flex items-center justify-center">
-        <div class="bg-gray-800 rounded-xl shadow-2xl p-8 w-full max-w-2xl transform transition-all duration-300 hover:shadow-indigo-500/30">
-            <h1 class="text-3xl font-extrabold text-white mb-2">Create New Coupon</h1>
-            <p class="text-sm text-gray-300 mb-6">Fill in the details to craft a new discount</p>
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
 
-            <form action="/admin/createCoupon" method="POST" id="createCouponForm" class="space-y-6">
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                    <div>
-                        <label for="code" class="block text-sm font-medium text-gray-300">Coupon Code*</label>
-                        <input type="text" name="code" id="code" value="<%= locals.formData?.code || '' %>" readonly
-                               class="mt-1 w-full bg-gray-700 text-white border border-gray-600 rounded-lg p-3 focus:ring-indigo-500 focus:border-indigo-500 uppercase">
+        @keyframes glowPulse {
+            0% { box-shadow: 0 0 5px rgba(59, 130, 246, 0.5); }
+            50% { box-shadow: 0 0 15px rgba(59, 130, 246, 0.8); }
+            100% { box-shadow: 0 0 5px rgba(59, 130, 246, 0.5); }
+        }
+
+        .fade-in-up {
+            animation: fadeInUp 0.6s ease-out forwards;
+        }
+
+        .form-container {
+            background: var(--primary-dark);
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .form-container:hover {
+            box-shadow: 0 6px 24px rgba(0, 0, 0, 0.4);
+            border-color: rgba(59, 130, 246, 0.4);
+        }
+
+        .form-input {
+            background: rgba(17, 24, 39, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: var(--text-primary);
+            transition: all 0.3s ease;
+            width: 100%;
+        }
+
+        .form-input:focus {
+            background: rgba(17, 24, 39, 0.95);
+            border-color: var(--accent-blue);
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+            outline: none;
+        }
+
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+            flex-shrink: 0;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #4b5563;
+            transition: .4s;
+            border-radius: 34px;
+        }
+
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 26px;
+            width: 26px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked+.toggle-slider {
+            background-color: var(--accent-blue);
+        }
+
+        input:checked+.toggle-slider:before {
+            transform: translateX(26px);
+        }
+
+        .submit-button {
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+            transition: all 0.3s ease;
+        }
+
+        .submit-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+        }
+
+        /* Improved sidebar styling */
+        .sidebar {
+            min-width: 256px;
+            height: 100vh;
+            position: fixed;
+        }
+
+        .sidebar nav a {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .sidebar nav a i {
+            width: 24px;
+            text-align: center;
+        }
+
+        /* Main content adjustments */
+        .main-content {
+            margin-left: 256px;
+            padding: 2rem;
+            width: calc(100% - 256px);
+        }
+    </style>
+</head>
+
+<body class="min-h-screen flex">
+    <!-- Sidebar -->
+    <div class="sidebar bg-gray-900 text-white space-y-6 py-7 px-4">
+        <div class="flex items-center space-x-2 px-4">
+            <span class="text-2xl font-extrabold">InfinityTech</span>
+        </div>
+        
+        <nav class="space-y-2">
+            <a href="/admin/dashboard" class="block py-2.5 px-4 rounded transition duration-200 text-gray-400 hover:bg-gray-800 hover:text-white">
+                <i class="fas fa-home"></i>
+                <span>Dashboard</span>
+            </a>
+            <a href="/admin/products" class="block py-2.5 px-4 rounded transition duration-200 text-gray-400 hover:bg-gray-800 hover:text-white">
+                <i class="fas fa-laptop"></i>
+                <span>Products</span>
+            </a>
+            <a href="/admin/categories" class="block py-2.5 px-4 rounded transition duration-200 text-gray-400 hover:bg-gray-800 hover:text-white">
+                <i class="fas fa-tags"></i>
+                <span>Categories</span>
+            </a>
+            <a href="/admin/users" class="block py-2.5 px-4 rounded transition duration-200 text-gray-400 hover:bg-gray-800 hover:text-white">
+                <i class="fas fa-users"></i>
+                <span>Customers</span>
+            </a>
+            <a href="/admin/orders" class="block py-2.5 px-4 rounded transition duration-200 text-gray-400 hover:bg-gray-800 hover:text-white">
+                <i class="fas fa-shopping-cart"></i>
+                <span>Orders</span>
+            </a>
+            <a href="/admin/return/requests" class="block py-2.5 px-4 rounded transition duration-200 text-gray-400 hover:bg-gray-800 hover:text-white">
+                <i class="fas fa-shopping-cart"></i>
+                <span>Return Orders</span>
+            </a>
+            <a href="/admin/offers" class="block py-2.5 px-4 rounded transition duration-200 text-gray-400 hover:bg-gray-800 hover:text-white">
+                <i class="fas fa-shopping-cart"></i>
+                <span>Offer</span>
+            </a>
+            <a href="/admin/coupons" class="block py-2.5 px-4 rounded transition duration-200 bg-gray-800 text-white">
+                <i class="fas fa-ticket-alt"></i>
+                <span>Coupon</span>
+            </a>
+        </nav>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <div class="flex items-center justify-between mb-8 fade-in-up">
+            <h1 class="text-4xl font-bold bg-gradient-to-r from-blue-400 to-blue-600 text-transparent bg-clip-text">
+                Add New Coupon
+            </h1>
+            <div class="flex items-center space-x-6">
+                <div class="theme-toggle" id="themeToggle"></div>
+                <a href="/admin/coupons" class="px-6 py-3 bg-blue-500 text-white rounded-lg shadow-lg hover:bg-blue-600 transition-all duration-300 flex items-center space-x-2">
+                    <i class="fas fa-arrow-left"></i>
+                    <span>Back to Coupons</span>
+                </a>
+            </div>
+        </div>
+
+        <% if (error_msg && error_msg.length > 0) { %>
+        <div id="errorMessage" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-6 fade-in-up">
+            <strong class="font-bold">Error!</strong>
+            <span class="block sm:inline"><%= error_msg %></span>
+        </div>
+        <% } %>
+
+        <div class="form-container p-8 fade-in-up">
+            <form method="post" action="/admin/addCoupon" id="couponForm" class="space-y-8">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="space-y-2">
+                        <label class="block text-sm font-medium text-gray-400">Coupon Name</label>
+                        <input value="<%= oldValue.name || '' %>" type="text" name="name" class="form-input px-4 py-3 rounded-lg" placeholder="Enter coupon name">
                     </div>
-                    <div>
-                        <label for="discountType" class="block text-sm font-medium text-gray-300">Discount Type*</label>
-                        <select id="discountType" name="discountType" class="mt-1 w-full bg-gray-700 text-white border border-gray-600 rounded-lg p-3 focus:ring-indigo-500 focus:border-indigo-500">
-                            <option value="percentage" <%= locals.formData?.discountType === 'percentage' ? 'selected' : '' %>>Percentage (%)</option>
-                            <option value="fixed" <%= locals.formData?.discountType === 'fixed' ? 'selected' : '' %>>Fixed Amount ($)</option>
+
+                    <div class="space-y-2">
+                        <label class="block text-sm font-medium text-gray-400 flex items-center justify-between">
+                            Coupon Code
+                            <span class="ml-2 text-xs bg-blue-500/20 text-blue-400 px-2 py-1 rounded">UPPERCASE</span>
+                        </label>
+                        <input value="<%= oldValue.code || '' %>" type="text" name="code" class="form-input px-4 py-3 rounded-lg uppercase" placeholder="Auto-generated code" readonly>
+                    </div>
+
+                    <div class="space-y-2">
+                        <label class="block text-sm font-medium text-gray-400">Offer Type</label>
+                        <select name="offerType" class="form-input px-4 py-3 rounded-lg">
+                            <option value="<%= oldValue.offerType || '' %>"><%= oldValue.offerType || 'Select Offer Type' %></option>
+                            <option value="percentage">Percentage</option>
+                            <option value="flat">Flat</option>
                         </select>
                     </div>
-                    <div>
-                        <label for="discountValue" class="block text-sm font-medium text-gray-300">Discount Value* <span class="discount-type-label">(in %)</span></label>
-                        <input type="number" name="discountValue" id="discountValue" min="0" step="0.01" value="<%= locals.formData?.discountValue || '' %>"
-                               class="mt-1 w-full bg-gray-700 text-white border border-gray-600 rounded-lg p-3 focus:ring-indigo-500 focus:border-indigo-500" required>
+
+                    <div class="space-y-2">
+                        <label class="block text-sm font-medium text-gray-400">Offer Value</label>
+                        <input value="<%= oldValue.offerValue || '' %>" type="number" name="offerValue" class="form-input px-4 py-3 rounded-lg" placeholder="Enter offer value">
                     </div>
-                    <div class="max-discount-container">
-                        <label for="maxDiscount" class="block text-sm font-medium text-gray-300">Max Discount ($)</label>
-                        <input type="number" name="maxDiscount" id="maxDiscount" min="0" step="0.01" value="<%= locals.formData?.maxDiscount || '' %>"
-                               class="mt-1 w-full bg-gray-700 text-white border border-gray-600 rounded-lg p-3 focus:ring-indigo-500 focus:border-indigo-500">
+
+                    <div class="space-y-2">
+                        <label class="block text-sm font-medium text-gray-400">Minimum Purchase Amount</label>
+                        <input value="<%= oldValue.minimumPrice || '' %>" type="number" name="minimumPrice" class="form-input px-4 py-3 rounded-lg" placeholder="Enter minimum amount">
                     </div>
-                    <div>
-                        <label for="minPurchase" class="block text-sm font-medium text-gray-300">Min Purchase ($)</label>
-                        <input type="number" name="minPurchase" id="minPurchase" min="0" step="0.01" value="<%= locals.formData?.minPurchase || '0' %>"
-                               class="mt-1 w-full bg-gray-700 text-white border border-gray-600 rounded-lg p-3 focus:ring-indigo-500 focus:border-indigo-500">
+
+                    <div class="space-y-2">
+                        <label class="block text-sm font-medium text-gray-400">Expiry Date</label>
+                        <input value="<%= oldValue.expiredOn || '' %>" type="text" name="expiredOn" class="form-input px-4 py-3 rounded-lg flatpickr-input" placeholder="Select expiry date">
                     </div>
-                    <div>
-                        <label for="expirationDate" class="block text-sm font-medium text-gray-300">Expiration Date*</label>
-                        <input type="date" name="expirationDate" id="expirationDate" value="<%= locals.formData?.expirationDate || '' %>"
-                               class="mt-1 w-full bg-gray-700 text-white border border-gray-600 rounded-lg p-3 focus:ring-indigo-500 focus:border-indigo-500" required>
+
+                    <div class="space-y-2">
+                        <label class="block text-sm font-medium text-gray-400">Usage Limit</label>
+                        <input value="<%= oldValue.usageLimit || '' %>" type="number" name="usageLimit" class="form-input px-4 py-3 rounded-lg" placeholder="Enter usage limit">
                     </div>
-                    <div>
-                        <label for="usageLimit" class="block text-sm font-medium text-gray-300">Usage Limit</label>
-                        <input type="number" name="usageLimit" id="usageLimit" min="1" step="1" value="<%= locals.formData?.usageLimit || '' %>"
-                               class="mt-1 w-full bg-gray-700 text-white border border-gray-600 rounded-lg p-3 focus:ring-indigo-500 focus:border-indigo-500" placeholder="Unlimited">
-                    </div>
-                    <div>
-                        <label for="status" class="block text-sm font-medium text-gray-300">Status</label>
-                        <select id="status" name="status" class="mt-1 w-full bg-gray-700 text-white border border-gray-600 rounded-lg p-3 focus:ring-indigo-500 focus:border-indigo-500">
-                            <option value="active" <%= locals.formData?.status === 'active' ? 'selected' : '' %>>Active</option>
-                            <option value="disabled" <%= locals.formData?.status === 'disabled' ? 'selected' : '' %>>Disabled</option>
-                        </select>
+
+                    <div class="space-y-2">
+                        <label class="block text-sm font-medium text-gray-400">Usage Per User</label>
+                        <input value="<%= oldValue.usagePerUserLimit || '' %>" type="number" name="usagePerUserLimit" class="form-input px-4 py-3 rounded-lg" placeholder="Enter per user limit" value="1">
                     </div>
                 </div>
 
-                <div class="flex justify-end space-x-4">
-                    <a href="/admin/coupon" class="px-5 py-2 bg-gray-600 text-gray-200 rounded-lg hover:bg-gray-500 transition-all duration-200">Cancel</a>
-                    <button type="submit" class="px-5 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-all duration-200">Create Coupon</button>
+                <div class="flex items-center space-x-4 pt-4">
+                    <label class="toggle-switch">
+                        <input type="checkbox" name="isActive" checked>
+                        <span class="toggle-slider"></span>
+                    </label>
+                    <span class="text-sm font-medium text-gray-400">Active Status</span>
                 </div>
+
+                <button type="submit" class="submit-button w-full px-6 py-4 text-white rounded-lg shadow-lg font-medium">
+                    Create Coupon
+                </button>
             </form>
         </div>
     </div>
-
-    <!-- Toast Container -->
-    <div id="toast-container" class="fixed top-5 right-5 z-50"></div>
-</div>
-
-<%- include('./partials/adminFooter.ejs') %>
-
-<script>
-    function showToast(message, type = 'success') {
-        const toast = document.createElement('div');
-        toast.className = `toast px-6 py-3 rounded-lg shadow-lg text-white mb-3 animate-slide-in ${type === 'success' ? 'bg-green-500' : 'bg-red-500'}`;
-        toast.textContent = message;
-
-        const container = document.getElementById('toast-container');
-        container.appendChild(toast);
-
-        setTimeout(() => {
-            toast.classList.remove('animate-slide-in');
-            toast.classList.add('animate-slide-out');
-            setTimeout(() => toast.remove(), 300);
-        }, 3000);
-    }
-
-    // Show flash messages from server
-    <% if (success && success.length) { %>
-        showToast('<%= success %>', 'success');
-    <% } %>
-    <% if (error && error.length) { %>
-        showToast('<%= error %>', 'error');
-    <% } %>
-    <% if (errors && errors.length) { %>
-        <% errors.forEach(error => { %>
-            showToast('<%= error %>', 'error');
-        <% }) %>
-    <% } %>
-
+  <script>
     document.addEventListener('DOMContentLoaded', () => {
-        const discountType = document.getElementById('discountType');
-        const discountLabel = document.querySelector('.discount-type-label');
-        const maxDiscountContainer = document.querySelector('.max-discount-container');
-        const form = document.getElementById('createCouponForm');
-        const today = new Date().toISOString().split('T')[0];
-        document.getElementById('expirationDate').min = today;
+      // Initialize flatpickr
+      flatpickr(".flatpickr-input", {
+        minDate: "today",
+        dateFormat: "Y-m-d"
+      });
 
-        if (!document.getElementById('expirationDate').value) {
-            const tomorrow = new Date();
-            tomorrow.setDate(tomorrow.getDate() + 1);
-            document.getDate('expirationDate').value = tomorrow.toISOString().split('T')[0];
-        }
-
-        function updateDiscountFields() {
-            discountLabel.textContent = discountType.value === 'percentage' ? '(in %)' : '(in $)';
-            maxDiscountContainer.classList.toggle('hidden', discountType.value !== 'percentage');
-        }
-
-        discountType.addEventListener('change', updateDiscountFields);
-        updateDiscountFields();
-
-        form.addEventListener('submit', (e) => {
-            const discountValue = document.getElementById('discountValue').value;
-            const maxDiscount = document.getElementById('maxDiscount').value;
-            let errors = [];
-
-            if (discountType.value === 'percentage' && (discountValue <= 0 || discountValue > 100)) {
-                errors.push('Percentage discount must be between 1 and 100.');
-            }
-            if (discountType.value === 'percentage' && maxDiscount && maxDiscount <= 0) {
-                errors.push('Max discount must be a positive number.');
-            }
-
-            if (errors.length) {
-                e.preventDefault();
-                errors.forEach(error => showToast(error, 'error'));
-            }
+      // Animate form elements
+      const animateElements = () => {
+        const elements = document.querySelectorAll('.fade-in-up');
+        elements.forEach((element, index) => {
+          element.style.animationDelay = `${index * 0.1}s`;
+          element.style.opacity = '1';
         });
-    });
-</script>
+      };
+      animateElements();
 
-<style>
-    @keyframes fade-in {
-        from { opacity: 0; }
-        to { opacity: 1; }
+      // Enhanced form interactions
+      const formInputs = document.querySelectorAll('.form-input');
+      formInputs.forEach(input => {
+        input.addEventListener('focus', () => {
+          input.parentElement.style.transform = 'translateY(-2px)';
+        });
+
+        input.addEventListener('blur', () => {
+          input.parentElement.style.transform = '';
+        });
+      });
+
+      // Submit button animation
+      const submitButton = document.querySelector('.submit-button');
+      submitButton.addEventListener('mouseenter', () => {
+        submitButton.style.animation = 'glowPulse 2s infinite';
+      });
+
+      submitButton.addEventListener('mouseleave', () => {
+        submitButton.style.animation = '';
+      });
+
+      // Form validation
+      const form = document.getElementById('couponForm');
+      form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        // Add your validation logic here
+        form.submit();
+      });
+    });
+
+    function generateNewCode() {
+        const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+        const codeLength = 8;
+        let code = '';
+        
+        for (let i = 0; i < codeLength; i++) {
+            code += characters.charAt(Math.floor(Math.random() * characters.length));
+        }
+        
+        document.querySelector('input[name="code"]').value = code;
     }
-    @keyframes slide-in {
-        from { transform: translateX(100%); }
-        to { transform: translateX(0); }
-    }
-    @keyframes slide-out {
-        from { transform: translateX(0); }
-        to { transform: translateX(100%); }
-    }
-    .animate-fade-in { animation: fade-in 0.5s ease-in; }
-    .animate-slide-in { animation: slide-in 0.3s ease-out; }
-    .animate-slide-out { animation: slide-out 0.3s ease-out; }
-</style>
+  </script>
+</body>
+
+</html>

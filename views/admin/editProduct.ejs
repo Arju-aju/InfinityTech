@@ -1,397 +1,195 @@
 <%- include('./partials/adminHeader.ejs') %>
+<style>
+    .glass-effect {
+        @apply bg-gray-800 bg-opacity-30 backdrop-blur-md border border-gray-700;
+    }
+    .fade-in {
+        animation: fadeIn 0.5s ease-in;
+    }
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+</style>
 
 <div class="flex h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-violet-900">
     <%- include('./partials/adminSidebar.ejs') %>
 
-    <!-- Main Content -->
     <div class="flex-1 overflow-x-hidden overflow-y-auto">
         <div class="container mx-auto px-6 py-8">
-            <!-- Breadcrumb -->
-            <nav class="flex mb-8" aria-label="Breadcrumb">
-                <ol class="inline-flex items-center space-x-1 md:space-x-3">
-                    <li class="inline-flex items-center">
-                        <a href="/admin/dashboard" class="text-gray-400 hover:text-white">Dashboard</a>
-                    </li>
-                    <li>
-                        <div class="flex items-center">
-                            <svg class="w-6 h-6 text-gray-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path></svg>
-                            <a href="/admin/products" class="text-gray-400 hover:text-white ml-1 md:ml-2">Products</a>
-                        </div>
-                    </li>
-                    <li aria-current="page">
-                        <div class="flex items-center">
-                            <svg class="w-6 h-6 text-gray-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path></svg>
-                            <span class="text-gray-500 ml-1 md:ml-2">Edit Product</span>
-                        </div>
-                    </li>
-                </ol>
-            </nav>
+            <div class="flex justify-between items-center mb-8 fade-in">
+                <h3 class="text-3xl font-semibold text-white">Edit Product</h3>
+                <a href="/admin/products" class="px-4 py-2 glass-effect text-white hover:bg-cyan-500 rounded-lg transition-all duration-300 transform hover:scale-105">
+                    <i class="fas fa-arrow-left mr-2"></i>Back to Products
+                </a>
+            </div>
 
-            <div class="backdrop-blur-lg bg-gray-900/50 rounded-2xl p-8 max-w-4xl mx-auto shadow-2xl border border-gray-800">
-                <% if (typeof message !== 'undefined' && message.content) { %>
-                    <div class="mb-6 p-4 rounded-lg backdrop-blur-sm <%= message.type === 'error' ? 'bg-red-500/20 text-red-100' : 'bg-green-500/20 text-green-100' %>">
-                        <%= message.content %>
-                    </div>
-                <% } %>
+            <% if (message) { %>
+                <div class="mb-6 p-4 rounded-lg glass-effect fade-in <%= messageType === 'success' ? 'text-green-300 border-green-500' : 'text-red-300 border-red-500' %>">
+                    <%= message %>
+                </div>
+            <% } %>
 
-                <form id="editProductForm" 
-                      data-product-id="<%= product._id %>"
-                      action="/admin/editProduct/<%= product._id %>" 
-                      method="POST" 
-                      enctype="multipart/form-data"
-                      class="space-y-6">
-
-                    <!-- Basic Information -->
-                    <div class="space-y-6">
-                        <div>
-                            <label for="name" class="block text-sm font-medium text-gray-300 mb-2">Product Name*</label>
-                            <input type="text" id="name" name="name" 
-                                   value="<%= product.name %>"
-                                    
-                                   class="w-full px-4 py-3 rounded-lg bg-gray-800 border border-gray-700 text-white placeholder-gray-400 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/50 transition-all duration-200">
-                        </div>
-
-                        <div>
-                            <label for="brand" class="block text-sm font-medium text-gray-300 mb-2">Brand*</label>
-                            <input type="text" id="brand" name="brand" 
-                                   value="<%= product.brand %>"
-                                    
-                                   class="w-full px-4 py-3 rounded-lg bg-gray-800 border border-gray-700 text-white placeholder-gray-400 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/50 transition-all duration-200">
-                        </div>
-
-                        <div>
-                            <label for="description" class="block text-sm font-medium text-gray-300 mb-2">Description*</label>
-                            <textarea id="description" name="description" 
-                                      rows="4"
-                                    class="w-full px-4 py-3 rounded-lg bg-gray-800 border border-gray-700 text-white placeholder-gray-400 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/50 transition-all duration-200"><%= product.description %></textarea>
-                        </div>
-
-                        <div>
-                            <label for="category" class="block text-sm font-medium text-gray-300 mb-2">Category*</label>
-                            <select id="category" name="category"  
-                                    class="w-full px-4 py-3 rounded-lg bg-gray-800 border border-gray-700 text-white placeholder-gray-400 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/50 transition-all duration-200">
-                                <% categories.forEach(function(category) { %>
-                                    <option value="<%= category._id %>" 
-                                            <%= product.category && product.category._id.toString() === category._id.toString() ? 'selected' : '' %>>
-                                        <%= category.name %>
-                                    </option>
-                                <% }); %>
-                            </select>
-                        </div>
-
-                        <!-- Specifications -->
-                        <div class="space-y-4">
-                            <h3 class="text-lg font-medium text-gray-300">Specifications</h3>
-                            
+            <div class="glass-effect rounded-2xl p-8 max-w-4xl mx-auto fade-in">
+                <form action="/admin/editProduct/<%= product._id %>" method="POST" enctype="multipart/form-data" class="space-y-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="space-y-6">
                             <div>
-                                <label for="processor" class="block text-sm font-medium text-gray-300 mb-2">Processor</label>
-                                <input type="text" id="processor" name="processor" 
-                                       value="<%= product.specifications.processor %>"
-                                       class="w-full px-4 py-3 rounded-lg bg-gray-800 border border-gray-700 text-white placeholder-gray-400 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/50 transition-all duration-200">
+                                <label for="name" class="block text-sm font-medium text-gray-300 mb-2">Product Name*</label>
+                                <input type="text" id="name" name="name" value="<%= product.name %>" required class="w-full px-4 py-3 rounded-lg bg-gray-800 border border-gray-700 text-white focus:border-cyan-500 transition-all duration-200">
                             </div>
-
                             <div>
-                                <label for="ram" class="block text-sm font-medium text-gray-300 mb-2">RAM</label>
-                                <input type="text" id="ram" name="ram" 
-                                       value="<%= product.specifications.ram %>"
-                                       class="w-full px-4 py-3 rounded-lg bg-gray-800 border border-gray-700 text-white placeholder-gray-400 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/50 transition-all duration-200">
+                                <label for="brand" class="block text-sm font-medium text-gray-300 mb-2">Brand</label>
+                                <input type="text" id="brand" name="brand" value="<%= product.brand %>" class="w-full px-4 py-3 rounded-lg bg-gray-800 border border-gray-700 text-white focus:border-cyan-500 transition-all duration-200">
                             </div>
-
                             <div>
-                                <label for="storage" class="block text-sm font-medium text-gray-300 mb-2">Storage</label>
-                                <input type="text" id="storage" name="storage" 
-                                       value="<%= product.specifications.storage %>"
-                                       class="w-full px-4 py-3 rounded-lg bg-gray-800 border border-gray-700 text-white placeholder-gray-400 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/50 transition-all duration-200">
+                                <label for="description" class="block text-sm font-medium text-gray-300 mb-2">Description</label>
+                                <textarea id="description" name="description" rows="4" class="w-full px-4 py-3 rounded-lg bg-gray-800 border border-gray-700 text-white focus:border-cyan-500 transition-all duration-200"><%= product.description %></textarea>
                             </div>
-
                             <div>
-                                <label for="graphics" class="block text-sm font-medium text-gray-300 mb-2">Graphics</label>
-                                <input type="text" id="graphics" name="graphics" 
-                                       value="<%= product.specifications.graphics %>"
-                                       class="w-full px-4 py-3 rounded-lg bg-gray-800 border border-gray-700 text-white placeholder-gray-400 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/50 transition-all duration-200">
+                                <label for="category" class="block text-sm font-medium text-gray-300 mb-2">Category</label>
+                                <select id="category" name="category" class="w-full px-4 py-3 rounded-lg bg-gray-800 border border-gray-700 text-white focus:border-cyan-500 transition-all duration-200">
+                                    <% categories.forEach(category => { %>
+                                        <option value="<%= category._id %>" <%= product.category?._id.toString() === category._id.toString() ? 'selected' : '' %>><%= category.name %></option>
+                                    <% }); %>
+                                </select>
+                            </div>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label for="price" class="block text-sm font-medium text-gray-300 mb-2">Price (₹)*</label>
+                                    <input type="number" id="price" name="price" value="<%= product.price %>" required min="0" step="0.01" class="w-full px-4 py-3 rounded-lg bg-gray-800 border border-gray-700 text-white focus:border-cyan-500 transition-all duration-200">
+                                </div>
+                                <div>
+                                    <label for="discountPercentage" class="block text-sm font-medium text-gray-300 mb-2">Discount (%)</label>
+                                    <input type="number" id="discountPercentage" name="discountPercentage" value="<%= product.productOffer || 0 %>" min="0" max="100" step="0.1" class="w-full px-4 py-3 rounded-lg bg-gray-800 border border-gray-700 text-white focus:border-cyan-500 transition-all duration-200">
+                                </div>
+                            </div>
+                            <div>
+                                <label for="stock" class="block text-sm font-medium text-gray-300 mb-2">Stock Quantity*</label>
+                                <input type="number" id="stock" name="stock" value="<%= product.stock %>" required min="0" class="w-full px-4 py-3 rounded-lg bg-gray-800 border border-gray-700 text-white focus:border-cyan-500 transition-all duration-200">
                             </div>
                         </div>
-
-                        <!-- Price and Stock -->
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div>
-                                <label for="price" class="block text-sm font-medium text-gray-300 mb-2">Price*</label>
-                                <input type="number" id="price" name="price" 
-                                       value="<%= product.price %>"
-                                         min="0" step="0.01"
-                                       class="w-full px-4 py-3 rounded-lg bg-gray-800 border border-gray-700 text-white placeholder-gray-400 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/50 transition-all duration-200">
+                        <div class="space-y-6">
+                            <div class="glass-effect p-6 rounded-lg">
+                                <h3 class="text-lg font-medium text-gray-300 mb-4">Specifications</h3>
+                                <div class="space-y-4">
+                                    <div>
+                                        <label for="processor" class="block text-sm font-medium text-gray-300 mb-2">Processor</label>
+                                        <input type="text" id="processor" name="processor" value="<%= product.specifications.processor %>" class="w-full px-4 py-3 rounded-lg bg-gray-800 border border-gray-700 text-white focus:border-cyan-500 transition-all duration-200">
+                                    </div>
+                                    <div>
+                                        <label for="ram" class="block text-sm font-medium text-gray-300 mb-2">RAM</label>
+                                        <input type="text" id="ram" name="ram" value="<%= product.specifications.ram %>" class="w-full px-4 py-3 rounded-lg bg-gray-800 border border-gray-700 text-white focus:border-cyan-500 transition-all duration-200">
+                                    </div>
+                                    <div>
+                                        <label for="storage" class="block text-sm font-medium text-gray-300 mb-2">Storage</label>
+                                        <input type="text" id="storage" name="storage" value="<%= product.specifications.storage %>" class="w-full px-4 py-3 rounded-lg bg-gray-800 border border-gray-700 text-white focus:border-cyan-500 transition-all duration-200">
+                                    </div>
+                                    <div>
+                                        <label for="graphics" class="block text-sm font-medium text-gray-300 mb-2">Graphics</label>
+                                        <input type="text" id="graphics" name="graphics" value="<%= product.specifications.graphics %>" class="w-full px-4 py-3 rounded-lg bg-gray-800 border border-gray-700 text-white focus:border-cyan-500 transition-all duration-200">
+                                    </div>
+                                </div>
                             </div>
-
                             <div>
-                                <label for="stock" class="block text-sm font-medium text-gray-300 mb-2">Stock*</label>
-                                <input type="number" id="stock" name="stock" 
-                                       value="<%= product.stock %>"
-                                         min="0"
-                                       class="w-full px-4 py-3 rounded-lg bg-gray-800 border border-gray-700 text-white placeholder-gray-400 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/50 transition-all duration-200">
-                            </div>
-
-                            <div>
-                                <label for="discountPercentage" class="block text-sm font-medium text-gray-300 mb-2">Discount Percentage</label>
-                                <input type="number" id="discountPercentage" name="discountPercentage" 
-                                       value="<%= product.discountPercentage || 0 %>"
-                                       min="0" max="100"
-                                       class="w-full px-4 py-3 rounded-lg bg-gray-800 border border-gray-700 text-white placeholder-gray-400 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/50 transition-all duration-200">
-                            </div>
-                        </div>
-
-                        
-                        <!-- Product Images Section -->
-                        <div class="space-y-4">
-                            <h3 class="text-lg font-medium text-gray-300">Current Images</h3>
-                            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-                                <% if (product.images && product.images.length > 0) { %>
-                                    <% product.images.forEach(function(image, index) { %>
+                                <label class="block text-sm font-medium text-gray-300 mb-2">Current Images</label>
+                                <div class="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-4">
+                                    <% product.images.forEach(image => { %>
                                         <div class="relative group">
-                                            <img src="<%= image %>" 
-                                                 alt="Product image <%= index + 1 %>"
-                                                 class="w-full h-32 object-cover rounded-lg">
-                                            <div class="absolute top-2 right-2 space-x-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                                                <label class="cursor-pointer bg-blue-500 hover:bg-blue-400 text-white rounded-full p-2 transition-colors duration-200">
-                                                    <i class="fas fa-exchange-alt"></i>
-                                                    <input type="file" 
-                                                           class="hidden" 
-                                                           accept="image/jpeg,image/png,image/webp,image/avif"
-                                                           onchange="replaceImage(this, '<%= product._id %>', '<%= image %>')">
-                                                </label>
-                                                <button type="button"
-                                                        onclick="deleteImage('<%= product._id %>', '<%= image %>', this.closest('.relative'))"
-                                                        class="bg-red-500 hover:bg-red-400 text-white rounded-full p-2 transition-colors duration-200">
-                                                    <i class="fas fa-times"></i>
-                                                </button>
-                                            </div>
+                                            <img src="<%= image %>" alt="Product image" class="w-full h-32 object-cover rounded-lg">
+                                            <form action="/admin/deleteProductImage/<%= product._id %>" method="POST" class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                <input type="hidden" name="imagePath" value="<%= image %>">
+                                                <button type="submit" class="bg-red-500 hover:bg-red-400 text-white rounded-full p-2 transition-colors"><i class="fas fa-times"></i></button>
+                                            </form>
                                         </div>
                                     <% }); %>
-                                <% } else { %>
-                                    <p class="text-gray-400 col-span-full">No images uploaded yet</p>
-                                <% } %>
+                                </div>
+                                <label class="block text-sm font-medium text-gray-300 mb-2">Add New Images</label>
+                                <input type="file" name="images" multiple accept="image/*" class="w-full px-4 py-3 rounded-lg bg-gray-800 border border-gray-700 text-white focus:border-cyan-500 transition-all duration-200">
                             </div>
                         </div>
-
-                        <div>
-                            <label for="newImages" class="block text-sm font-medium text-gray-300 mb-2">Add New Images</label>
-                            <input type="file" id="newImages" name="images" 
-                                   multiple accept="image/*"
-                                   onchange="previewNewImages(this)"
-                                   class="w-full px-4 py-3 rounded-lg bg-gray-800 border border-gray-700 text-white placeholder-gray-400 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/50 transition-all duration-200">
-                        </div>
-                        <div id="imagePreviewContainer" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-                            <!-- New image previews will be inserted here -->
-                        </div>
                     </div>
-                </div>
-
-                <div class="flex justify-between mt-8">
-                    <button type="button" onclick="confirmDelete('<%= product._id %>')"
-                            class="inline-flex items-center px-6 py-3 rounded-lg bg-red-600 hover:bg-red-500 text-white font-medium transition-all duration-200 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
-                        <i class="fas fa-trash-alt mr-2"></i>
-                        Delete Product
-                    </button>
-                    
-                    <div class="space-x-4">
-                        <a href="/admin/products"
-                           class="inline-flex items-center px-6 py-3 rounded-lg border border-gray-600 text-gray-300 hover:bg-gray-800 font-medium transition-all duration-200">
-                            Cancel
-                        </a>
-                        <button type="submit"
-                                class="inline-flex items-center px-6 py-3 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white font-medium transition-all duration-200 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-cyan-500">
-                            <i class="fas fa-save mr-2"></i>
-                            Save Changes
+                    <div class="flex justify-end space-x-4">
+                        <a href="/admin/products" class="px-6 py-3 glass-effect text-white hover:bg-gray-700 rounded-lg transition-all duration-300">Cancel</a>
+                        <button type="submit" class="px-6 py-3 bg-cyan-600 hover:bg-cyan-500 text-white rounded-lg transition-all duration-300 transform hover:scale-105">
+                            <i class="fas fa-save mr-2"></i>Save Changes
                         </button>
                     </div>
-                </div>
                 </form>
             </div>
         </div>
     </div>
 </div>
-
-<!-- Scripts -->
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
+<%- include('./partials/adminFooter.ejs') %>
 
 <script>
-// Initialize the page with proper error handling
-document.addEventListener('DOMContentLoaded', function() {
-    // Check if all required data is present
-    const form = document.getElementById('editProductForm');
-    const productId = form?.getAttribute('data-product-id');
-    
-    if (!form || !productId) {
-        Swal.fire({
-            icon: 'error',
-            title: 'Error',
-            text: 'Could not load product data. Please try again.',
-            confirmButtonText: 'Go Back',
-            allowOutsideClick: false
-        }).then((result) => {
-            if (result.isConfirmed) {
-                window.location.href = '/admin/products';
-            }
-        });
-    }
-});
-async function deleteImage(productId, imagePath, imageElement) {
-    console.log('1>>>>',imagePath)
-    try {
-        console.log('2>>>>',imagePath)
-        const response = await fetch(`/admin/deleteProductImage/${productId}`, {
-            method: 'DELETE', // Use DELETE request
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ imagePath }) // Send imagePath in the body
-        });
+    // DOM Elements
+    const form = document.querySelector('form');
+    const imageInput = document.querySelector('input[name="images"]');
+    const imagePreviewContainer = document.getElementById('imagePreviewContainer') || document.createElement('div');
 
-        const data = await response.json();
-        if (data.success) {
-            imageElement.remove(); // Remove image from UI
-            Swal.fire('Deleted!', 'Image has been deleted.', 'success');
-        } else {
-            Swal.fire('Error!', data.message, 'error');
-        }
-    } catch (error) {
-        console.error('Error deleting image:', error);
-        Swal.fire('Error!', 'Something went wrong.', 'error');
-    }
-}
-
-async function replaceImage(input, productId, oldImagePath) {
-    if (!input.files || !input.files[0]) return;
-
-    // Validate file size (5MB limit)
-    if (input.files[0].size > 5 * 1024 * 1024) {
-        Swal.fire({
-            icon: 'error',
-            title: 'Error',
-            text: 'File size must be less than 5MB'
-        });
-        input.value = '';
-        return;
-    }
-
-    // Validate file type
-    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/avif'];
-    if (!allowedTypes.includes(input.files[0].type)) {
-        Swal.fire({
-            icon: 'error',
-            title: 'Error',
-            text: 'Only .jpg, .jpeg, .png, .avif and .webp formats are allowed'
-        });
-        input.value = '';
-        return;
-    }
-
-    try {
-        // Show loading state
-        Swal.fire({
-            title: 'Replacing image...',
-            didOpen: () => {
-                Swal.showLoading();
-            },
-            allowOutsideClick: false
-        });
-
-        const formData = new FormData();
-        formData.append('newImage', input.files[0]);
-        formData.append('oldImagePath', oldImagePath);
-
-        const response = await fetch(`/admin/replaceProductImage/${productId}`, {
-            method: 'POST',
-            body: formData
-        });
-
-        if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.message || 'Failed to replace image');
-        }
-
-        const data = await response.json();
-
-        // Update the image in UI
-        const imgElement = input.closest('.relative').querySelector('img');
-        imgElement.src = data.newImagePath + '?t=' + new Date().getTime(); // Prevent caching
-
-        Swal.fire({
-            icon: 'success',
-            title: 'Success',
-            text: 'Image replaced successfully!',
-            timer: 2000,
-            showConfirmButton: false
-        });
-
-    } catch (error) {
-        console.error('Error replacing image:', error);
-        Swal.fire({
-            icon: 'error',
-            title: 'Error',
-            text: error.message || 'Failed to replace image'
+    // Animation Functions
+    function fadeIn(element) {
+        element.style.opacity = '0';
+        element.classList.remove('hidden');
+        requestAnimationFrame(() => {
+            element.style.transition = 'opacity 0.5s ease-in';
+            element.style.opacity = '1';
         });
     }
 
-    // Clear the file input
-    input.value = '';
-}
+    function fadeOut(element, callback) {
+        element.style.transition = 'opacity 0.5s ease-out';
+        element.style.opacity = '0';
+        element.addEventListener('transitionend', function handler() {
+            element.remove();
+            if (callback) callback();
+            element.removeEventListener('transitionend', handler);
+        }, { once: true });
+    }
 
-async function confirmDelete(productId) {
-        try {
-            const result = await Swal.fire({
-                title: 'Delete Product?',
-                text: "This action cannot be undone!",
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#d33',
-                cancelButtonColor: '#3085d6',
-                confirmButtonText: 'Yes, delete it!'
-            });
-
-            if (result.isConfirmed) {
-                const response = await fetch(`/admin/deleteProduct/${productId}`, {
-                    method: 'DELETE'
+    // Handle Image Deletion
+    document.querySelectorAll('form[action*="/deleteProductImage"]').forEach(form => {
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const url = form.action;
+            const imageDiv = form.closest('.relative');
+            try {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    body: new FormData(form),
                 });
-
-                if (!response.ok) {
-                    throw new Error('Failed to delete product');
+                if (response.redirected) {
+                    fadeOut(imageDiv, () => {
+                        window.location.href = response.url; // Follow redirect for flash messages
+                    });
                 }
-
-                await Swal.fire({
-                    icon: 'success',
-                    title: 'Deleted!',
-                    text: 'Product has been deleted.',
-                    timer: 2000,
-                    showConfirmButton: false
-                });
-
-                // Redirect to products page
-                window.location.href = '/admin/products';
+            } catch (error) {
+                console.error('Error deleting image:', error);
             }
-        } catch (error) {
-            console.error('Error:', error);
-            Swal.fire({
-                icon: 'error',
-                title: 'Error',
-                text: error.message || 'Failed to delete product. Please try again.',
-                confirmButtonText: 'OK'
-            });
-        }
-    }
+        });
+    });
 
-    window.previewNewImages = previewNewImages;
-    window.deleteImage = deleteImage;
-    window.confirmDelete = confirmDelete;
+    // New Image Preview
+    imageInput.addEventListener('change', () => {
+        imagePreviewContainer.innerHTML = '';
+        Array.from(imageInput.files).forEach(file => {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const img = document.createElement('img');
+                img.src = e.target.result;
+                img.className = 'w-24 h-24 object-cover rounded-lg';
+                imagePreviewContainer.appendChild(img);
+                fadeIn(img);
+            };
+            reader.readAsDataURL(file);
+        });
+    });
+
+    // Form Submission Animation
+    form.addEventListener('submit', (e) => {
+        const submitButton = form.querySelector('button[type="submit"]');
+        submitButton.disabled = true;
+        submitButton.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Saving...';
+    });
 </script>
-
-
-
-
-
-
-
-
-
-
-
-
-

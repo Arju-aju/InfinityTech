@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Orders Management</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.css">
+    <style>
+        /* Custom Animations */
+        @keyframes slideIn {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        .slide-in { animation: slideIn 0.5s ease-out forwards; }
+        .fade-in { animation: fadeIn 0.7s ease-in; }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        /* Gradient Button */
+        .btn-gradient {
+            background: linear-gradient(135deg, #3b82f6, #1e3a8a);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        .btn-gradient:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);
+        }
+        /* Table Row Hover */
+        .table-row-hover {
+            transition: background-color 0.3s, transform 0.2s;
+        }
+        .table-row-hover:hover {
+            transform: scale(1.01);
+        }
+    </style>
+</head>
+<body class="bg-gray-950 text-gray-200 min-h-screen flex">
+    
+    <!-- Sidebar -->
+    <%- include('./partials/adminSidebar.ejs') %>
+    <div class="flex-1 flex flex-col overflow-hidden">
+        <!-- Main Content Area -->
+        <main class="flex-1 overflow-x-hidden overflow-y-auto bg-gray-950 p-6">
+            <!-- Header Section -->
+            <div class="mb-8 animate__animated animate__fadeIn">
+                <h1 class="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-500 to-teal-400">Offer Management</h1>
+                <p class="text-gray-400 mt-2 text-lg">Craft irresistible deals for your products and categories</p>
+            </div>
+
+            <!-- Add New Offer Button -->
+            <div class="mb-6 animate__animated animate__bounceIn">
+                <a href="/admin/offers/add" class="btn-gradient text-white px-6 py-3 rounded-lg inline-flex items-center shadow-lg">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                    </svg>
+                    Add New Offer
+                </a>
+            </div>
+
+            <!-- Tabs Container -->
+            <div class="bg-gray-900 rounded-xl shadow-2xl overflow-hidden animate__animated animate__fadeInUp">
+                <!-- Tabs -->
+                <div class="border-b border-gray-700">
+                    <ul class="flex flex-wrap -mb-px text-sm font-medium text-center" role="tablist">
+                        <li class="mr-2" role="presentation">
+                            <button class="tab-btn inline-block p-4 border-b-2 rounded-t-lg text-gray-300 hover:text-blue-400 transition-colors" id="product-tab" data-tabs-target="#product-offers" type="button" role="tab" aria-selected="true">
+                                Product Offers
+                            </button>
+                        </li>
+                        <li class="mr-2" role="presentation">
+                            <button class="tab-btn inline-block p-4 border-b-2 rounded-t-lg text-gray-300 hover:text-blue-400 transition-colors" id="category-tab" data-tabs-target="#category-offers" type="button" role="tab" aria-selected="false">
+                                Category Offers
+                            </button>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Tab Contents -->
+                <div id="tabContent">
+                    <!-- Product Offers Tab -->
+                    <div class="hidden p-6 rounded-lg bg-gray-900" id="product-offers" role="tabpanel">
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-sm text-left text-gray-300">
+                                <thead class="text-xs text-gray-200 uppercase bg-gray-800">
+                                    <tr>
+                                        <th class="px-6 py-3">Name</th>
+                                        <th class="px-6 py-3">Discount</th>
+                                        <th class="px-6 py-3">Products</th>
+                                        <th class="px-6 py-3">Valid Until</th>
+                                        <th class="px-6 py-3">Status</th>
+                                        <th class="px-6 py-3">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <% offers.forEach(offer => { %>
+                                        <% if (offer.products && offer.products.length > 0) { %>
+                                            <tr class="bg-gray-900 border-b border-gray-800 table-row-hover slide-in">
+                                                <td class="px-6 py-4 font-medium text-gray-200">
+                                                    <%= offer.name %>
+                                                    <p class="text-xs text-gray-500"><%= offer.description %></p>
+                                                </td>
+                                                <td class="px-6 py-4">
+                                                    <%= offer.discountValue %><%= offer.discountType === 'percentage' ? '%' : ' INR' %>
+                                                    <% if (offer.maxDiscount) { %>
+                                                        <p class="text-xs text-gray-500">Max: ₹<%= offer.maxDiscount %></p>
+                                                    <% } %>
+                                                </td>
+                                                <td class="px-6 py-4">
+                                                    <%= offer.products.length %> products
+                                                </td>
+                                                <td class="px-6 py-4">
+                                                    <%= new Date(offer.endDate).toLocaleDateString() %>
+                                                </td>
+                                                <td class="px-6 py-4">
+                                                    <span class="text-xs font-medium px-2.5 py-0.5 rounded animate__animated animate__pulse <%= offer.isActive ? 'bg-green-900 text-green-300' : 'bg-red-900 text-red-300' %>">
+                                                        <%= offer.isActive ? 'Active' : 'Inactive' %>
+                                                    </span>
+                                                </td>
+                                                <td class="px-6 py-4">
+                                                    <div class="flex space-x-2">
+                                                        <a href="/admin/offers/edit/<%= offer._id %>" class="text-blue-400 hover:text-blue-600 transition-colors">Edit</a>
+                                                        <button onclick="toggleOfferStatus('<%= offer._id %>')" class="text-red-400 hover:text-red-600 transition-colors">
+                                                            <%= offer.isActive ? 'Deactivate' : 'Activate' %>
+                                                        </button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        <% } %>
+                                    <% }) %>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Category Offers Tab -->
+                    <div class="hidden p-6 rounded-lg bg-gray-900" id="category-offers" role="tabpanel">
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-sm text-left text-gray-300">
+                                <thead class="text-xs text-gray-200 uppercase bg-gray-800">
+                                    <tr>
+                                        <th class="px-6 py-3">Name</th>
+                                        <th class="px-6 py-3">Discount</th>
+                                        <th class="px-6 py-3">Categories</th>
+                                        <th class="px-6 py-3">Valid Until</th>
+                                        <th class="px-6 py-3">Status</th>
+                                        <th class="px-6 py-3">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <% offers.forEach(offer => { %>
+                                        <% if (offer.categories && offer.categories.length > 0) { %>
+                                            <tr class="bg-gray-900 border-b border-gray-800 table-row-hover slide-in">
+                                                <td class="px-6 py-4 font-medium text-gray-200">
+                                                    <%= offer.name %>
+                                                    <p class="text-xs text-gray-500"><%= offer.description %></p>
+                                                </td>
+                                                <td class="px-6 py-4">
+                                                    <%= offer.discountValue %><%= offer.discountType === 'percentage' ? '%' : ' INR' %>
+                                                    <% if (offer.maxDiscount) { %>
+                                                        <p class="text-xs text-gray-500">Max: ₹<%= offer.maxDiscount %></p>
+                                                    <% } %>
+                                                </td>
+                                                <td class="px-6 py-4">
+                                                    <%= offer.categories.length %> categories
+                                                </td>
+                                                <td class="px-6 py-4">
+                                                    <%= new Date(offer.endDate).toLocaleDateString() %>
+                                                </td>
+                                                <td class="px-6 py-4">
+                                                    <span class="text-xs font-medium px-2.5 py-0.5 rounded animate__animated animate__pulse <%= offer.isActive ? 'bg-green-900 text-green-300' : 'bg-red-900 text-red-300' %>">
+                                                        <%= offer.isActive ? 'Active' : 'Inactive' %>
+                                                    </span>
+                                                </td>
+                                                <td class="px-6 py-4">
+                                                    <div class="flex space-x-2">
+                                                        <a href="/admin/offers/edit/<%= offer._id %>" class="text-blue-400 hover:text-blue-600 transition-colors">Edit</a>
+                                                        <button onclick="toggleOfferStatus('<%= offer._id %>')" class="text-red-400 hover:text-red-600 transition-colors">
+                                                            <%= offer.isActive ? 'Deactivate' : 'Activate' %>
+                                                        </button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        <% } %>
+                                    <% }) %>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- JavaScript for Tab Functionality and SweetAlert -->
+    <script>
+        // Initialize tabs
+        const tabElements = [
+            {
+                id: 'product-tab',
+                triggerEl: document.querySelector('#product-tab'),
+                targetEl: document.querySelector('#product-offers')
+            },
+            {
+                id: 'category-tab',
+                triggerEl: document.querySelector('#category-tab'),
+                targetEl: document.querySelector('#category-offers')
+            }
+        ];
+
+        // Show first tab by default
+        tabElements[0].targetEl.classList.remove('hidden');
+        tabElements[0].triggerEl.classList.add('text-blue-600', 'border-blue-600');
+
+        // Add click handlers
+        tabElements.forEach(tab => {
+            tab.triggerEl.addEventListener('click', () => {
+                tabElements.forEach(t => {
+                    t.targetEl.classList.add('hidden');
+                    t.triggerEl.classList.remove('text-blue-600', 'border-blue-600');
+                });
+                tab.targetEl.classList.remove('hidden');
+                tab.triggerEl.classList.add('text-blue-600', 'border-blue-600');
+                tab.targetEl.classList.add('animate__animated', 'animate__fadeIn');
+            });
+        });
+
+        // Function to toggle offer status with SweetAlert
+        async function toggleOfferStatus(offerId) {
+            const action = document.querySelector(`button[onclick="toggleOfferStatus('${offerId}')"]`).textContent.trim();
+            const confirmText = action === 'Deactivate' ? 'deactivate' : 'activate';
+
+            const result = await Swal.fire({
+                title: `Are you sure?`,
+                text: `Do you want to ${confirmText} this offer?`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3b82f6',
+                cancelButtonColor: '#ef4444',
+                confirmButtonText: `Yes, ${confirmText} it!`
+            });
+
+            if (result.isConfirmed) {
+                try {
+                    const response = await fetch(`/admin/offers/toggle/${offerId}`, {
+                        method: 'PATCH',
+                        headers: { 'Content-Type': 'application/json' }
+                    });
+
+                    if (response.ok) {
+                        Swal.fire({
+                            title: 'Success!',
+                            text: `Offer has been ${confirmText}d.`,
+                            icon: 'success',
+                            confirmButtonColor: '#3b82f6'
+                        }).then(() => window.location.reload());
+                    } else {
+                        Swal.fire('Error', 'Failed to update offer status', 'error');
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    Swal.fire('Error', 'An error occurred while updating the offer status', 'error');
+                }
+            }
+        }
+    </script>
+</body>
+</html>
