@@ -72,6 +72,7 @@
                             value="<%= locals.user?.email %>" 
                             class="w-full p-3 rounded bg-white/10 border border-white/20 text-white focus:outline-none focus:ring-2 focus:ring-blue-500" 
                             required
+                            readonly
                         >
                         <% if (locals.errors?.email) { %>
                             <p class="text-red-400 text-sm mt-1"><%= errors.email %></p>

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Orders Management</title>
+    <title>Offers Management</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
@@ -97,7 +97,7 @@
                                 </thead>
                                 <tbody>
                                     <% offers.forEach(offer => { %>
-                                        <% if (offer.products && offer.products.length > 0) { %>
+                                        <% if (offer.Product && offer.Product.length > 0) { %>
                                             <tr class="bg-gray-900 border-b border-gray-800 table-row-hover slide-in">
                                                 <td class="px-6 py-4 font-medium text-gray-200">
                                                     <%= offer.name %>
@@ -110,7 +110,7 @@
                                                     <% } %>
                                                 </td>
                                                 <td class="px-6 py-4">
-                                                    <%= offer.products.length %> products
+                                                    <%= offer.Product.length %> products
                                                 </td>
                                                 <td class="px-6 py-4">
                                                     <%= new Date(offer.endDate).toLocaleDateString() %>
@@ -137,6 +137,7 @@
                     </div>
 
                     <!-- Category Offers Tab -->
+                   
                     <div class="hidden p-6 rounded-lg bg-gray-900" id="category-offers" role="tabpanel">
                         <div class="overflow-x-auto">
                             <table class="w-full text-sm text-left text-gray-300">
@@ -152,7 +153,7 @@
                                 </thead>
                                 <tbody>
                                     <% offers.forEach(offer => { %>
-                                        <% if (offer.categories && offer.categories.length > 0) { %>
+                                        <% if (offer.Categories && offer.Categories.length > 0) { %>
                                             <tr class="bg-gray-900 border-b border-gray-800 table-row-hover slide-in">
                                                 <td class="px-6 py-4 font-medium text-gray-200">
                                                     <%= offer.name %>
@@ -165,7 +166,16 @@
                                                     <% } %>
                                                 </td>
                                                 <td class="px-6 py-4">
-                                                    <%= offer.categories.length %> categories
+                                                    <!-- Display category names -->
+                                                    <% if (offer.Categories && offer.Categories.length > 0) { %>
+                                                        <ul class="list-disc list-inside">
+                                                            <% offer.Categories.forEach(category => { %>
+                                                                <li class="text-gray-400"><%= category.name || 'Unnamed Category' %></li>
+                                                            <% }) %>
+                                                        </ul>
+                                                    <% } else { %>
+                                                        No categories assigned
+                                                    <% } %>
                                                 </td>
                                                 <td class="px-6 py-4">
                                                     <%= new Date(offer.endDate).toLocaleDateString() %>

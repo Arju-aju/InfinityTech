@@ -19,9 +19,17 @@ const orderSchema = new Schema({
             type: Number,
             required: true
         },
+        finalPrice: { // Added since checkoutController uses this
+            type: Number,
+            required: true
+        },
         totalPrice: {
             type: Number,
             required: true
+        },
+        status: {
+            type: String,
+            default: 'Pending'
         },
         createdAt: {
             type: Date,
@@ -30,7 +38,7 @@ const orderSchema = new Schema({
     }],
     status: {
         type: String,
-        enum: ["Pending", "Processing", "Shipped","Out for Delivery","Delivered","Cancelled","Return Requested","Return Approved","Returned Rejected","Returned",],
+        enum: ["Pending", "Processing", "Shipped", "Out for Delivery", "Delivered", "Cancelled", "Return Requested", "Return Approved", "Returned Rejected", "Returned"],
         default: "Pending",
     },
     deliveryAddress: {
@@ -41,10 +49,19 @@ const orderSchema = new Schema({
         type: Number,
         required: true
     },
+    shippingCharge: {
+        type: Number,
+        default: 0
+    },
     paymentMethod: {
         type: String,
-        enum: ['Credit Card', 'Debit Card','cod','razorpay', 'cash'],
+        enum: ['Credit Card', 'Debit Card', 'cod', 'razorpay', 'cash'],
         required: true
+    },
+    paymentStatus: {
+        type: String,
+        enum: ['pending', 'paid', 'failed'],
+        default: 'pending'
     },
     cancellationReason: {
         type: String,
@@ -74,6 +91,11 @@ const orderSchema = new Schema({
     cancelDate: {
         type: String,
         default: null
+    },
+    razorpayDetails: { 
+        orderId: String,
+        paymentId: String,
+        signature: String
     }
 }, { timestamps: true });
 

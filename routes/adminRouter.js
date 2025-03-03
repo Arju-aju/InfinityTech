@@ -62,11 +62,11 @@ router.get('/viewdetails/:orderId',admin.isAdmin, orderController.viewOrderDetai
 
 //Offer Management
 
-router.get('/offers',admin.isAdmin,offerController.getAllOffers)
-router.get('/offers/add',admin.isAdmin,offerController.getAddOffer)
-router.post('/offers/add',admin.isAdmin,offerController.postAddOffer)
-router.get('/offers/edit/:id',admin.isAdmin, offerController.getEditOffer);
-router.post('/offers/edit/:id', offerController.postEditOffer);
+router.get('/offers', admin.isAdmin, offerController.getAllOffers);
+router.get('/offers/add', admin.isAdmin, offerController.getAddOffer);
+router.post('/offers/add', admin.isAdmin, offerController.postAddOffer);
+router.get('/offers/edit/:id', admin.isAdmin, offerController.getEditOffer);
+router.post('/offers/edit/:id', admin.isAdmin, offerController.postEditOffer);
 
 
 //coupoun Management

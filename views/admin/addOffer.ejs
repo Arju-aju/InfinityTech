@@ -92,7 +92,7 @@
             <!-- Form Container -->
             <div class="bg-gray-900 rounded-xl shadow-2xl p-8 animate__animated animate__fadeInUp">
                 <!-- Product Offer Form -->
-                <form id="productOfferForm" action="/admin/offers/add-product" method="POST" class="space-y-6 slide-in">
+                <form id="productOfferForm" action="/admin/offers/add?type=product" method="POST" class="space-y-6 slide-in">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <!-- Basic Info Section -->
                         <div class="space-y-6">
@@ -168,7 +168,7 @@
                 </form>
 
                 <!-- Category Offer Form -->
-                <form id="categoryOfferForm" action="/admin/offers/add-category" method="POST" class="hidden space-y-6 slide-in">
+                <form id="categoryOfferForm" action="/admin/offers/add?type=category" method="POST" class="hidden space-y-6 slide-in">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <!-- Basic Info Section -->
                         <div class="space-y-6">
@@ -184,13 +184,18 @@
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-300">Select Category</label>
-                                <select name="category" required
-                                        class="mt-1 block w-full rounded-md bg-gray-800 border-gray-700 text-gray-300 shadow-sm p-3 focus:border-blue-500 focus:ring focus:ring-blue-500 transition-all duration-300">
-                                    <option value="" disabled selected>Select a category</option>
-                                    <% categories.forEach(category => { %>
-                                        <option value="<%= category._id %>"><%= category.name %></option>
-                                    <% }) %>
-                                </select>
+                                <% if (categories && categories.length > 0) { %>
+                                    <select name="category" required
+                                            class="mt-1 block w-full rounded-md bg-gray-800 border-gray-700 text-gray-300 shadow-sm p-3 focus:border-blue-500 focus:ring focus:ring-blue-500 transition-all duration-300">
+                                        <option value="" disabled selected>Select a category</option>
+                                        <% categories.forEach(category => { %>
+                                            <option value="<%= category._id %>"><%= category.name %></option>
+                                        <% }) %>
+                                    </select>
+                                <% } else { %>
+                                    <p class="text-red-500">No categories available. Please add a category first.</p>
+                                    <input type="hidden" name="category" value="" disabled>
+                                <% } %>
                             </div>
                         </div>
 
@@ -237,7 +242,7 @@
                         <a href="/admin/offers" class="px-6 py-3 text-sm font-medium rounded-md border border-gray-700 text-gray-300 hover:bg-gray-800 transition-all duration-300">
                             Cancel
                         </a>
-                        <button type="submit" class="btn-gradient px-6 py-3 text-sm font-medium rounded-md text-white">
+                        <button type="submit" class="btn-gradient px-6 py-3 text-sm font-medium rounded-md text-white" <%= (categories && categories.length > 0) ? '' : 'disabled' %>>
                             Create Offer
                         </button>
                     </div>
@@ -281,34 +286,59 @@
         document.querySelectorAll('form').forEach(form => {
             form.addEventListener('submit', async (e) => {
                 e.preventDefault();
-                const formData = new FormData(form);
+
+                // Create URLSearchParams to send data as application/x-www-form-urlencoded
+                const formData = new URLSearchParams();
+                const formEntries = new FormData(form);
+                for (const [key, value] of formEntries) {
+                    formData.append(key, value);
+                }
 
                 try {
                     const response = await fetch(form.action, {
                         method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded'
+                        },
                         body: formData
                     });
 
-                    if (response.ok) {
-                        Swal.fire({
-                            title: 'Success!',
-                            text: 'Offer created successfully!',
-                            icon: 'success',
-                            confirmButtonColor: '#3b82f6'
-                        }).then(() => {
-                            window.location.href = '/admin/offers';
-                        });
+                    const contentType = response.headers.get('content-type');
+                    if (contentType && contentType.includes('application/json')) {
+                        const data = await response.json();
+                        if (response.ok) {
+                            Swal.fire({
+                                title: 'Success!',
+                                text: 'Offer created successfully!',
+                                icon: 'success',
+                                confirmButtonColor: '#3b82f6'
+                            }).then(() => {
+                                window.location.href = '/admin/offers';
+                            });
+                        } else {
+                            console.error('Error response:', data); // Log the error response
+                            Swal.fire({
+                                title: 'Error',
+                                text: data.message || 'Failed to create offer.',
+                                icon: 'error',
+                                confirmButtonColor: '#ef4444'
+                            });
+                        }
                     } else {
-                        const errorData = await response.json();
-                        Swal.fire({
-                            title: 'Error',
-                            text: errorData.message || 'Failed to create offer.',
-                            icon: 'error',
-                            confirmButtonColor: '#ef4444'
-                        });
+                        console.error('Non-JSON response:', await response.text()); // Log non-JSON response
+                        if (response.redirected) {
+                            window.location.href = response.url;
+                        } else {
+                            Swal.fire({
+                                title: 'Error',
+                                text: 'Unexpected response from server.',
+                                icon: 'error',
+                                confirmButtonColor: '#ef4444'
+                            });
+                        }
                     }
                 } catch (error) {
-                    console.error('Error:', error);
+                    console.error('Fetch error:', error); // Log fetch errors
                     Swal.fire({
                         title: 'Error',
                         text: 'An error occurred while creating the offer.',

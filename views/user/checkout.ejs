@@ -1,47 +1,74 @@
 <%- include('../partials/header') %>
 <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 
-<main class="container mx-auto px-4 py-8 mt-16 bg-gray-100">
+<main class="container mx-auto px-4 py-8 mt-16 bg-gray-50 min-h-screen">
+  <!-- Flash notifications -->
+  <% if (locals.message && message.content) { %>
+    <script>
+      document.addEventListener('DOMContentLoaded', () => {
+        Swal.fire({
+          icon: '<%= message.type %>',
+          title: '<%= message.type === "error" ? "Oops..." : "Success" %>',
+          text: '<%= message.content %>',
+          toast: true,
+          position: 'top-end',
+          timer: 3000,
+          timerProgressBar: true,
+          showConfirmButton: false
+        });
+      });
+    </script>
+  <% } %>
+
   <!-- Breadcrumbs -->
   <nav aria-label="Breadcrumb" class="hidden lg:block container mx-auto px-4 py-4">
-    <ol class="flex items-center space-x-1 text-sm">
-      <li class="breadcrumb-item">
-        <a href="/" class="text-gray-500 hover:text-red-500 transition duration-300">
+    <ol class="flex items-center space-x-2 text-sm text-gray-600">
+      <li class="flex items-center">
+        <a href="/" class="hover:text-blue-600 transition duration-300">
           <i class="fas fa-home mr-1"></i>Home
         </a>
       </li>
-      <li class="breadcrumb-item">
-        <a href="/products" class="text-gray-500 hover:text-red-500 transition duration-300">Products</a>
+      <li class="flex items-center">
+        <span class="mx-1">/</span>
+        <a href="/products" class="hover:text-blue-600 transition duration-300">Products</a>
       </li>
-      <li class="breadcrumb-item">
-        <a href="/cart" class="text-gray-500 hover:text-red-500 transition duration-300">Cart</a>
+      <li class="flex items-center">
+        <span class="mx-1">/</span>
+        <a href="/cart" class="hover:text-blue-600 transition duration-300">Cart</a>
       </li>
-      <li class="breadcrumb-item">
+      <li class="flex items-center">
+        <span class="mx-1">/</span>
         <span class="text-gray-900 font-medium">Checkout</span>
       </li>
     </ol>
   </nav>
 
-  <h1 class="text-4xl font-bold mb-8 text-center text-gray-800">Checkout</h1>
+  <h1 class="text-3xl md:text-4xl font-bold mb-8 text-center text-gray-800">Checkout</h1>
 
   <div class="flex flex-wrap -mx-4">
     <!-- Shipping Information -->
     <div class="w-full lg:w-2/3 px-4 mb-8">
-      <div class="bg-white p-6 rounded-lg shadow-md">
+      <div class="bg-white p-6 rounded-lg shadow-lg border border-gray-200">
         <h2 class="text-2xl font-semibold mb-4 text-gray-800">Shipping Information</h2>
         <div id="savedAddresses" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <% addresses.forEach((address, index) => { %>
-            <div class="saved-address-card rounded-lg cursor-pointer p-5 border border-gray-200 hover:border-indigo-200 hover:bg-indigo-50 transition-colors" 
-                 data-address='<%= JSON.stringify(address) %>'>
-              <h3 class="font-semibold text-lg"><%= address.addressType || 'Home' %></h3>
-              <p class="text-sm text-gray-600 mt-2">
-                <%= address.fullName %>, <%= address.street %>, <%= address.city %>, <%= address.state %> <%= address.pincode %>
-              </p>
-              <p class="text-sm text-gray-600 mt-1">Phone: <%= address.phone %></p>
-            </div>
-          <% }); %>
+          <% if (addresses.length === 0) { %>
+            <p class="text-gray-600">No saved addresses found. <a href="/address" class="text-blue-600 hover:underline">Add one now</a>.</p>
+          <% } else { %>
+            <% addresses.forEach((address, index) => { %>
+              <div class="saved-address-card rounded-lg cursor-pointer p-5 border border-gray-200 hover:border-blue-500 hover:bg-blue-50 transition-all duration-300 shadow-sm <%= index === defaultAddressIndex ? 'selected border-blue-500 bg-blue-50' : '' %>"
+                   data-address='<%= JSON.stringify(address) %>'>
+                <h3 class="font-semibold text-lg text-gray-800 mb-2"><%= address.addressType || 'Home' %></h3>
+                <p class="text-sm text-gray-600">
+                  <%= address.fullName %>, <%= address.street %>, <%= address.city %>, <%= address.state %> <%= address.pincode %>
+                </p>
+                <p class="text-sm text-gray-600 mt-1">Phone: <%= address.phone %></p>
+              </div>
+            <% }); %>
+          <% } %>
         </div>
-        <a href="/address" class="inline-flex items-center mt-4 text-sm font-medium text-indigo-600 hover:text-indigo-500">
+        <a href="/address" class="inline-flex items-center mt-4 text-sm font-medium text-blue-600 hover:text-blue-700 transition-colors duration-300">
           <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
             <path fill-rule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clip-rule="evenodd" />
           </svg>
@@ -52,42 +79,48 @@
 
     <!-- Order Summary -->
     <div class="w-full lg:w-1/3 px-4">
-      <div class="bg-white p-6 rounded-lg shadow-md">
+      <div class="bg-white p-6 rounded-lg shadow-lg border border-gray-200 sticky top-4">
         <h2 class="text-2xl font-semibold mb-4 text-gray-800">Order Summary</h2>
-        <div id="orderItems">
-          <% cart.items.forEach(item => { %>
+        <div id="orderItems" class="max-h-96 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
+          <% cartItemsWithOffers.forEach(item => { %>
             <div class="flex justify-between items-center mb-4 p-3 hover:bg-gray-50 rounded-lg transition-all duration-300 group">
               <div class="flex items-center flex-1">
                 <div class="relative">
-                  <img src="<%= item.product.images[0] %>" alt="<%= item.product.name %>" class="w-16 h-16 object-cover rounded-lg mr-4 float-animation">
-                  <span class="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold w-6 h-6 rounded-full flex items-center justify-center transform scale-0 group-hover:scale-100 transition-transform duration-300">
+                  <img src="<%= item.product && item.product.images && item.product.images.length > 0 ? item.product.images[0] : '/images/placeholder.jpg' %>" 
+                       alt="<%= item.product ? item.product.name : 'Product' %>" 
+                       class="w-12 h-12 object-cover rounded-lg mr-4 animate-float">
+                  <span class="absolute -top-2 -right-2 bg-blue-500 text-white text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center transform scale-0 group-hover:scale-100 transition-transform duration-300">
                     <%= item.quantity %>
                   </span>
                 </div>
                 <div class="flex flex-col">
-                  <span class="text-sm font-medium text-gray-800"><%= item.product.name %></span>
+                  <span class="text-sm font-medium text-gray-800"><%= item.product ? item.product.name : 'Product unavailable' %></span>
                   <span class="text-xs text-gray-500">Qty: <%= item.quantity %></span>
+                  <% if (item.offerDetails && item.offerDetails.discountPercentage > 0) { %>
+                    <span class="text-xs text-green-600">Discount: <%= item.offerDetails.discountPercentage.toFixed(0) %>%</span>
+                    <span class="text-xs text-blue-600">(<%= item.offerDetails.appliedOfferType.charAt(0).toUpperCase() + item.offerDetails.appliedOfferType.slice(1) %> Offer)</span>
+                  <% } %>
                 </div>
               </div>
-              <span class="font-semibold text-gray-900">₹<%= (item.price * item.quantity).toFixed(2) %></span>
+              <span class="font-semibold text-gray-900">₹<%= item.total ? item.total.toFixed(2) : '0.00' %></span>
             </div>
           <% }); %>
         </div>
 
-        <div class="border-t pt-4">
-          <div class="flex justify-between mb-2">
+        <div class="border-t pt-4 mt-4">
+          <div class="flex justify-between mb-2 text-gray-700">
             <span>Subtotal:</span>
             <span class="font-semibold">₹<%= subtotal.toFixed(2) %></span>
           </div>
-          <div class="flex justify-between mb-2">
+          <div class="flex justify-between mb-2 text-gray-700">
             <span>Shipping Charge:</span>
             <span class="font-semibold">₹<%= shippingCharge.toFixed(2) %></span>
           </div>
-          <div class="flex justify-between mb-2">
+          <div class="flex justify-between mb-2 text-gray-700">
             <span>Coupon Discount:</span>
-            <span class="font-semibold text-green-500" id="couponDiscount">₹0</span>
+            <span class="font-semibold text-green-600" id="couponDiscount">₹0</span>
           </div>
-          <div class="flex justify-between font-semibold text-lg mt-4">
+          <div class="flex justify-between font-semibold text-lg mt-4 text-gray-900">
             <span>Total:</span>
             <span id="cartTotal">₹<%= totalAmount.toFixed(2) %></span>
           </div>
@@ -95,10 +128,10 @@
 
         <!-- Coupon Section -->
         <div class="mt-6">
-          <div class="flex">
-            <input id="coupon" type="text" name="couponCode" placeholder="Enter coupon code" 
-                   class="flex-grow px-4 py-3 rounded-l-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500">
-            <button id="applyCouponBtn" class="bg-indigo-500 text-white px-6 py-3 rounded-r-lg hover:bg-indigo-600 transition-all duration-300">
+          <div class="flex space-x-2">
+            <input id="coupon" type="text" name="couponCode" placeholder="Enter coupon code"
+                   class="flex-grow px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <button id="applyCouponBtn" class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-all duration-300">
               Apply
             </button>
           </div>
@@ -110,7 +143,7 @@
           <div class="space-y-4">
             <div class="relative">
               <input type="radio" id="cod" name="paymentMethod" value="cod" class="absolute w-0 h-0 opacity-0 peer" checked>
-              <label for="cod" class="flex items-center p-4 border rounded-lg cursor-pointer transition-all duration-300 peer-checked:border-indigo-500 peer-checked:bg-indigo-100 hover:bg-gray-50 block">
+              <label for="cod" class="flex items-center p-4 border rounded-lg cursor-pointer transition-all duration-300 peer-checked:border-blue-500 peer-checked:bg-blue-50 hover:bg-gray-50 block">
                 <i class="fas fa-money-bill-wave text-xl mr-3 text-gray-600"></i>
                 <div class="flex flex-col">
                   <span class="font-medium text-gray-800">Cash on Delivery</span>
@@ -120,7 +153,7 @@
             </div>
             <div class="relative">
               <input type="radio" id="razorpay" name="paymentMethod" value="razorpay" class="absolute w-0 h-0 opacity-0 peer">
-              <label for="razorpay" class="flex items-center p-4 border rounded-lg cursor-pointer transition-all duration-300 peer-checked:border-indigo-500 peer-checked:bg-indigo-100 hover:bg-gray-50 block">
+              <label for="razorpay" class="flex items-center p-4 border rounded-lg cursor-pointer transition-all duration-300 peer-checked:border-blue-500 peer-checked:bg-blue-50 hover:bg-gray-50 block">
                 <i class="fas fa-credit-card text-xl mr-3 text-gray-600"></i>
                 <div class="flex flex-col">
                   <span class="font-medium text-gray-800">Pay Online (Razorpay)</span>
@@ -132,7 +165,7 @@
         </div>
 
         <!-- Place Order Button -->
-        <button id="placeOrderBtn" class="w-full bg-indigo-500 text-white py-4 px-6 rounded-lg hover:bg-indigo-600 transition-all duration-300 text-lg font-semibold mt-6">
+        <button id="placeOrderBtn" class="w-full bg-blue-600 text-white py-3 px-6 rounded-lg hover:bg-blue-700 transition-all duration-300 text-lg font-semibold mt-6 shadow-md">
           Place Order
         </button>
       </div>
@@ -143,39 +176,44 @@
 <%- include('../partials/footer') %>
 
 <style>
-  /* Add your custom styles from the sample template here */
-  .saved-address-card {
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  }
-  .saved-address-card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-  }
-  .saved-address-card.selected {
-    border-color: #4F46E5;
-    box-shadow: 0 0 0 2px #4F46E5;
-  }
-  .float-animation {
+  .animate-float {
     animation: float 3s ease-in-out infinite;
   }
   @keyframes float {
     0%, 100% { transform: translateY(0px); }
-    50% { transform: translateY(-10px); }
+    50% { transform: translateY(-5px); }
+  }
+  .scrollbar-thin {
+    scrollbar-width: thin;
+  }
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 6px;
+  }
+  .scrollbar-thin::-webkit-scrollbar-track {
+    background: #f1f1f1;
+  }
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background: #d1d5db;
+    border-radius: 3px;
+  }
+  .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+    background: #b0b3b8;
   }
 </style>
 
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
   const orderState = {
     selectedAddress: null,
     paymentMethod: 'cod',
-    items: <%- JSON.stringify(cart.items) %>,
+    items: <%- JSON.stringify(cartItemsWithOffers) %>,
     totalAmount: <%= totalAmount %>
   };
 
   const userData = {
     name: '<%= user.name %>',
     email: '<%= user.email %>',
-    phone: '<%= user.phone %>'
+    phone: '<%= user.phone || "9999999999" %>'
   };
 
   document.addEventListener('DOMContentLoaded', () => {
@@ -185,17 +223,21 @@
     const applyCouponBtn = document.getElementById('applyCouponBtn');
     const couponInput = document.getElementById('coupon');
 
-    // Address Selection
+    // Automatically select default address if available
+    const defaultAddressCard = document.querySelector('.saved-address-card.selected');
+    if (defaultAddressCard) {
+      orderState.selectedAddress = JSON.parse(defaultAddressCard.dataset.address);
+    }
+
     addressCards.forEach(card => {
       card.addEventListener('click', () => {
-        addressCards.forEach(c => c.classList.remove('selected'));
-        card.classList.add('selected');
+        addressCards.forEach(c => c.classList.remove('selected', 'border-blue-500', 'bg-blue-50'));
+        card.classList.add('selected', 'border-blue-500', 'bg-blue-50');
         orderState.selectedAddress = JSON.parse(card.dataset.address);
         validateOrderState();
       });
     });
 
-    // Payment Method Selection
     paymentMethods.forEach(method => {
       method.addEventListener('change', (e) => {
         orderState.paymentMethod = e.target.value;
@@ -204,10 +246,21 @@
       });
     });
 
-    // Coupon Application
     applyCouponBtn.addEventListener('click', async () => {
       const couponCode = couponInput.value.trim();
-      if (!couponCode) return alert('Please enter a coupon code');
+      if (!couponCode) {
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: 'Please enter a coupon code',
+          toast: true,
+          position: 'top-end',
+          timer: 3000,
+          timerProgressBar: true,
+          showConfirmButton: false
+        });
+        return;
+      }
 
       try {
         const response = await fetch('/apply-coupon', {
@@ -222,27 +275,86 @@
           document.getElementById('cartTotal').textContent = `₹${result.discountedTotal.toFixed(2)}`;
           couponInput.disabled = true;
           applyCouponBtn.disabled = true;
+          Swal.fire({
+            icon: 'success',
+            title: 'Coupon Applied!',
+            text: result.message,
+            toast: true,
+            position: 'top-end',
+            timer: 2000,
+            timerProgressBar: true,
+            showConfirmButton: false
+          });
         } else {
-          alert(result.message);
+          Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: result.message,
+            toast: true,
+            position: 'top-end',
+            timer: 3000,
+            timerProgressBar: true,
+            showConfirmButton: false
+          });
         }
       } catch (error) {
-        alert('Error applying coupon');
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: 'Error applying coupon',
+          toast: true,
+          position: 'top-end',
+          timer: 3000,
+          timerProgressBar: true,
+          showConfirmButton: false
+        });
       }
     });
 
-    // Place Order
     placeOrderBtn.addEventListener('click', async () => {
-      if (!orderState.selectedAddress) return alert('Please select a delivery address');
+      if (!orderState.selectedAddress) {
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: 'Please select a delivery address',
+          toast: true,
+          position: 'top-end',
+          timer: 3000,
+          timerProgressBar: true,
+          showConfirmButton: false
+        });
+        return;
+      }
+
+      if (!orderState.items || orderState.items.length === 0) {
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: 'Your cart is empty. Please add items to proceed.',
+          toast: true,
+          position: 'top-end',
+          timer: 3000,
+          timerProgressBar: true,
+          showConfirmButton: false
+        });
+        window.location.href = '/cart';
+        return;
+      }
 
       if (orderState.paymentMethod === 'cod') {
         await handleCashOrder();
-      } else {
+      } else if (orderState.paymentMethod === 'razorpay') {
         await handleRazorpayOrder();
       }
     });
 
     function validateOrderState() {
-      placeOrderBtn.disabled = !orderState.selectedAddress;
+      placeOrderBtn.disabled = !orderState.selectedAddress || !orderState.items || orderState.items.length === 0;
+      if (placeOrderBtn.disabled) {
+        placeOrderBtn.classList.add('opacity-50', 'cursor-not-allowed');
+      } else {
+        placeOrderBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+      }
     }
 
     async function handleCashOrder() {
@@ -256,12 +368,39 @@
             totalAmount: orderState.totalAmount
           })
         });
+
+        if (!response.ok) {
+          const errorResult = await response.json();
+          throw new Error(errorResult.message || `HTTP error! status: ${response.status}`);
+        }
+
         const result = await response.json();
         if (result.success) {
-          window.location.href = `/orders/${result.orderId}`;
+          window.location.href = result.redirectUrl || `/orders/${result.orderId}`;
+        } else {
+          Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: result.message || 'Error placing order',
+            toast: true,
+            position: 'top-end',
+            timer: 3000,
+            timerProgressBar: true,
+            showConfirmButton: false
+          });
         }
       } catch (error) {
-        alert('Error placing order');
+        console.error('Error placing COD order:', error);
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: error.message || 'Error placing order',
+          toast: true,
+          position: 'top-end',
+          timer: 3000,
+          timerProgressBar: true,
+          showConfirmButton: false
+        });
       }
     }
 
@@ -275,28 +414,68 @@
             addressId: orderState.selectedAddress._id
           })
         });
+
+        if (!response.ok) {
+          const errorResult = await response.json();
+          throw new Error(errorResult.message || `HTTP error! status: ${response.status}`);
+        }
+
         const order = await response.json();
+        if (!order.success) {
+          throw new Error(order.message || 'Failed to create Razorpay order');
+        }
 
         const options = {
-          key: '<%= process.env.Test_Key_ID %>',
+          key: order.key,
           amount: order.amount,
           currency: 'INR',
           order_id: order.orderId,
           handler: async (response) => {
-            const verifyResponse = await fetch('/checkout/verify-payment', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                razorpay_order_id: response.razorpay_order_id,
-                razorpay_payment_id: response.razorpay_payment_id,
-                razorpay_signature: response.razorpay_signature,
-                addressId: orderState.selectedAddress._id,
-                totalAmount: orderState.totalAmount
-              })
-            });
-            const verifyResult = await verifyResponse.json();
-            if (verifyResult.success) {
-              window.location.href = `/orders/${verifyResult.orderId}`;
+            try {
+              const verifyResponse = await fetch('/verify-payment', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  razorpay_order_id: response.razorpay_order_id,
+                  razorpay_payment_id: response.razorpay_payment_id,
+                  razorpay_signature: response.razorpay_signature,
+                  addressId: orderState.selectedAddress._id,
+                  totalAmount: orderState.totalAmount
+                })
+              });
+
+              if (!verifyResponse.ok) {
+                const errorResult = await verifyResponse.json();
+                throw new Error(errorResult.message || `HTTP error! status: ${verifyResponse.status}`);
+              }
+
+              const verifyResult = await verifyResponse.json();
+              if (verifyResult.success) {
+                window.location.href = `/orders/${verifyResult.orderId}`;
+              } else {
+                Swal.fire({
+                  icon: 'error',
+                  title: 'Error',
+                  text: verifyResult.message || 'Payment verification failed',
+                  toast: true,
+                  position: 'top-end',
+                  timer: 3000,
+                  timerProgressBar: true,
+                  showConfirmButton: false
+                });
+              }
+            } catch (error) {
+              console.error('Error verifying Razorpay payment:', error);
+              Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: error.message || 'Error verifying payment',
+                toast: true,
+                position: 'top-end',
+                timer: 3000,
+                timerProgressBar: true,
+                showConfirmButton: false
+              });
             }
           },
           prefill: {
@@ -304,13 +483,37 @@
             email: userData.email,
             contact: userData.phone
           },
-          theme: { color: '#4F46E5' }
+          theme: { color: '#3b82f6' }
         };
         const rzp = new Razorpay(options);
+        rzp.on('payment.failed', (response) => {
+          Swal.fire({
+            icon: 'error',
+            title: 'Payment Failed',
+            text: response.error.description || 'Payment failed. Please try again.',
+            toast: true,
+            position: 'top-end',
+            timer: 3000,
+            timerProgressBar: true,
+            showConfirmButton: false
+          });
+        });
         rzp.open();
       } catch (error) {
-        alert('Error processing payment');
+        console.error('Error creating Razorpay order:', error);
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: error.message || 'Error processing payment',
+          toast: true,
+          position: 'top-end',
+          timer: 3000,
+          timerProgressBar: true,
+          showConfirmButton: false
+        });
       }
     }
+
+    validateOrderState();
   });
 </script>

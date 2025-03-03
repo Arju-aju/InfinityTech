@@ -1,7 +1,6 @@
-const Wallet = require('../../models/walletSchema')
-const Users = require('../../models/userSchema')
-const Category = require('../../models/categorySchema')
-
+const Wallet = require('../../models/walletSchema');
+const Users = require('../../models/userSchema');
+const Category = require('../../models/categorySchema');
 
 exports.getWallet = async (req, res, next) => {
     try {
@@ -14,7 +13,6 @@ exports.getWallet = async (req, res, next) => {
         const categories = await Category.find({});
         let wallet = await Wallet.findOne({ userId });
 
-        // If no wallet exists, create one with default values
         if (!wallet) {
             wallet = new Wallet({
                 userId: userId,
@@ -49,7 +47,6 @@ exports.getWallet = async (req, res, next) => {
             cvv: '123'
         };
 
-        console.log(wallet);
         return res.render('user/wallet', { user, categories, wallet, ...cardData });
     } catch (error) {
         console.error(error.message);
@@ -61,10 +58,8 @@ exports.getWallet = async (req, res, next) => {
 
 exports.getWalletDetails = async (req, res, next) => {
     try {
-        // Find the wallet by userId
         let wallet = await Wallet.findOne({ userId: req.user._id });
 
-        // If no wallet is found, create a new one with an initial balance of 0
         if (!wallet) {
             wallet = new Wallet({
                 userId: req.user._id,
@@ -74,7 +69,6 @@ exports.getWalletDetails = async (req, res, next) => {
             await wallet.save();
         }
 
-        // Format the response data
         const responseData = {
             balance: wallet.balance,
             transactions: wallet.transactions.map(t => ({
@@ -86,25 +80,23 @@ exports.getWalletDetails = async (req, res, next) => {
             }))
         };
 
-        // Send the wallet details as the response
         res.json(responseData);
     } catch (error) {
         console.error("Failed to retrieve wallet:", error);
-        next(error)
+        next(error);
         res.status(500).json({ message: 'Server error' });
     }
-}
+};
 
 exports.getTransactionHistory = async (req, res, next) => {
     try {
-        const sessionUserId = req.session.user?._id; // Renamed to avoid conflict
+        const sessionUserId = req.session.user?._id;
         if (!sessionUserId) {
             throw new Error("User not authenticated");
         }
 
-        const user = await Users.findById(sessionUserId); // Pass sessionUserId directly
+        const user = await Users.findById(sessionUserId);
         const categories = await Category.find({});
-        const announcements = await Announcement.find({});
         const wallet = await Wallet.findOne({ userId: sessionUserId });
 
         if (!wallet) {
@@ -126,7 +118,6 @@ exports.getTransactionHistory = async (req, res, next) => {
         return res.render('user/transaction-history', {
             user,
             categories,
-            announcements,
             transactions,
             totalTransactions: transactions.length,
             totalCredits,
@@ -143,29 +134,34 @@ exports.getTransactionHistory = async (req, res, next) => {
 
 exports.refundToWallet = async (orderId, userId, amount, description) => {
     try {
-      let wallet = await Wallet.findOne({ userId });
-  
-      if (!wallet) {
-        wallet = new Wallet({
-          userId,
-          balance: 0,
-          transactions: []
+        let wallet = await Wallet.findOne({ userId });
+
+        if (!wallet) {
+            wallet = new Wallet({
+                userId,
+                balance: 0,
+                transactions: []
+            });
+        }
+
+        const refundAmount = Math.abs(Number(amount));
+        if (isNaN(refundAmount) || refundAmount <= 0) {
+            throw new Error('Invalid refund amount');
+        }
+
+        wallet.balance += refundAmount;
+        wallet.transactions.push({
+            amount: refundAmount,
+            type: 'credit',
+            description,
+            date: new Date(),
+            time: new Date()
         });
-      }
-  
-      wallet.balance += amount;
-      wallet.transactions.push({
-        amount,
-        type: 'credit',
-        description,
-        date: new Date(),
-        time: new Date()
-      });
-  
-      await wallet.save();
-      return true;
+
+        await wallet.save();
+        return true;
     } catch (error) {
-      console.error('Refund to Wallet Error:', error);
-      throw error;
+        console.error('Refund to Wallet Error:', error);
+        throw error;
     }
-  };
+};

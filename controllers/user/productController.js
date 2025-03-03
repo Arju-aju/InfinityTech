@@ -2,6 +2,7 @@ const Product = require('../../models/productSchema');
 const LaptopCategory = require('../../models/categorySchema');
 const User = require('../../models/userSchema'); 
 const Cart = require('../../models/cartSchema');
+const { getBestOfferForProduct } = require('../../utils/offer');
 const { default: mongoose } = require('mongoose');
 
 // Get Home Page Products
@@ -10,7 +11,6 @@ const getHomePageProducts = async (req, res) => {
         const sevenDaysAgo = new Date();
         sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
-        // Fetch active categories
         const activeCategories = await LaptopCategory.find({ isActive: true }).select('_id');
         const activeCategoryIds = activeCategories.map(cat => cat._id);
 
@@ -19,41 +19,59 @@ const getHomePageProducts = async (req, res) => {
             isDeleted: false,
             category: { $in: activeCategoryIds },
             createdAt: { $gte: sevenDaysAgo }
-        })
-        .sort({ createdAt: -1 })
-        .limit(8);
+        }).sort({ createdAt: -1 }).limit(8).lean();
 
         const featuredProducts = await Product.find({ 
             isListed: true,
             isDeleted: false,
-            category: { $in: activeCategoryIds },
-            discount: { $gt: 56 }
-        })
-        .sort({ discount: -1 })
-        .limit(8);
+            category: { $in: activeCategoryIds }
+        }).sort({ createdAt: -1 }).limit(8).lean();
 
         const topSellingProducts = await Product.find({ 
             isListed: true,
             isDeleted: false,
             category: { $in: activeCategoryIds }
-        })
-        .sort({ salesCount: -1 })
-        .limit(8);
+        }).sort({ salesCount: -1 }).limit(8).lean();
 
         const dealProducts = await Product.find({ 
             isListed: true,
             isDeleted: false,
-            category: { $in: activeCategoryIds },
-            discount: { $gt: 0 }
-        })
-        .sort({ discount: -1 })
-        .limit(8);
+            category: { $in: activeCategoryIds }
+        }).sort({ createdAt: -1 }).limit(8).lean();
+
+        // Ensure offerDetails is always defined
+        const enhanceProducts = async (products) => {
+            return await Promise.all(products.map(async (product) => {
+                try {
+                    const offerDetails = await getBestOfferForProduct(product);
+                    return { ...product, offerDetails };
+                } catch (error) {
+                    console.error(`Error calculating offer for product ${product._id}:`, error);
+                    // Provide default offerDetails if calculation fails
+                    return {
+                        ...product,
+                        offerDetails: {
+                            originalPrice: product.price,
+                            finalPrice: product.price,
+                            discountAmount: 0,
+                            discountPercentage: 0,
+                            appliedOfferType: null
+                        }
+                    };
+                }
+            }));
+        };
+
+        const enhancedNewArrivals = await enhanceProducts(newArrivals);
+        const enhancedFeaturedProducts = await enhanceProducts(featuredProducts);
+        const enhancedTopSellingProducts = await enhanceProducts(topSellingProducts);
+        const enhancedDealProducts = await enhanceProducts(dealProducts);
 
         res.render('user/home', {
-            newArrivals,
-            featuredProducts,
-            topSellingProducts,
-            dealProducts,
+            newArrivals: enhancedNewArrivals,
+            featuredProducts: enhancedFeaturedProducts,
+            topSellingProducts: enhancedTopSellingProducts,
+            dealProducts: enhancedDealProducts,
             message: {
                 type: req.flash('error').length ? 'error' : 'success',
                 content: req.flash('error')[0] || req.flash('success')[0]
@@ -76,31 +94,27 @@ const getSingleProduct = async (req, res) => {
             _id: productId,
             isListed: true,
             isDeleted: false
-        }).populate('category');
+        }).populate('category').lean();
 
         if (!product) {
             req.flash('error', 'Product not found or unavailable');
             return res.redirect('/shop');
         }
 
-        const discountedPrice = product.price - (product.price * (product.discountPercentage / 100));
+        const offerDetails = await getBestOfferForProduct(product);
 
         const recommendedProducts = await Product.find({
             category: product.category._id,
             _id: { $ne: product._id },
             isListed: true,
             isDeleted: false
-        })
-        .populate('category')
-        .limit(4)
-        .sort('-createdAt')
-        .lean();
+        }).populate('category').limit(4).sort('-createdAt').lean();
 
-        recommendedProducts.forEach(prod => {
-            prod.discountedPrice = prod.price - (prod.price * (prod.discountPercentage / 100));
-        });
+        const recommendedProductsWithOffers = await Promise.all(recommendedProducts.map(async (prod) => {
+            const recOfferDetails = await getBestOfferForProduct(prod);
+            return { ...prod, offerDetails: recOfferDetails };
+        }));
 
-        // Fetch the cart items count for the logged-in user
         let cartItemsCount = 0;
         if (req.user) {
             const cart = await Cart.findOne({ user: req.user._id });
@@ -110,12 +124,9 @@ const getSingleProduct = async (req, res) => {
         }
 
         res.render('user/product', {
-            product: {
-                ...product.toObject(),
-                discountedPrice
-            },
-            recommendedProducts,
-            cartItemsCount, // Pass the cart items count to the template
+            product: { ...product, offerDetails },
+            recommendedProducts: recommendedProductsWithOffers,
+            cartItemsCount,
             message: {
                 type: req.flash('error').length ? 'error' : 'success',
                 content: req.flash('error')[0] || req.flash('success')[0]
@@ -223,25 +234,21 @@ const loadShop = async (req, res) => {
         const limit = parseInt(req.query.limit) || 12;
         const skip = (page - 1) * limit;
 
-        // Get filter parameters
         const selectedCategory = req.query.category || null;
         const sortOption = req.query.sort || 'newest';
         const searchQuery = req.query.search || '';
         const minPrice = parseFloat(req.query.minPrice) || 0;
         const maxPrice = parseFloat(req.query.maxPrice) || Number.MAX_VALUE;
 
-        // Get active categories
         const activeCategories = await LaptopCategory.find({ isActive: true }).select('_id name');
         const activeCategoryIds = activeCategories.map(cat => cat._id);
 
-        // Build filter object
         const filter = {
             isListed: true,
             isDeleted: false,
             category: { $in: activeCategoryIds }
         };
 
-        // Add search query if present
         if (searchQuery) {
             filter.$or = [
                 { name: { $regex: searchQuery, $options: 'i' } },
@@ -253,49 +260,37 @@ const loadShop = async (req, res) => {
             filter.category = selectedCategory;
         }
 
-        // Fetch all products matching the filter
         const allProducts = await Product.find(filter).populate('category').lean();
 
-        // Calculate discounted prices and filter by price range
-        const filteredProducts = allProducts
-            .map(product => {
-                product.discountedPrice = product.price - (product.price * (product.discountPercentage / 100));
-                return product;
-            })
-            .filter(product => {
-                return product.discountedPrice >= minPrice && product.discountedPrice <= maxPrice;
-            });
+        // Apply offer logic to all products
+        const productsWithOffers = await Promise.all(allProducts.map(async (product) => {
+            const offerDetails = await getBestOfferForProduct(product);
+            return { ...product, offerDetails };
+        }));
 
-        // Define sorting logic based on discountedPrice
-        const sortQuery = {
-            'price_low_to_high': { discountedPrice: 1 },
-            'price_high_to_low': { discountedPrice: -1 },
-            'newest': { createdAt: -1 },
-            'name_a_to_z': { name: 1 },
-            'name_z_to_a': { name: -1 },
-            'popularity': { viewCount: -1 },
-            'average_rating': { averageRating: -1 }
-        }[sortOption] || { createdAt: -1 };
-
-        // Sort the filtered products
-        filteredProducts.sort((a, b) => {
-            if (sortOption === 'price_low_to_high') return a.discountedPrice - b.discountedPrice;
-            if (sortOption === 'price_high_to_low') return b.discountedPrice - a.discountedPrice;
-            if (sortOption === 'newest') return new Date(b.createdAt) - new Date(a.createdAt);
-            if (sortOption === 'name_a_to_z') return a.name.localeCompare(b.name);
-            if (sortOption === 'name_z_to_a') return b.name.localeCompare(a.name);
-            if (sortOption === 'popularity') return b.viewCount - a.viewCount;
-            if (sortOption === 'average_rating') return b.averageRating - a.averageRating;
-            return 0;
+        // Filter by price range using finalPrice
+        const filteredProducts = productsWithOffers.filter(product => {
+            return product.offerDetails.finalPrice >= minPrice && product.offerDetails.finalPrice <= maxPrice;
         });
 
-        // Paginate the sorted and filtered products
+        // Sort based on the selected sort option
+        const sortQuery = {
+            'price_low_to_high': (a, b) => a.offerDetails.finalPrice - b.offerDetails.finalPrice,
+            'price_high_to_low': (a, b) => b.offerDetails.finalPrice - a.offerDetails.finalPrice,
+            'newest': (a, b) => new Date(b.createdAt) - new Date(a.createdAt),
+            'name_a_to_z': (a, b) => a.name.localeCompare(b.name),
+            'name_z_to_a': (a, b) => b.name.localeCompare(a.name),
+            'popularity': (a, b) => (b.viewCount || 0) - (a.viewCount || 0),
+            'average_rating': (a, b) => (b.averageRating || 0) - (a.averageRating || 0)
+        }[sortOption] || ((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+        filteredProducts.sort(sortQuery);
+
         const paginatedProducts = filteredProducts.slice(skip, skip + limit);
 
-        // Get price range for the filter (based on discountedPrice)
-        const discountedPrices = filteredProducts.map(product => product.discountedPrice);
-        const minPriceInDb = Math.min(...discountedPrices);
-        const maxPriceInDb = Math.max(...discountedPrices);
+        const finalPrices = filteredProducts.map(product => product.offerDetails.finalPrice);
+        const minPriceInDb = finalPrices.length > 0 ? Math.min(...finalPrices) : 0;
+        const maxPriceInDb = finalPrices.length > 0 ? Math.max(...finalPrices) : 0;
 
         const totalProducts = filteredProducts.length;
         const totalPages = Math.ceil(totalProducts / limit);
@@ -309,8 +304,8 @@ const loadShop = async (req, res) => {
             selectedCategory,
             sortOption,
             searchQuery,
-            minPrice: minPriceInDb || 0,
-            maxPrice: maxPriceInDb || 0,
+            minPrice: minPriceInDb,
+            maxPrice: maxPriceInDb,
             selectedMinPrice: minPrice,
             selectedMaxPrice: maxPrice === Number.MAX_VALUE ? maxPriceInDb : maxPrice,
             message: {
@@ -509,3 +504,4 @@ module.exports = {
     addToWishlist,
     removeFromWishlist,
 };
+

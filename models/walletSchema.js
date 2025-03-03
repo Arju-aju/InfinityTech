@@ -8,7 +8,7 @@ const transactionSchema = new Schema({
     },
     type: {
         type: String,
-        enum: ['credit', 'debit'], 
+        enum: ['credit', 'debit'],
         required: true
     },
     date: {
@@ -40,7 +40,6 @@ const walletSchema = new mongoose.Schema({
         default: Date.now
     }
 });
-
 
 walletSchema.pre('save', function (next) {
     this.lastUpdated = Date.now();

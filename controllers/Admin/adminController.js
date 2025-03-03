@@ -2,20 +2,20 @@ const User = require('../../models/userSchema');
 const Order = require('../../models/orderSchema');
 const Product = require('../../models/productSchema');
 const LaptopCategory = require('../../models/categorySchema');
+const Coupon = require('../../models/coupounSchema'); // Added Coupon model
+const Return = require('../../models/returnSchema'); // Added Return model
 const bcrypt = require('bcrypt');
 const { jsPDF } = require('jspdf');
 require('jspdf-autotable');
 
-
-
-const pageerror = async(req,res) => {
-    res.render('admin-error')
-}
+const pageerror = async (req, res) => {
+    res.render('admin-error');
+};
 
 const loadLogin = (req, res) => {
     try {
         if (req.session.admin) {
-            return res.redirect('/admin/dashboard'); // Prevents logged-in admin from accessing login page
+            return res.redirect('/admin/dashboard');
         }
         res.render('adminLogin', { message: null });
     } catch (error) {
@@ -27,26 +27,26 @@ const loadLogin = (req, res) => {
 const login = async (req, res) => {
     try {
         const { email, password } = req.body;
-        
+
         if (!email || !password) {
             return res.render('adminLogin', { message: 'Email and password are required' });
         }
 
         const admin = await User.findOne({ email: email, isAdmin: true });
-        
+
         if (!admin) {
             return res.render('adminLogin', { message: 'Invalid admin credentials' });
         }
 
         const passwordMatch = await bcrypt.compare(password, admin.password);
-        
+
         if (passwordMatch) {
             req.session.admin = {
                 id: admin._id,
                 email: admin.email,
                 isAdmin: admin.isAdmin
             };
-            
+
             req.session.save((err) => {
                 if (err) {
                     console.error("Session save error:", err);
@@ -69,7 +69,6 @@ const loadDashboard = async (req, res) => {
             return res.redirect('/admin/login');
         }
 
-        // Initial dashboard stats
         const userCount = await User.countDocuments({ isBlocked: false });
         const totalOrders = await Order.countDocuments();
         const totalSales = await Order.aggregate([
@@ -77,14 +76,66 @@ const loadDashboard = async (req, res) => {
             { $group: { _id: null, total: { $sum: "$orderAmount" } } }
         ]);
 
+        // Initial sales data
+        const initialSales = await Order.aggregate([
+            { $match: { status: "Delivered" } },
+            {
+                $group: {
+                    _id: { $month: "$orderDate" },
+                    orders: { $sum: 1 },
+                    sales: { $sum: "$orderAmount" },
+                    totalItems: { $sum: { $sum: "$products.quantity" } },
+                    totalCouponsUsed: { $sum: { $cond: [{ $ne: ["$couponApplied", null] }, 1, 0] } },
+                    couponDeductions: { $sum: "$offerApplied" }
+                }
+            },
+            {
+                $project: {
+                    date: "$_id",
+                    orders: 1,
+                    sales: 1,
+                    totalItems: 1,
+                    totalCouponsUsed: 1,
+                    couponDeductions: 1,
+                    _id: 0
+                }
+            },
+            { $sort: { date: 1 } }
+        ]);
+
+        // Coupon stats
+        const couponStats = await Coupon.aggregate([
+            {
+                $group: {
+                    _id: null,
+                    totalCoupons: { $sum: 1 },
+                    activeCoupons: { $sum: { $cond: ["$isActive", 1, 0] } },
+                    totalUsage: { $sum: "$couponUsed" }
+                }
+            }
+        ]);
+
+        // Return stats
+        const returnStats = await Return.aggregate([
+            {
+                $group: {
+                    _id: "$status",
+                    count: { $sum: 1 }
+                }
+            }
+        ]);
+
         res.render('adminDashboard', {
             userCount,
             totalOrders,
-            totalSales: totalSales[0]?.total || 0
+            totalSales: totalSales[0]?.total || 0,
+            initialSales: JSON.stringify(initialSales),
+            couponStats: JSON.stringify(couponStats[0] || { totalCoupons: 0, activeCoupons: 0, totalUsage: 0 }),
+            returnStats: JSON.stringify(returnStats)
         });
     } catch (error) {
         console.error("Dashboard error:", error);
-        res.redirect('/admin/login');
+        res.redirect('/admin/pageerror');
     }
 };
 
@@ -96,7 +147,7 @@ const logout = async (req, res) => {
                     console.error('Error destroying session:', err);
                     return res.redirect('/admin/pageerror');
                 }
-                res.clearCookie('connect.sid'); // Clears session cookie
+                res.clearCookie('connect.sid');
                 res.redirect('/admin/login');
             });
         } else {
@@ -111,17 +162,13 @@ const logout = async (req, res) => {
 const getSalesReport = async (req, res) => {
     try {
         const { startDate, endDate, timeFrame } = req.query;
-        
-        // Set default dates if not provided
-        const start = startDate ? new Date(startDate) : new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
-        const end = endDate ? new Date(endDate) : new Date();
 
-        // Adjust end date to include the full day
+        const start = startDate ? new Date(startDate) : new Date(0);
+        const end = endDate ? new Date(endDate) : new Date();
         end.setHours(23, 59, 59, 999);
 
-        // Define group by based on timeFrame
         let dateFormat;
-        switch (timeFrame) {
+        switch (timeFrame || 'monthly') {
             case 'weekly':
                 dateFormat = { $week: "$orderDate" };
                 break;
@@ -131,11 +178,10 @@ const getSalesReport = async (req, res) => {
             case 'yearly':
                 dateFormat = { $year: "$orderDate" };
                 break;
-            default: // daily
+            default:
                 dateFormat = { $dateToString: { format: "%Y-%m-%d", date: "$orderDate" } };
         }
 
-        // Aggregate sales data
         const salesData = await Order.aggregate([
             {
                 $match: {
@@ -172,7 +218,6 @@ const getSalesReport = async (req, res) => {
             { $sort: { date: 1 } }
         ]);
 
-        // Get payment method statistics
         const paymentMethodStats = await Order.aggregate([
             {
                 $match: {
@@ -188,7 +233,6 @@ const getSalesReport = async (req, res) => {
             }
         ]);
 
-        // Calculate summary
         const summary = salesData.reduce(
             (acc, curr) => ({
                 totalSales: acc.totalSales + curr.sales,
@@ -228,10 +272,8 @@ const getSalesReport = async (req, res) => {
     }
 };
 
-// Get Top Sellers Data
 const getTopSellers = async (req, res) => {
     try {
-        // Top Products by sales
         const products = await Order.aggregate([
             { $match: { status: "Delivered" } },
             { $unwind: "$products" },
@@ -262,7 +304,6 @@ const getTopSellers = async (req, res) => {
             { $limit: 10 }
         ]);
 
-        // Top Categories by items sold
         const categories = await Order.aggregate([
             { $match: { status: "Delivered" } },
             { $unwind: "$products" },
@@ -300,7 +341,6 @@ const getTopSellers = async (req, res) => {
             { $limit: 10 }
         ]);
 
-        // Top Brands by sales
         const brands = await Order.aggregate([
             { $match: { status: "Delivered" } },
             { $unwind: "$products" },

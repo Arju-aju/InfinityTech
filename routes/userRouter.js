@@ -63,7 +63,7 @@ router.delete('/cart/remove/:productId',auth, cartController.removeFromCart);
 // checkout routes
 
 router.get('/checkout', auth, checkoutController.getCheckout);
-router.post('/place-order', auth, checkoutController.placeOrder);
+router.post('/checkout/place-order', auth, checkoutController.placeOrder);
 router.post('/apply-coupon', auth, checkoutController.applyCoupon);
 router.post('/checkout/create-razorpay-order', auth, paymentController.createRazorpayOrder);
 router.post('/verify-payment', auth, paymentController.verifyPayment);

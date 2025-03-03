@@ -1,24 +1,29 @@
-const offer = require('../../models/offerSchema')
-const Categories = require('../../models/categorySchema')
-const Product = require('../../models/productSchema')
-const {body, validationResult} = require('express-validator')
-const { array } = require('joi')
-const { default: mongoose } = require('mongoose')
+const Offer = require('../../models/offerSchema');
+const Categories = require('../../models/categorySchema');
+const Product = require('../../models/productSchema');
+const mongoose = require('mongoose');
 
 exports.getAllOffers = async (req, res) => {
     try {
-        const offers = await offer.find();
-        const categories = await Categories.find(); // Fetch categories for the form
-        const products = await Product.find();      // Fetch products for the form
+        // Fetch offers and populate Categories and Product fields
+        const offers = await Offer.find()
+            .populate('Categories') 
+            .populate('Product');   
+
+        const categories = await Categories.find(); 
+        const products = await Product.find();     
+
+        // Log the fetched offers for debugging
+        console.log('Fetched Offers:', offers);
 
         res.render('offer', {
             offers,
-            categories,          // Pass categories
-            products,           // Pass products
+            categories,          
+            products,           
             editing: false,
-            success: req.flash('success'), // Pass success message
-            error: req.flash('error'),     // Pass error message
-            oldInput: {}        // Provide default empty oldInput
+            success: req.flash('success'), 
+            error: req.flash('error'),    
+            oldInput: {}       
         });
     } catch (error) {
         console.error('Error fetching offers:', error);
@@ -27,147 +32,150 @@ exports.getAllOffers = async (req, res) => {
     }
 };
 
-
-exports.getAddOffer = async(req,res) => {
+exports.getAddOffer = async (req, res) => {
     try {
-        
-        const categories = await Categories.find()
-        const products = await Product.find()
+        const categories = await Categories.find();
+        const products = await Product.find();
 
         res.render('addOffer', {
-            editing :false,
+            editing: false,
             categories,
             products,
-            offer:{},
-            errorMessage : req.flash('error'),
+            offer: {},
+            errorMessage: req.flash('error'),
             validationErrors: [],
-            oldInput : req.flash('oldInput')[0] || {}
-        })
-
+            oldInput: req.flash('oldInput')[0] || {}
+        });
     } catch (error) {
         console.error('Error loading form:', error);
         req.flash('error', 'Failed to load form data');
         res.redirect('/admin/offers');
     }
-}
+};
 
-exports.postAddOffer = async (req,res) => {
+exports.postAddOffer = async (req, res) => {
     try {
-        
-        const {name,discountType , discountValue, startDate, endDate} = req.body
+        // Log the incoming request body for debugging
+        console.log('Request Body:', req.body);
+        console.log('Offer Type:', req.query.type);
 
-        if(!name || !discountType || !discountValue || !startDate || !endDate){
-            throw new Error('Please fill in all  required fields')
+        const { name, description, discountType, discountValue, maxDiscount, minimumAmount, startDate, endDate, product, category } = req.body;
+        const offerType = req.query.type; 
+
+        // Validation for required fields
+        if (!name || !discountType || !discountValue || !startDate || !endDate) {
+            throw new Error('Please fill in all required fields (name, discountType, discountValue, startDate, endDate)');
         }
 
-
-        if(name.length < 3 || name.length > 30 ){
-            throw new Error('Offer name must be between 3 and 30')
+        // Validate offer name
+        if (name.length < 3 || name.length > 30) {
+            throw new Error('Offer name must be between 3 and 30 characters');
         }
 
-        if(!['percenatge','fixed'].includes(discountType)){
-            throw new Error('Invalid Discount Type')
+        // Validate discount type
+        if (!['percentage', 'fixed'].includes(discountType)) {
+            throw new Error('Invalid discount type. Must be "percentage" or "fixed"');
         }
 
-
-        const discountvalue = parseFloat(discountValue)
-        if(isNaN(discountvalue) || discountvalue < 0){
-            throw new Error('Discount value must be a positive value')
+        // Validate discount value
+        const discountValueNum = parseFloat(discountValue);
+        if (isNaN(discountValueNum) || discountValueNum < 0) {
+            throw new Error('Discount value must be a positive number');
+        }
+        if (discountType === 'percentage' && discountValueNum > 100) {
+            throw new Error('Percentage discount cannot exceed 100');
         }
 
-        if(discountType === 'percentage' && discountvalue >100){
-            throw new Error('Percentage discount cannot exceed 100')
+        // Validate minimum amount
+        const minimumAmountNum = parseFloat(minimumAmount);
+        if (isNaN(minimumAmountNum) || minimumAmountNum < 0) {
+            throw new Error('Minimum amount must be a positive number');
         }
 
-        const minimumAmount  = parseFloat(minimumAmount)
-        if(isNaN(minimumAmount) || minimumAmount < 0){
-            throw new Error('mimum Amount must be positive number') 
+        // Validate dates
+        const startDateObj = new Date(startDate);
+        const endDateObj = new Date(endDate);
+        const currentDate = new Date();
+
+        if (isNaN(startDateObj.getTime())) {
+            throw new Error('Invalid start date format');
+        }
+        if (isNaN(endDateObj.getTime())) {
+            throw new Error('Invalid end date format');
         }
 
-        const startdate = new Date(startDate)
-        const enddate = new Date(endDate)
-        const currentDate = new Date()
-
-        if(startdate < currentDate){
-            throw new Error('start date cannot be in the past')
+        if (startDateObj < currentDate) {
+            throw new Error('Start date cannot be in the past');
         }
-        if(enddate <= startdate){
-            throw new Error('End date must be after start date')
+        if (endDateObj <= startDateObj) {
+            throw new Error('End date must be after start date');
         }
 
+        // Validate product or category based on offer type
+        let productArray = [];
+        let categoryArray = [];
 
-        if(req.body.Categories){
-            const categories = array.isArray(req.body.Categories)? req.body.Categories : [req.body.Categories]
-
-            for(const catId of categories){
-
-                if(!mongoose.Types.ObjectId.isValid(catId)){
-                    throw new Error('Invalid Category is provided')
-                }
-
-                const existingCategory =  await Categories.findById(catId)
-                if(!existingCategory){
-                    throw new Error('One or more category do not exist')
-                }
+        if (offerType === 'product') {
+            if (!product) {
+                throw new Error('Please select a product');
             }
-        }
-
-        if(req.body.Product){
-            const product =  Array.isArray(req.body.Product) ? req.body.Product :[req.body.Product]
-
-            for (const proId of product){
-                if(!mongoose.Types.ObjectId.isValid(prodId)){
-                    throw new Error('Invalid Product ID is provided')
+            const productIdArray = Array.isArray(product) ? product : [product];
+            for (const prodId of productIdArray) {
+                if (!mongoose.Types.ObjectId.isValid(prodId)) {
+                    throw new Error(`Invalid product ID provided: ${prodId}`);
                 }
-
-            const productExists = await mongoose.model('Product').findById(prodId);
-                if (!productExists) {
-                    throw new Error('One or more selected products do not exist');
+                const existingProduct = await Product.findById(prodId);
+                if (!existingProduct) {
+                    throw new Error(`Selected product does not exist: ${prodId}`);
                 }
+                productArray.push(prodId);
             }
+        } else if (offerType === 'category') {
+            if (!category) {
+                throw new Error('Please select a category');
+            }
+            const categoryIdArray = Array.isArray(category) ? category : [category];
+            for (const catId of categoryIdArray) {
+                if (!mongoose.Types.ObjectId.isValid(catId)) {
+                    throw new Error(`Invalid category ID provided: ${catId}`);
+                }
+                const existingCategory = await Categories.findById(catId);
+                if (!existingCategory) {
+                    throw new Error(`Selected category does not exist: ${catId}`);
+                }
+                categoryArray.push(catId);
+            }
+        } else {
+            throw new Error('Invalid offer type');
         }
 
+        // Prepare offer data
         const offerData = {
-            name: req.body.name,
-            description: req.body.description || '',
-            discountType: req.body.discountType,
-            discountValue: discountValue,
-            minimumAmount: minimumAmount,
-            maxDiscount: req.body.maxDiscount || null,
-            startDate: startDate,
-            endDate: endDate,
-            isActive: req.body.isActive === 'on',
-            Categories: req.body.Categories || [],
-            Product: req.body.Product || []
+            name,
+            description: description || '',
+            discountType,
+            discountValue: discountValueNum,
+            minimumAmount: minimumAmountNum,
+            maxDiscount: maxDiscount ? parseFloat(maxDiscount) : null,
+            startDate: startDateObj,
+            endDate: endDateObj,
+            isActive: true,
+            Categories: categoryArray,
+            Product: productArray
         };
 
-        const offer = new Offer(offerData);
-        await offer.save();
+        const newOffer = new Offer(offerData);
+        await newOffer.save();
 
-        req.flash('success', 'Offer created successfully');
-        res.redirect('/admin/offers');
-
-
+        // Respond with JSON for fetch requests
+        res.status(200).json({ message: 'Offer created successfully' });
 
     } catch (error) {
         console.error('Error creating offer:', error);
-            const categories = await mongoose.model('LaptopCategory').find();
-            const products = await mongoose.model('Product').find();
-
-            // Render form with error and old input
-            res.render('offers/form', {
-                editing: false,
-                categories,
-                products,
-                errorMessage: error.message,
-                validationErrors: [{ msg: error.message }],
-                oldInput: req.body
-            });
-        }
-}
-
-    
-// Show edit offer form
+        // Respond with JSON error for fetch requests
+        res.status(400).json({ message: error.message });
+    }
+};
 
 exports.getEditOffer = async (req, res) => {
     try {
@@ -180,8 +188,8 @@ exports.getEditOffer = async (req, res) => {
             throw new Error('Offer not found');
         }
 
-        const categories = await mongoose.model('LaptopCategory').find();
-        const products = await mongoose.model('Product').find();
+        const categories = await Categories.find();
+        const products = await Product.find();
 
         res.render('addOffer', {
             editing: true,
@@ -192,99 +200,126 @@ exports.getEditOffer = async (req, res) => {
             validationErrors: [],
             oldInput: req.flash('oldInput')[0] || offer
         });
-
-
-
     } catch (error) {
-        
         console.error('Error loading offer:', error);
         req.flash('error', error.message);
         res.redirect('/admin/offers');
-    }   
-}  
+    }
+};
 
-exports.postEditOffer =  async (req,res) => {
+exports.postEditOffer = async (req, res) => {
     try {
-        
-        if(!mongoose.Types.ObjectId.isValid(req.params.id)){
-            throw new Error('Invalid offer Id')
+        if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+            throw new Error('Invalid offer ID');
         }
 
-        const offer = await Offer.findById(req.params.id)
-
-        if(!offer){
-            throw new Error ('Offer not found')
+        const offer = await Offer.findById(req.params.id);
+        if (!offer) {
+            throw new Error('Offer not found');
         }
 
-        if(!req.body.name || !req.body.discountType || !req.body.discountValue ||!req.body.startDate || !req.body.endDate){
-            throw new Error('Please fill all the required fields')
+        const { name, description, discountType, discountValue, maxDiscount, minimumAmount, startDate, endDate, product, category } = req.body;
+
+        // Validation for required fields
+        if (!name || !discountType || !discountValue || !startDate || !endDate) {
+            throw new Error('Please fill in all required fields');
         }
 
-        if(req.body.name.length < 3 || req.body.name.length > 30 ){
-            throw new Error('Offer name must be between 3 and 30')
+        // Validate offer name
+        if (name.length < 3 || name.length > 30) {
+            throw new Error('Offer name must be between 3 and 30 characters');
         }
 
-          // Validate discount type
-          if (!['percentage', 'fixed'].includes(req.body.discountType)) {
+        // Validate discount type
+        if (!['percentage', 'fixed'].includes(discountType)) {
             throw new Error('Invalid discount type');
         }
 
         // Validate discount value
-        const discountValue = parseFloat(req.body.discountValue);
-        if (isNaN(discountValue) || discountValue < 0) {
+        const discountValueNum = parseFloat(discountValue);
+        if (isNaN(discountValueNum) || discountValueNum < 0) {
             throw new Error('Discount value must be a positive number');
         }
-        if (req.body.discountType === 'percentage' && discountValue > 100) {
+        if (discountType === 'percentage' && discountValueNum > 100) {
             throw new Error('Percentage discount cannot exceed 100%');
         }
 
         // Validate minimum amount
-        const minimumAmount = parseFloat(req.body.minimumAmount);
-        if (isNaN(minimumAmount) || minimumAmount < 0) {
+        const minimumAmountNum = parseFloat(minimumAmount);
+        if (isNaN(minimumAmountNum) || minimumAmountNum < 0) {
             throw new Error('Minimum amount must be a positive number');
         }
 
         // Validate dates
-        const startDate = new Date(req.body.startDate);
-        const endDate = new Date(req.body.endDate);
+        const startDateObj = new Date(startDate);
+        const endDateObj = new Date(endDate);
 
-        if (endDate <= startDate) {
+        if (endDateObj <= startDateObj) {
             throw new Error('End date must be after start date');
         }
 
+        // Validate product or category based on existing offer
+        let productArray = [];
+        let categoryArray = [];
+
+        if (product) {
+            const productIdArray = Array.isArray(product) ? product : [product];
+            for (const prodId of productIdArray) {
+                if (!mongoose.Types.ObjectId.isValid(prodId)) {
+                    throw new Error('Invalid product ID provided');
+                }
+                const existingProduct = await Product.findById(prodId);
+                if (!existingProduct) {
+                    throw new Error('Selected product does not exist');
+                }
+                productArray.push(prodId);
+            }
+        }
+
+        if (category) {
+            const categoryIdArray = Array.isArray(category) ? category : [category];
+            for (const catId of categoryIdArray) {
+                if (!mongoose.Types.ObjectId.isValid(catId)) {
+                    throw new Error('Invalid category ID provided');
+                }
+                const existingCategory = await Categories.findById(catId);
+                if (!existingCategory) {
+                    throw new Error('Selected category does not exist');
+                }
+                categoryArray.push(catId);
+            }
+        }
+
         // Update offer data
-        offer.name = req.body.name;
-        offer.description = req.body.description || '';
-        offer.discountType = req.body.discountType;
-        offer.discountValue = discountValue;
-        offer.minimumAmount = minimumAmount;
-        offer.maxDiscount = req.body.maxDiscount || null;
-        offer.startDate = startDate;
-        offer.endDate = endDate;
+        offer.name = name;
+        offer.description = description || '';
+        offer.discountType = discountType;
+        offer.discountValue = discountValueNum;
+        offer.minimumAmount = minimumAmountNum;
+        offer.maxDiscount = maxDiscount ? parseFloat(maxDiscount) : null;
+        offer.startDate = startDateObj;
+        offer.endDate = endDateObj;
         offer.isActive = req.body.isActive === 'on';
-        offer.Categories = req.body.Categories || [];
-        offer.Product = req.body.Product || [];
+        offer.Categories = categoryArray;
+        offer.Product = productArray;
 
         await offer.save();
+
         req.flash('success', 'Offer updated successfully');
         res.redirect('/admin/offers');
-
-
     } catch (error) {
-        
         console.error('Error updating offer:', error);
-            const categories = await mongoose.model('LaptopCategory').find();
-            const products = await mongoose.model('Product').find();
+        const categories = await Categories.find();
+        const products = await Product.find();
 
-            res.render('offers/form', {
-                editing: true,
-                offer: { _id: req.params.id, ...req.body },
-                categories,
-                products,
-                errorMessage: error.message,
-                validationErrors: [{ msg: error.message }],
-                oldInput: req.body
-            });
-
+        res.render('addOffer', {
+            editing: true,
+            offer: { _id: req.params.id, ...req.body },
+            categories,
+            products,
+            errorMessage: error.message,
+            validationErrors: [{ msg: error.message }],
+            oldInput: req.body
+        });
     }
-}
+};
