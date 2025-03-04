@@ -40,12 +40,6 @@
             </div>
         <% } %>
 
-        <div class="flex justify-between items-center mb-6">
-            <a href="/orders" class="text-black hover:text-blue-300 transition duration-300">
-                <i class="fas fa-arrow-left mr-2"></i>Back to Orders
-            </a>
-        </div>
-
         <!-- Order Status Bar -->
         <div class="mb-8">
             <div class="relative">
@@ -97,7 +91,7 @@
                     <p class="text-gray-600">Order ID: <%= order._id %></p>
                     <p class="text-gray-600">Date: <%= new Date(order.date).toLocaleDateString() %></p>
                     <p class="text-gray-600">Payment Method: <%= order.paymentMethod %></p>
-                    <p class="text-gray-600">Total Amount: $<%= order.orderAmount.toFixed(2) %></p>
+                    <p class="text-gray-600">Total Amount: ₹<%= order.orderAmount.toFixed(2) %></p>
                     <% if (order.status === 'Cancelled' && order.cancellationReason) { %>
                         <p class="text-red-600 mt-2">Cancellation Reason: <%= order.cancellationReason %></p>
                         <p class="text-gray-600">Cancelled On: <%= new Date(order.cancelledAt).toLocaleDateString() %></p>
@@ -132,18 +126,29 @@
         <div class="bg-white rounded-lg shadow-md p-6 mb-6">
             <h2 class="text-2xl font-semibold mb-4">Products</h2>
             <div class="space-y-4">
-                <% order.products.forEach(product => { %>
-                    <div class="flex items-center border-b pb-4">
-                        <div class="flex-grow">
+                <% order.products.forEach((product, index) => { %>
+                    <div class="flex items-center justify-between border-b pb-4">
+                        <div class="flex items-center">
                             <img src="<%= product.productId.images[0] %>" 
                                  alt="<%= product.productId.name %>" 
                                  class="w-20 h-20 object-cover rounded-lg"
                                  loading="lazy">
-                            <h3 class="text-lg font-medium"><%= product.productId.name %></h3>
-                            <p class="text-gray-600">Quantity: <%= product.quantity %></p>
-                            <p class="text-gray-600">Price: ₹<%= product.price.toFixed(2) %></p>
+                            <div class="ml-4">
+                                <h3 class="text-lg font-medium"><%= product.productId.name %></h3>
+                                <p class="text-gray-600">Quantity: <%= product.quantity %></p>
+                                <p class="text-gray-600">Price: ₹<%= product.price.toFixed(2) %></p>
+                                <p class="text-gray-600">Status: <%= product.status %></p>
+                            </div>
                         </div>
-                        <p class="text-lg font-semibold">₹<%= product.totalPrice.toFixed(2) %></p>
+                        <div class="flex items-center space-x-4">
+                            <p class="text-lg font-semibold">₹<%= product.totalPrice.toFixed(2) %></p>
+                            <% if (['Pending', 'Processing'].includes(order.status) && product.status === 'Active') { %>
+                                <button class="cancel-product-btn px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition-colors" 
+                                        data-product-index="<%= index %>">
+                                    Cancel Product
+                                </button>
+                            <% } %>
+                        </div>
                     </div>
                 <% }); %>
             </div>
@@ -238,6 +243,39 @@
         </div>
     </div>
 
+    <!-- Product Cancellation Modal -->
+    <div id="productCancellationModal" class="modal">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="modal-content bg-white rounded-lg shadow-xl w-full max-w-md mx-auto p-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-xl font-semibold text-gray-900">Cancel Product</h3>
+                    <button id="closeProductModal" class="text-gray-400 hover:text-gray-500">
+                        <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+                <p class="mb-4 text-gray-700">Please provide a reason for canceling this product:</p>
+                <form id="productCancellationForm">
+                    <input type="hidden" name="productIndex" id="productIndex">
+                    <div class="space-y-4">
+                        <div><label class="block text-sm font-medium text-gray-700"><input type="radio" name="productCancellationReason" value="Changed my mind" class="mr-2">Changed my mind</label></div>
+                        <div><label class="block text-sm font-medium text-gray-700"><input type="radio" name="productCancellationReason" value="Found better price elsewhere" class="mr-2">Found better price elsewhere</label></div>
+                        <div><label class="block text-sm font-medium text-gray-700"><input type="radio" name="productCancellationReason" value="Ordered by mistake" class="mr-2">Ordered by mistake</label></div>
+                        <div><label class="block text-sm font-medium text-gray-700"><input type="radio" name="productCancellationReason" value="Other" class="mr-2" id="otherProductReason">Other</label></div>
+                        <div id="otherProductReasonContainer" class="mt-2 hidden">
+                            <textarea id="otherProductReasonText" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" rows="3" placeholder="Please specify your reason"></textarea>
+                        </div>
+                    </div>
+                    <div class="mt-6 flex justify-end space-x-3">
+                        <button type="button" id="cancelProductModalBtn" class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 bg-white hover:bg-gray-50">Cancel</button>
+                        <button type="submit" class="px-4 py-2 border border-transparent rounded-md shadow-sm text-white bg-red-600 hover:bg-red-700">Submit</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             // Status Bar Logic
@@ -250,7 +288,7 @@
                 const currentIndex = statuses.indexOf(currentStatus);
                 const progressPercentage = (currentIndex / (statuses.length - 1)) * 100;
                 setTimeout(() => {
-                    statusBar.style.width = `${progressPercentage}%`;
+                    statusBar.style.width = `₹{progressPercentage}%`;
                 }, 100);
                 statusPoints.forEach((point, index) => {
                     if (index <= currentIndex) point.classList.add('completed');
@@ -273,6 +311,14 @@
             const otherReturnReason = document.getElementById('otherReturnReason');
             const otherReturnReasonContainer = document.getElementById('otherReturnReasonContainer');
 
+            const productCancellationModal = document.getElementById('productCancellationModal');
+            const productCancellationForm = document.getElementById('productCancellationForm');
+            const closeProductModalBtn = document.getElementById('closeProductModal');
+            const cancelProductModalBtn = document.getElementById('cancelProductModalBtn');
+            const otherProductReason = document.getElementById('otherProductReason');
+            const otherProductReasonContainer = document.getElementById('otherProductReasonContainer');
+            const productIndexInput = document.getElementById('productIndex');
+
             // Toggle "Other" Reason Textarea
             if (otherReason) {
                 otherReason.addEventListener('change', () => {
@@ -282,6 +328,11 @@
             if (otherReturnReason) {
                 otherReturnReason.addEventListener('change', () => {
                     otherReturnReasonContainer.classList.toggle('hidden', !otherReturnReason.checked);
+                });
+            }
+            if (otherProductReason) {
+                otherProductReason.addEventListener('change', () => {
+                    otherProductReasonContainer.classList.toggle('hidden', !otherProductReason.checked);
                 });
             }
 
@@ -305,6 +356,19 @@
                 document.body.style.overflow = '';
             };
 
+            // Product Cancellation Modal Functions
+            const openProductCancellationModal = (index) => {
+                productIndexInput.value = index;
+                productCancellationModal.style.display = 'block';
+                document.body.style.overflow = 'hidden';
+            };
+            const closeProductCancellationModal = () => {
+                productCancellationModal.style.display = 'none';
+                document.body.style.overflow = '';
+                productCancellationForm.reset();
+                otherProductReasonContainer.classList.add('hidden');
+            };
+
             // Button Event Listeners
             const cancelOrderBtn = document.getElementById('cancelOrder');
             if (cancelOrderBtn) {
@@ -318,11 +382,20 @@
                 console.warn('Return Order button not found. Check order.status condition.');
             }
 
+            document.querySelectorAll('.cancel-product-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const productIndex = btn.getAttribute('data-product-index');
+                    openProductCancellationModal(productIndex);
+                });
+            });
+
             // Close Modal Buttons
             if (closeModalBtn) closeModalBtn.addEventListener('click', closeCancellationModal);
             if (cancelModalBtn) cancelModalBtn.addEventListener('click', closeCancellationModal);
             if (closeReturnModalBtn) closeReturnModalBtn.addEventListener('click', closeReturnModal);
             if (cancelReturnModalBtn) cancelReturnModalBtn.addEventListener('click', closeReturnModal);
+            if (closeProductModalBtn) closeProductModalBtn.addEventListener('click', closeProductCancellationModal);
+            if (cancelProductModalBtn) cancelProductModalBtn.addEventListener('click', closeProductCancellationModal);
 
             // Close Modal on Outside Click
             if (cancellationModal) {
@@ -333,6 +406,11 @@
             if (returnModal) {
                 returnModal.addEventListener('click', (e) => {
                     if (e.target === returnModal) closeReturnModal();
+                });
+            }
+            if (productCancellationModal) {
+                productCancellationModal.addEventListener('click', (e) => {
+                    if (e.target === productCancellationModal) closeProductCancellationModal();
                 });
             }
 
@@ -422,6 +500,58 @@
                         }
                     } catch (error) {
                         Swal.fire('Error', error.message || 'An unexpected error occurred', 'error');
+                    }
+                });
+            }
+
+            // Product Cancellation Form Submission
+            if (productCancellationForm) {
+                productCancellationForm.addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    const formData = new FormData(productCancellationForm);
+                    const productIndex = formData.get('productIndex');
+                    let reason = formData.get('productCancellationReason');
+                    if (reason === 'Other') {
+                        const otherText = document.getElementById('otherProductReasonText').value.trim();
+                        if (!otherText) {
+                            Swal.fire('Error', 'Please specify your reason', 'error');
+                            return;
+                        }
+                        reason = otherText;
+                    }
+                    if (!reason) {
+                        Swal.fire('Error', 'Please select a reason for cancellation', 'error');
+                        return;
+                    }
+
+                    closeProductCancellationModal();
+                    const result = await Swal.fire({
+                        title: 'Are you sure?',
+                        text: "You won't be able to revert this product cancellation!",
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonColor: '#d33',
+                        cancelButtonColor: '#3085d6',
+                        confirmButtonText: 'Yes, cancel product!'
+                    });
+
+                    if (result.isConfirmed) {
+                        try {
+                            const response = await fetch(`/api/orders/<%= order._id %>/cancel-product`, {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ productIndex, reason })
+                            });
+                            const data = await response.json();
+                            if (response.ok) {
+                                await Swal.fire('Cancelled!', 'The product has been cancelled successfully.', 'success');
+                                window.location.reload();
+                            } else {
+                                throw new Error(data.message || 'Failed to cancel product');
+                            }
+                        } catch (error) {
+                            Swal.fire('Error', error.message || 'Network or server error', 'error');
+                        }
                     }
                 });
             }

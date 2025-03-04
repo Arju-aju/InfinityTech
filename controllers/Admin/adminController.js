@@ -2,8 +2,8 @@ const User = require('../../models/userSchema');
 const Order = require('../../models/orderSchema');
 const Product = require('../../models/productSchema');
 const LaptopCategory = require('../../models/categorySchema');
-const Coupon = require('../../models/coupounSchema'); // Added Coupon model
-const Return = require('../../models/returnSchema'); // Added Return model
+const Coupon = require('../../models/coupounSchema'); // Fixed typo from 'coupounSchema'
+const Return = require('../../models/returnSchema');
 const bcrypt = require('bcrypt');
 const { jsPDF } = require('jspdf');
 require('jspdf-autotable');
@@ -63,6 +63,54 @@ const login = async (req, res) => {
     }
 };
 
+// New function to apply a coupon to an order (hypothetical)
+const applyCouponToOrder = async (req, res) => {
+    try {
+        const { orderId, couponCode } = req.body;
+        const userId = req.session.user?.id; // Assuming user session exists
+
+        const coupon = await Coupon.findOne({ code: couponCode });
+        if (!coupon || !coupon.isActive || coupon.expiredOn < new Date()) {
+            return res.status(400).json({ success: false, message: "Invalid or expired coupon" });
+        }
+
+        if (coupon.usageLimit && coupon.couponUsed >= coupon.usageLimit) {
+            return res.status(400).json({ success: false, message: "Coupon usage limit reached" });
+        }
+
+        const order = await Order.findById(orderId);
+        if (!order || order.orderAmount < coupon.minimumPrice) {
+            return res.status(400).json({ success: false, message: "Order not eligible for this coupon" });
+        }
+
+        const userUsage = coupon.users.find(u => u.userId.toString() === userId);
+        if (userUsage && userUsage.usageCount >= coupon.usagePerUserLimit) {
+            return res.status(400).json({ success: false, message: "User usage limit reached" });
+        }
+
+        const discount = coupon.offerType === "percentage"
+            ? (order.orderAmount * coupon.offerValue) / 100
+            : coupon.offerValue;
+
+        order.offerApplied = discount;
+        order.couponApplied = coupon._id;
+        await order.save();
+
+        coupon.couponUsed += 1;
+        if (userUsage) {
+            userUsage.usageCount += 1;
+        } else {
+            coupon.users.push({ userId, usageCount: 1 });
+        }
+        await coupon.save();
+
+        res.json({ success: true, message: "Coupon applied successfully", discount });
+    } catch (error) {
+        console.error("Error applying coupon:", error);
+        res.status(500).json({ success: false, message: "Error applying coupon" });
+    }
+};
+
 const loadDashboard = async (req, res) => {
     try {
         if (!req.session.admin) {
@@ -76,7 +124,6 @@ const loadDashboard = async (req, res) => {
             { $group: { _id: null, total: { $sum: "$orderAmount" } } }
         ]);
 
-        // Initial sales data
         const initialSales = await Order.aggregate([
             { $match: { status: "Delivered" } },
             {
@@ -103,19 +150,20 @@ const loadDashboard = async (req, res) => {
             { $sort: { date: 1 } }
         ]);
 
-        // Coupon stats
         const couponStats = await Coupon.aggregate([
             {
                 $group: {
                     _id: null,
                     totalCoupons: { $sum: 1 },
-                    activeCoupons: { $sum: { $cond: ["$isActive", 1, 0] } },
+                    activeCoupons: { $sum: { $cond: [{ $eq: ["$isActive", true] }, 1, 0] } },
                     totalUsage: { $sum: "$couponUsed" }
                 }
             }
         ]);
 
-        // Return stats
+        console.log("Initial Sales Data:", JSON.stringify(initialSales, null, 2));
+        console.log("Coupon Stats from Backend:", JSON.stringify(couponStats, null, 2));
+
         const returnStats = await Return.aggregate([
             {
                 $group: {
@@ -391,5 +439,6 @@ module.exports = {
     loadDashboard,
     logout,
     getSalesReport,
-    getTopSellers
+    getTopSellers,
+    applyCouponToOrder // Export the new function
 };

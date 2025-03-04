@@ -262,13 +262,16 @@
         return;
       }
 
+      console.log('Applying coupon:', couponCode);
       try {
         const response = await fetch('/apply-coupon', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ couponCode })
         });
+        console.log('Coupon response:', await response.clone().json());
         const result = await response.json();
+
         if (response.ok) {
           document.getElementById('couponDiscount').textContent = `-₹${result.discount.toFixed(2)}`;
           orderState.totalAmount = result.discountedTotal;
@@ -298,6 +301,7 @@
           });
         }
       } catch (error) {
+        console.error('Coupon application error:', error);
         Swal.fire({
           icon: 'error',
           title: 'Error',
@@ -359,6 +363,12 @@
 
     async function handleCashOrder() {
       try {
+        console.log('Placing COD order with:', {
+          addressId: orderState.selectedAddress._id,
+          paymentMethod: 'cod',
+          totalAmount: orderState.totalAmount
+        });
+
         const response = await fetch('/checkout/place-order', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -369,25 +379,23 @@
           })
         });
 
-        if (!response.ok) {
-          const errorResult = await response.json();
-          throw new Error(errorResult.message || `HTTP error! status: ${response.status}`);
-        }
-
         const result = await response.json();
-        if (result.success) {
-          window.location.href = result.redirectUrl || `/orders/${result.orderId}`;
-        } else {
+        console.log('COD Response:', result);
+
+        if (response.ok && result.success) {
           Swal.fire({
-            icon: 'error',
-            title: 'Error',
-            text: result.message || 'Error placing order',
+            icon: 'success',
+            title: 'Order Placed!',
+            text: 'Your order has been successfully placed.',
             toast: true,
             position: 'top-end',
-            timer: 3000,
+            timer: 2000,
             timerProgressBar: true,
             showConfirmButton: false
           });
+          window.location.href = result.redirectUrl || `/orders/${result.orderId}`;
+        } else {
+          throw new Error(result.message || 'Failed to place COD order');
         }
       } catch (error) {
         console.error('Error placing COD order:', error);
@@ -406,6 +414,11 @@
 
     async function handleRazorpayOrder() {
       try {
+        console.log('Creating Razorpay order with:', {
+          amount: orderState.totalAmount,
+          addressId: orderState.selectedAddress._id
+        });
+
         const response = await fetch('/checkout/create-razorpay-order', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -415,13 +428,10 @@
           })
         });
 
-        if (!response.ok) {
-          const errorResult = await response.json();
-          throw new Error(errorResult.message || `HTTP error! status: ${response.status}`);
-        }
-
         const order = await response.json();
-        if (!order.success) {
+        console.log('Razorpay order response:', order);
+
+        if (!response.ok || !order.success) {
           throw new Error(order.message || 'Failed to create Razorpay order');
         }
 
@@ -432,6 +442,7 @@
           order_id: order.orderId,
           handler: async (response) => {
             try {
+              console.log('Verifying payment:', response);
               const verifyResponse = await fetch('/verify-payment', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -444,25 +455,23 @@
                 })
               });
 
-              if (!verifyResponse.ok) {
-                const errorResult = await verifyResponse.json();
-                throw new Error(errorResult.message || `HTTP error! status: ${verifyResponse.status}`);
-              }
-
               const verifyResult = await verifyResponse.json();
-              if (verifyResult.success) {
-                window.location.href = `/orders/${verifyResult.orderId}`;
-              } else {
+              console.log('Verification result:', verifyResult);
+
+              if (verifyResponse.ok && verifyResult.success) {
                 Swal.fire({
-                  icon: 'error',
-                  title: 'Error',
-                  text: verifyResult.message || 'Payment verification failed',
+                  icon: 'success',
+                  title: 'Payment Successful!',
+                  text: 'Your order has been placed.',
                   toast: true,
                   position: 'top-end',
-                  timer: 3000,
+                  timer: 2000,
                   timerProgressBar: true,
                   showConfirmButton: false
                 });
+                window.location.href = `/orders/${verifyResult.orderId}`;
+              } else {
+                throw new Error(verifyResult.message || 'Payment verification failed');
               }
             } catch (error) {
               console.error('Error verifying Razorpay payment:', error);
@@ -487,6 +496,7 @@
         };
         const rzp = new Razorpay(options);
         rzp.on('payment.failed', (response) => {
+          console.error('Payment failed:', response.error);
           Swal.fire({
             icon: 'error',
             title: 'Payment Failed',

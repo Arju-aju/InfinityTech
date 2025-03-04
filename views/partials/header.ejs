@@ -2,90 +2,54 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=1024, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title><%= locals.title || 'InfinityTech' %></title>
     <meta
       name="description"
       content="<%= locals.description || 'Your Ultimate Laptop Destination' %>"
     />
-    <link href="/css/output.css" rel="stylesheet" />
-    <script
-      defer
-      src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"
-    ></script>
-    <link rel="stylesheet" href="https://unpkg.com/swiper/swiper-bundle.min.css" />
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-
+    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/swiper/swiper-bundle.min.css" />
     <style>
-      /* Add minimum width to body */
       body {
-        min-width: 1024px;
-        overflow-x: auto;
+        font-family: 'Inter', sans-serif;
+        background-color: #f9fafb;
+        color: #1f2937;
+        margin: 0;
+        padding: 0;
       }
-      @keyframes gradient {
-        0% {
-          background-position: 0% 50%;
-        }
-        50% {
-          background-position: 100% 50%;
-        }
-        100% {
-          background-position: 0% 50%;
-        }
-      }
-      .gradient-animate {
-        background: linear-gradient(-45deg, #3210b9, #6366f1);
-        background-size: 400% 400%;
-
-      }
-      .nav-link {
-        position: relative;
-        transition: color 0.3s ease;
-      }
-      .nav-link::after {
-        content: "";
-        position: absolute;
-        width: 0;
-        height: 2px;
-        bottom: -2px;
-        left: 0;
-        background: linear-gradient(to right, #60a5fa, #ec4899);
-        transition: width 0.3s ease;
-      }
-      .nav-link:hover::after {
-        width: 100%;
-      }
-      /* Ensure header is above other content */
       .site-header {
         position: fixed;
         top: 0;
         left: 0;
         right: 0;
-        z-index: 1000;
-        background: linear-gradient(-45deg, #6366f1, #10b981, #6366f1);
-        background-size: 400% 400%;
+        z-index: 50;
+        background: linear-gradient(135deg, #4f46e5, #10b981);
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
       }
-      /* Add margin to the main content */
-      main {
-        margin-left: 2rem;
-        margin-right: 2rem;
+      .nav-link {
+        position: relative;
+        transition: all 0.3s ease;
       }
-      /* Add margin to the navbar */
-      nav {
-        margin-left: 2rem;
-        margin-right: 2rem;
+      .nav-link:hover::after {
+        content: '';
+        position: absolute;
+        width: 100%;
+        height: 2px;
+        bottom: -4px;
+        left: 0;
+        background: #ffffff;
+        transition: width 0.3s ease;
       }
-      body {
-        min-width: 1024px;
-        overflow-x: auto;
-        margin: 4; /* Reset default margin */
-        padding-top: 4rem; /* Add padding to account for the fixed header */
+      .glass-effect {
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
       }
     </style>
   </head>
-  <%- include('../partials/headerContent') %>
-
-    <main class="flex-grow pt-16 min-h-screen">
-      <!-- Your main content goes here -->
-    
-    
+  <body class="flex flex-col min-h-screen">
+    <%- include('../partials/headerContent') %>
+    <main class="flex-grow pt-20">
+      <!-- Content goes here -->

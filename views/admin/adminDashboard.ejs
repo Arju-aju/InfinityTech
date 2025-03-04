@@ -356,7 +356,7 @@
 
   <script>
     const initialSales = <%- initialSales %>;
-    const couponStats = <%- couponStats %>;
+    const couponStats = JSON.parse('<%- couponStats %>');
     const returnStats = <%- returnStats %>;
 
     document.addEventListener('DOMContentLoaded', function() {
@@ -373,6 +373,7 @@
     });
 
     function loadInitialData() {
+      console.log("Frontend couponStats:", couponStats); // Debug log
       const summary = initialSales.reduce((acc, curr) => ({
         totalSales: acc.totalSales + curr.sales,
         totalOrders: acc.totalOrders + curr.orders,
@@ -387,7 +388,7 @@
       document.getElementById('totalItems').textContent = summary.totalItems;
       document.getElementById('totalCouponsUsed').textContent = summary.totalCouponsUsed;
       document.getElementById('couponDeductions').textContent = `₹${summary.couponDeductions.toFixed(2)}`;
-      document.getElementById('activeCoupons').textContent = couponStats.activeCoupons;
+      document.getElementById('activeCoupons').textContent = couponStats.activeCoupons || 0;
 
       updateSalesChart(initialSales);
       updateSalesTable(initialSales);

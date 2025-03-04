@@ -5,12 +5,19 @@ const couponSchema = new Schema({
     name: {
         type: String,
         required: true,
-        unique: true
+        unique: true,
+        trim: true,
+        minlength: 3,
+        maxlength: 50
     },
     code: {
         type: String,
         required: true,
-        unique: true
+        unique: true,
+        uppercase: true,
+        trim: true,
+        minlength: 6,
+        maxlength: 12
     },
     offerType: {
         type: String,
@@ -19,11 +26,13 @@ const couponSchema = new Schema({
     },
     offerValue: {
         type: Number,
-        required: true
+        required: true,
+        min: 0.01
     },
     minimumPrice: {
         type: Number,
-        required: true
+        required: true,
+        min: 0
     },
     createdOn: {
         type: Date,
@@ -32,7 +41,13 @@ const couponSchema = new Schema({
     },
     expiredOn: {
         type: Date,
-        required: true
+        required: true,
+        validate: {
+            validator: function(value) {
+                return value >= new Date().setHours(0, 0, 0, 0);
+            },
+            message: 'Expiration date must be today or in the future'
+        }
     },
     isActive: {
         type: Boolean,
@@ -40,23 +55,32 @@ const couponSchema = new Schema({
     },
     usageLimit: {
         type: Number,
+        min: 1,
         default: null
     },
     usagePerUserLimit: {
         type: Number,
+        min: 1,
         default: 1
     },
-    userId: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "User",
-        default: null
-    },
+    users: [{
+        userId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "User"
+        },
+        usageCount: {
+            type: Number,
+            default: 0,
+            min: 0
+        }
+    }],
     couponUsed: {
         type: Number,
-        default: 0
+        default: 0,
+        min: 0
     }
+}, {
+    timestamps: true
 });
 
-
-
-module.exports = mongoose.model('Coupoun',couponSchema)
+module.exports = mongoose.model('Coupon', couponSchema);

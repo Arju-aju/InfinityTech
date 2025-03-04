@@ -1,6 +1,6 @@
 const Order = require('../../models/orderSchema');
 const Return = require('../../models/returnSchema');
-const { refundToWallet } = require('./walletController'); // Import refundToWallet
+const { refundToWallet } = require('./walletController');
 
 exports.getOrdersList = async (req, res) => {
     try {
@@ -66,17 +66,16 @@ exports.cancelOrder = async (req, res) => {
         }
 
         const cancellableStatuses = ['Pending', 'Processing', 'Shipped', 'Out for Delivery'];
-        if (!cancellableStatuses.includes(order.status)) {
+        if (!cancellableStatuses.includes(order.orderStatus)) {
             req.flash('error_msg', 'This order cannot be cancelled');
             return res.redirect(`/orders/${orderId}`);
         }
 
-        order.status = 'Cancelled';
+        order.orderStatus = 'Cancelled';
         order.cancellationReason = reason;
         order.cancelDate = new Date().toISOString();
         await order.save();
 
-        // Refund to wallet
         const refundAmount = order.orderAmount;
         await refundToWallet(orderId, order.user, refundAmount, `Refund for cancelled order #${orderId}`);
 
@@ -100,12 +99,12 @@ exports.returnOrder = async (req, res) => {
             return res.redirect('/orders');
         }
 
-        if (order.status !== 'Delivered') {
+        if (order.orderStatus !== 'Delivered') {
             req.flash('error_msg', 'Only delivered orders can be returned');
             return res.redirect(`/orders/${orderId}`);
         }
 
-        order.status = 'Return Requested';
+        order.orderStatus = 'Return Requested';
         order.returnReason = reason;
         order.returnRequestedAt = new Date();
         await order.save();
@@ -115,11 +114,10 @@ exports.returnOrder = async (req, res) => {
             user: req.user._id,
             reason,
             items: order.products.map(p => ({ productId: p.productId, quantity: p.quantity })),
-            status: 'Pending' // Added status field
+            status: 'Pending'
         });
         await returnDoc.save();
 
-        // Note: Refund is not immediate here; it waits for approval
         req.flash('success_msg', 'Return request submitted successfully');
         res.redirect(`/orders/${orderId}`);
     } catch (error) {
@@ -129,7 +127,6 @@ exports.returnOrder = async (req, res) => {
     }
 };
 
-// Optional: Admin approval for returns
 exports.approveReturn = async (req, res) => {
     try {
         const { returnId } = req.params;
@@ -146,14 +143,13 @@ exports.approveReturn = async (req, res) => {
             return res.redirect('/admin/returns');
         }
 
-        order.status = 'Returned';
+        order.orderStatus = 'Returned';
         order.returnApprovedAt = new Date();
         await order.save();
 
         returnDoc.status = 'Approved';
         await returnDoc.save();
 
-        // Refund to wallet upon approval
         const refundAmount = order.orderAmount;
         await refundToWallet(order._id, order.user, refundAmount, `Refund for approved return of order #${order._id}`);
 
