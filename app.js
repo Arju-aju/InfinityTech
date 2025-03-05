@@ -50,14 +50,17 @@ app.use(
                 ],
                 scriptSrc: [
                     "'self'",
-                    "'unsafe-inline'",
+                    "'unsafe-inline'", // Add this to allow inline scripts
+                    "'unsafe-eval'",   // Add this to allow Alpine.js initialization
                     'https://cdn.jsdelivr.net',
                     'https://unpkg.com',
                     'https://cdn.tailwindcss.com',
                     'https://code.jquery.com',
                     'https://cdn.jsdelivr.net/npm/sweetalert2@11',
                     'https://cdnjs.cloudflare.com',
-                ],
+                    'https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js', // Specific Alpine.js CDN
+                    
+                  ],
                 imgSrc: [
                     "'self'",
                     'data:',

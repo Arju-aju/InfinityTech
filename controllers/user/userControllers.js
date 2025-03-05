@@ -5,16 +5,6 @@ require('dotenv').config();
 const Product = require('../../models/productSchema');
 const mongoose = require('mongoose');
 
-// Page not found
-const pageNotFound = async (req, res) => {
-    try {
-        res.render('page-404');
-    } catch (error) {
-        res.render('/pageNotFound');
-    }
-};
-
-// Configure Nodemailer Transporter
 const transporter = nodemailer.createTransport({
     host: 'smtp.gmail.com',
     port: 587,
@@ -34,15 +24,23 @@ const sendVerificationEmail = async (email, otp) => {
         from: process.env.EMAIL_USER,
         to: email,
         subject: 'Email Verification OTP',
-        text: `Your OTP for email verification is: ${otp}`,
+        text: `Your OTP for email verification is: ${otp}. Valid for 1 minute.`,
     };
     try {
         await transporter.sendMail(mailOptions);
-        console.log('Mail sent with OTP:', otp);
         return true;
     } catch (error) {
         console.error('Error sending email:', error);
         return false;
+    }
+};
+
+// Page not found
+const pageNotFound = async (req, res) => {
+    try {
+        res.render('page-404');
+    } catch (error) {
+        res.render('/pageNotFound');
     }
 };
 
@@ -63,34 +61,25 @@ const login = async (req, res) => {
     try {
         const { email, password } = req.body;
         if (!email || !password) {
-            return res.status(400).json({ success: false, message: 'All fields are required.' });
-        }
-
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(email)) {
-            return res.status(400).json({ success: false, message: 'Invalid email format.' });
+            return res.status(400).json({ success: false, message: 'All fields are required' });
         }
 
         const user = await User.findOne({ email });
         if (!user) {
-            return res.status(400).json({ success: false, message: 'Invalid email or password.' });
+            return res.status(400).json({ success: false, message: 'Invalid email or password' });
         }
 
         if (user.isBlocked) {
-            return res.status(403).json({
-                success: false,
-                blocked: true,
-                message: 'Your account has been blocked. Please contact support.',
-            });
+            return res.status(403).json({ success: false, message: 'Your account has been blocked. Please contact support' });
         }
 
         const isPasswordMatch = await bcrypt.compare(password, user.password);
         if (!isPasswordMatch) {
-            return res.status(400).json({ success: false, message: 'Invalid email or password.' });
+            return res.status(400).json({ success: false, message: 'Invalid email or password' });
         }
 
         req.session.user = user;
-        return res.status(200).json({ success: true, message: 'Login successful!', redirect: '/' });
+        return res.status(200).json({ success: true, message: `Welcome back, ${user.name}!`, redirect: '/' });
     } catch (error) {
         console.error(`Login error for email ${req.body.email}: ${error.message}`);
         return res.status(500).json({ success: false, message: 'Internal Server Error' });
@@ -101,10 +90,8 @@ const login = async (req, res) => {
 const loadSignup = async (req, res) => {
     try {
         res.render('user/signup', {
-            message: {
-                type: req.flash('error').length ? 'error' : 'success',
-                content: req.flash('error')[0] || req.flash('success')[0],
-            },
+            message: req.flash('success')[0] || req.flash('error')[0] || '',
+            messageType: req.flash('success').length ? 'success' : req.flash('error').length ? 'error' : '',
         });
     } catch (error) {
         console.error('Error loading signup page:', error);
@@ -116,36 +103,6 @@ const loadSignup = async (req, res) => {
 const signup = async (req, res) => {
     try {
         const { name, email, phone, password, confirmPassword } = req.body;
-
-        if (!name || !email || !phone || !password || !confirmPassword) {
-            return res.status(400).json({ success: false, message: 'All fields are required' });
-        }
-
-        const nameRegex = /^[a-zA-Z][a-zA-Z\s]*$/;
-        if (!nameRegex.test(name)) {
-            return res.status(400).json({
-                success: false,
-                message: 'Name must start with a letter and contain only letters and spaces',
-            });
-        }
-
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(email)) {
-            return res.status(400).json({ success: false, message: 'Please enter a valid email address' });
-        }
-
-        const phoneRegex = /^\d{10}$/;
-        if (!phoneRegex.test(phone)) {
-            return res.status(400).json({ success: false, message: 'Phone number must be exactly 10 digits' });
-        }
-
-        if (password.length < 6) {
-            return res.status(400).json({ success: false, message: 'Password must be at least 6 characters long' });
-        }
-
-        if (password !== confirmPassword) {
-            return res.status(400).json({ success: false, message: 'Passwords do not match' });
-        }
 
         const existingUser = await User.findOne({ email: email.toLowerCase() });
         if (existingUser) {
@@ -169,23 +126,17 @@ const signup = async (req, res) => {
 
         const emailSent = await sendVerificationEmail(email, otp);
         if (!emailSent) {
-            return res.status(500).json({
-                success: false,
-                message: 'Failed to send verification email. Please try again.',
-            });
+            return res.status(500).json({ success: false, message: 'Failed to send verification email' });
         }
 
         return res.status(200).json({
             success: true,
-            message: 'Registration successful! Please verify your email.',
+            message: `OTP sent to ${email}`,
             redirect: '/verifyOtp',
         });
     } catch (error) {
         console.error('Signup error:', error);
-        return res.status(500).json({
-            success: false,
-            message: 'An error occurred during signup. Please try again.',
-        });
+        return res.status(500).json({ success: false, message: 'Server error during signup' });
     }
 };
 
@@ -195,13 +146,14 @@ const loadverifyOtp = async (req, res) => {
         if (!req.session.tempUser) {
             return res.redirect('/signup');
         }
-        return res.render('verifyOtp', {
+        res.render('verifyOtp', {
             email: req.session.tempUser.email,
-            message: req.query.message,
+            message: req.flash('success')[0] || req.flash('error')[0] || '',
+            messageType: req.flash('success').length ? 'success' : req.flash('error').length ? 'error' : '',
         });
     } catch (error) {
-        console.log(`verifyOtp page not loading ${error}`);
-        res.status(500).send('Server Error');
+        console.error('verifyOtp page error:', error);
+        res.redirect('/pageNotFound');
     }
 };
 
@@ -212,24 +164,15 @@ const verifyOtp = async (req, res) => {
         const tempUser = req.session.tempUser;
 
         if (!tempUser) {
-            return res.status(400).json({
-                success: false,
-                message: 'Session expired. Please sign up again.',
-            });
+            return res.status(400).json({ success: false, message: 'Session expired. Please sign up again' });
         }
 
         if (otp !== tempUser.otp) {
-            return res.status(400).json({
-                success: false,
-                message: 'Invalid OTP. Please try again.',
-            });
+            return res.status(400).json({ success: false, message: 'Invalid OTP' });
         }
 
         if (new Date() > new Date(tempUser.otpExpiry)) {
-            return res.status(400).json({
-                success: false,
-                message: 'OTP has expired. Please request a new one.',
-            });
+            return res.status(400).json({ success: false, message: 'OTP has expired' });
         }
 
         const newUser = new User({
@@ -253,15 +196,12 @@ const verifyOtp = async (req, res) => {
 
         return res.status(200).json({
             success: true,
-            message: 'Email verified successfully!',
+            message: `Welcome ${newUser.name}! Your email has been verified`,
             redirect: '/',
         });
     } catch (error) {
         console.error('OTP verification error:', error);
-        return res.status(500).json({
-            success: false,
-            message: 'An error occurred during verification. Please try again.',
-        });
+        return res.status(500).json({ success: false, message: 'Server error during verification' });
     }
 };
 
@@ -270,38 +210,23 @@ const resendOtp = async (req, res) => {
     try {
         const tempUser = req.session.tempUser;
         if (!tempUser) {
-            return res.status(400).json({
-                success: false,
-                message: 'Session expired. Please try signing up again.',
-            });
+            return res.status(400).json({ success: false, message: 'Session expired. Please sign up again' });
         }
 
         const otp = generateOtp();
-        console.log('New OTP:', otp);
-
         tempUser.otp = otp;
-        tempUser.otpExpiry = new Date(Date.now() + 10 * 60 * 1000);
+        tempUser.otpExpiry = new Date(Date.now() + 1 * 60 * 1000);
         req.session.tempUser = tempUser;
 
-        try {
-            await sendVerificationEmail(tempUser.email, otp);
-            return res.status(200).json({
-                success: true,
-                message: 'OTP has been resent to your email.',
-            });
-        } catch (emailError) {
-            console.error('Error sending verification email:', emailError);
-            return res.status(500).json({
-                success: false,
-                message: 'Failed to send verification email. Please try again.',
-            });
+        const emailSent = await sendVerificationEmail(tempUser.email, otp);
+        if (!emailSent) {
+            return res.status(500).json({ success: false, message: 'Failed to resend OTP' });
         }
+
+        return res.status(200).json({ success: true, message: `New OTP sent to ${tempUser.email}` });
     } catch (error) {
-        console.error('Error in resendOtp:', error);
-        return res.status(500).json({
-            success: false,
-            message: 'An error occurred. Please try again.',
-        });
+        console.error('Resend OTP error:', error);
+        return res.status(500).json({ success: false, message: 'Server error during OTP resend' });
     }
 };
 
@@ -374,14 +299,11 @@ const loadHomePage = async (req, res) => {
             featuredProducts,
             topSellingProducts,
             dealProducts,
-            message: {
-                type: req.flash('error').length ? 'error' : 'success',
-                content: req.flash('error')[0] || req.flash('success')[0],
-            },
+            message: req.flash('success')[0] || req.flash('error')[0] || '',
+            messageType: req.flash('success').length ? 'success' : req.flash('error').length ? 'error' : '',
         });
     } catch (error) {
         console.error('Error in loadHomePage:', error);
-        req.flash('error', 'Error loading home page');
         res.redirect('/');
     }
 };
@@ -390,10 +312,8 @@ const loadHomePage = async (req, res) => {
 const loadAboutPage = async (req, res) => {
     try {
         res.render('user/about', {
-            message: {
-                type: req.flash('error').length ? 'error' : 'success',
-                content: req.flash('error')[0] || req.flash('success')[0],
-            },
+            message: req.flash('success')[0] || req.flash('error')[0] || '',
+            messageType: req.flash('success').length ? 'success' : req.flash('error').length ? 'error' : '',
         });
     } catch (error) {
         console.error('Error loading about page:', error);
@@ -404,14 +324,53 @@ const loadAboutPage = async (req, res) => {
 const loadContactPage = async (req, res) => {
     try {
         res.render('user/contact', {
-            message: {
-                type: req.flash('error').length ? 'error' : 'success',
-                content: req.flash('error')[0] || req.flash('success')[0],
-            },
+            message: req.flash('success')[0] || req.flash('error')[0] || '',
+            messageType: req.flash('success').length ? 'success' : req.flash('error').length ? 'error' : '',
         });
     } catch (error) {
         console.error('Error loading contact page:', error);
         res.redirect('/pageNotFound');
+    }
+};
+
+// Handle Google Callback
+const handleGoogleCallback = async (req, res) => {
+    try {
+        const user = req.user; // Provided by Passport
+        const existingUser = await User.findOne({ email: user.email });
+
+        if (!existingUser) {
+            const newUser = new User({
+                name: user.name,
+                email: user.email,
+                googleId: user.googleId,
+                isVerified: true,
+                isBlocked: false,
+            });
+            await newUser.save();
+            req.session.user = {
+                _id: newUser._id,
+                name: newUser.name,
+                email: newUser.email,
+                isVerified: true,
+            };
+            return res.redirect('/');
+        }
+
+        if (await checkUserBlockedStatus(existingUser, req, res)) {
+            return; // Redirects to login if blocked
+        }
+
+        req.session.user = {
+            _id: existingUser._id,
+            name: existingUser.name,
+            email: existingUser.email,
+            isVerified: existingUser.isVerified,
+        };
+        res.redirect('/');
+    } catch (error) {
+        console.error('Google callback error:', error);
+        res.redirect('/login?error=auth_failed');
     }
 };
 
@@ -460,128 +419,49 @@ const sendOTPForPasswordChange = async (req, res) => {
     }
 };
 
-const sendOTPEmail = async (email, otp) => {
-    try {
-        const mailOptions = {
-            from: process.env.EMAIL_USER,
-            to: email,
-            subject: 'Password Reset OTP',
-            html: `
-                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-                    <h2>Password Reset Verification</h2>
-                    <p>Your One-Time Password (OTP) for password reset is:</p>
-                    <h3 style="background-color: #f0f0f0; padding: 10px; text-align: center; letter-spacing: 5px;">
-                        ${otp}
-                    </h3>
-                    <p>This OTP is valid for 10 minutes. Do not share this with anyone.</p>
-                    <small>If you did not request this, please ignore this email.</small>
-                </div>
-            `,
-        };
-
-        await transporter.sendMail(mailOptions);
-    } catch (error) {
-        console.error('Email sending error:', error);
-        throw new Error('Failed to send OTP email');
-    }
-};
-
 const changePassword = async (req, res) => {
     try {
         const { email, otp, newPassword } = req.body;
 
+        // Validate input
         if (!email || !otp || !newPassword) {
             return res.status(400).json({ success: false, message: 'All fields are required' });
         }
 
         const user = await User.findOne({ email });
+
         if (!user) {
             return res.status(404).json({ success: false, message: 'User not found' });
         }
 
-        if (
-            !user.resetPasswordOTP ||
-            user.resetPasswordOTP.code !== otp ||
-            user.resetPasswordOTP.expiresAt < Date.now()
-        ) {
+        // Validate OTP
+        if (!user.resetPasswordOTP || user.resetPasswordOTP.code !== otp || user.resetPasswordOTP.expiresAt < Date.now()) {
             return res.status(400).json({ success: false, message: 'Invalid or expired OTP' });
         }
 
+        // Password strength validation
         const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
         if (!passwordRegex.test(newPassword)) {
-            return res.status(400).json({
-                success: false,
-                message: 'Password does not meet complexity requirements',
-            });
+            return res.status(400).json({ success: false, message: 'Password does not meet complexity requirements' });
         }
 
+        // Hash new password
         const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+        // Update password and clear OTP
         user.password = hashedPassword;
         user.resetPasswordOTP = undefined;
 
         await user.save();
 
         return res.json({ success: true, message: 'Password changed successfully' });
+
     } catch (error) {
         console.error('Error changing password:', error);
-        return res.status(500).json({
-            success: false,
-            message: 'Server error. Please try again later.',
-        });
+        return res.status(500).json({ success: false, message: 'Server error. Please try again later.' });
     }
 };
 
-// Check if user is blocked
-const checkUserBlockedStatus = async (user, req, res) => {
-    if (user.isBlocked) {
-        req.session.destroy(() => {
-            res.redirect('/login?blocked=true');
-        });
-        return true;
-    }
-    return false;
-};
-
-// Handle Google Callback
-const handleGoogleCallback = async (req, res) => {
-    try {
-        const user = req.user; // Provided by Passport
-        const existingUser = await User.findOne({ email: user.email });
-
-        if (!existingUser) {
-            const newUser = new User({
-                name: user.name,
-                email: user.email,
-                googleId: user.googleId,
-                isVerified: true,
-                isBlocked: false,
-            });
-            await newUser.save();
-            req.session.user = {
-                _id: newUser._id,
-                name: newUser.name,
-                email: newUser.email,
-                isVerified: true,
-            };
-            return res.redirect('/');
-        }
-
-        if (await checkUserBlockedStatus(existingUser, req, res)) {
-            return; // Redirects to login if blocked
-        }
-
-        req.session.user = {
-            _id: existingUser._id,
-            name: existingUser.name,
-            email: existingUser.email,
-            isVerified: existingUser.isVerified,
-        };
-        res.redirect('/');
-    } catch (error) {
-        console.error('Google callback error:', error);
-        res.redirect('/login?error=auth_failed');
-    }
-};
 
 module.exports = {
     pageNotFound,
@@ -596,8 +476,8 @@ module.exports = {
     loadAboutPage,
     loadContactPage,
     loadHomePage,
+    changePassword ,
     loadPassword,
+    handleGoogleCallback,
     sendOTPForPasswordChange,
-    changePassword,
-    handleGoogleCallback, 
 };
