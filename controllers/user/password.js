@@ -2,8 +2,6 @@ const User = require('../../models/userSchema');
 const bcrypt = require('bcrypt');
 const nodemailer = require('nodemailer');
 
-
-
 // Configure nodemailer
 const transporter = nodemailer.createTransport({
     host: 'smtp.gmail.com',
@@ -15,38 +13,29 @@ const transporter = nodemailer.createTransport({
     }
 });
 
-
 exports.getForgotPasswordPage = (req, res) => {
-    res.render('forgotPassword', {
-        title: 'Forgot Password'
-    });
+    res.render('forgotPassword', { title: 'Forgot Password' });
 };
+
 exports.forgotPassword = async (req, res) => {
     try {
         const { email } = req.body;
         console.log('Processing forgot password for email:', email);
 
         const user = await User.findOne({ email });
-
         if (!user) {
             return res.status(404).json({ 
                 message: 'If an account exists with this email, you will receive reset instructions.' 
             });
         }
 
-        // Generate OTP
         const otp = Math.floor(100000 + Math.random() * 900000).toString();
         const otpExpiry = new Date();
-        otpExpiry.setMinutes(otpExpiry.getMinutes() + 1); // OTP valid for 10 minutes
+        otpExpiry.setMinutes(otpExpiry.getMinutes() + 10); // OTP valid for 10 minutes
 
-        // Save OTP to user document
-        user.resetPasswordOTP = {
-            code: otp,
-            expiresAt: otpExpiry
-        };
+        user.resetPasswordOTP = { code: otp, expiresAt: otpExpiry };
         await user.save();
 
-        // Send email
         const mailOptions = {
             from: process.env.EMAIL_USER,
             to: email,
@@ -60,53 +49,44 @@ exports.forgotPassword = async (req, res) => {
         };
 
         await transporter.sendMail(mailOptions);
+        console.log(`OTP ${otp} sent to ${email}`);
         
         res.status(200).json({ 
             message: 'OTP sent to your email',
             email: email 
         });
-
     } catch (error) {
         console.error('Forgot password error:', error);
-        res.status(500).json({ message: 'Internal server error' });
+        res.status(500).json({ message: 'Failed to send OTP. Please try again.' });
     }
 };
 
-
-
 exports.getVerifyOTP = async (req, res) => {
-
     try {
         const { email } = req.query;
         res.render('user/forgotOtp', { email });
     } catch (error) {
-        console.error('Error loading get verify otp:', error);
-        res.status(500).json({ message: "Server error", error: error.message });
+        console.error('Error loading OTP verification page:', error);
+        res.status(500).json({ message: 'Server error', error: error.message });
     }
-
-}
+};
 
 exports.verifyOTP = async (req, res) => {
     try {
         const { email, otp } = req.body;
+        console.log('Verifying OTP:', otp, 'for email:', email);
 
-        console.log('reset otp>>>>>>>>>>>>>>>',otp);
         const user = await User.findOne({ email });
-
         if (!user) {
             return res.status(404).json({ message: 'User not found' });
         }
 
-        if (!user.resetPasswordOTP.code || !user.resetPasswordOTP.expiresAt) {
+        if (!user.resetPasswordOTP?.code || !user.resetPasswordOTP?.expiresAt) {
             return res.status(400).json({ message: 'No OTP request found' });
         }
 
         if (new Date() > user.resetPasswordOTP.expiresAt) {
-            // Clear expired OTP
-            user.resetPasswordOTP = {
-                code: null,
-                expiresAt: null
-            };
+            user.resetPasswordOTP = { code: null, expiresAt: null };
             await user.save();
             return res.status(400).json({ message: 'OTP has expired' });
         }
@@ -119,25 +99,21 @@ exports.verifyOTP = async (req, res) => {
             message: 'OTP verified successfully',
             email: email 
         });
-
     } catch (error) {
         console.error('OTP verification error:', error);
         res.status(500).json({ message: 'Internal server error' });
     }
-}
-
+};
 
 exports.getResetPassword = async (req, res) => {
-
     try {
         const { email } = req.query;
         res.render('user/resetPassword', { email });
     } catch (error) {
-        console.error('Error loading get verify otp:', error);
-        res.status(500).json({ message: "Server error", error: error.message });
+        console.error('Error loading reset password page:', error);
+        res.status(500).json({ message: 'Server error', error: error.message });
     }
-
-}
+};
 
 exports.resetPassword = async (req, res) => {
     try {
@@ -148,22 +124,16 @@ exports.resetPassword = async (req, res) => {
             return res.status(404).json({ message: 'User not found' });
         }
 
-        // Hash new password
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);
 
-        // Update password and clear OTP
         user.password = hashedPassword;
-        user.resetPasswordOTP = {
-            code: null,
-            expiresAt: null
-        };
+        user.resetPasswordOTP = { code: null, expiresAt: null };
         await user.save();
 
         res.status(200).json({ message: 'Password reset successful' });
-
     } catch (error) {
         console.error('Password reset error:', error);
         res.status(500).json({ message: 'Internal server error' });
     }
-}
+};

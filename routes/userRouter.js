@@ -8,7 +8,7 @@ const addressController = require('../controllers/user/addressController');
 const cartController = require('../controllers/user/cartController');
 const checkoutController = require('../controllers/user/checkOutController');
 const orderController = require('../controllers/user/orderController');
-const password = require('../controllers/user/password');
+const passwordController = require('../controllers/user/password');
 const wishlist = require('../controllers/user/wishlistController');
 const walletController = require('../controllers/user/walletController');
 const paymentController = require('../controllers/user/paymentController');
@@ -36,12 +36,12 @@ router.post("/send-password-otp", userController.sendOTPForPasswordChange);
 router.post('/change-password', userController.changePassword);
 router.post('/changePasswordresendOtp', userController.resendOtp);
 
-router.get('/forgotPassword', password.getForgotPasswordPage);
-router.post('/forgotPassword', password.forgotPassword);
-router.get('/forgotOtp', password.getVerifyOTP);
-router.post('/forgotOtp', password.verifyOTP);
-router.get('/resetPassword', password.getResetPassword);
-router.post('/resetPassword', password.resetPassword);
+router.get('/forgotPassword', passwordController.getForgotPasswordPage);
+router.post('/forgotPassword', passwordController.forgotPassword);
+router.get('/forgotOtp', passwordController.getVerifyOTP);
+router.post('/forgotOtp', passwordController.verifyOTP); 
+router.get('/resetPassword', passwordController.getResetPassword);
+router.post('/resetPassword', passwordController.resetPassword)
 
 // Product routes
 router.get('/', userController.loadHomePage);

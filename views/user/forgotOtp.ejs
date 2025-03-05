@@ -27,7 +27,7 @@
             const otp = document.getElementById('otp').value;
             
             try {
-                const response = await fetch('/forgotOtp', {
+                const response = await fetch('/forgotOtp', { // Update to '/verifyOTP' if that's your route
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ email, otp })
@@ -35,11 +35,12 @@
                 
                 const data = await response.json();
                 if (response.ok) {
-                    window.location.href = `/resetPassword?email=${email}`;
+                    window.location.href = `/resetPassword?email=${encodeURIComponent(email)}`;
                 } else {
-                    alert(data.message);
+                    alert(data.message || 'Invalid OTP');
                 }
             } catch (error) {
+                console.error('Error:', error);
                 alert('An error occurred. Please try again.');
             }
         });
