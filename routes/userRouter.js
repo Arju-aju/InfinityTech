@@ -25,23 +25,26 @@ router.get('/verifyOtp', userController.loadverifyOtp);
 router.post('/verifyOtp', userController.verifyOtp);
 router.post('/resendOtp', userController.resendOtp);
 router.get('/logout', userController.logout);
+
+// Google Authentication Routes
 router.get('/auth/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
-router.get('/auth/google/callback', passport.authenticate('google', { failureRedirect: '/' }), (req, res) => {
-    req.session.user = req.user;
-    res.redirect('/');
-});
+router.get(
+    '/auth/google/callback',
+    passport.authenticate('google', { failureRedirect: '/login' }),
+    userController.handleGoogleCallback
+);
 
 router.get('/changePassword', userController.loadPassword);
-router.post("/send-password-otp", userController.sendOTPForPasswordChange);
+router.post('/send-password-otp', userController.sendOTPForPasswordChange);
 router.post('/change-password', userController.changePassword);
 router.post('/changePasswordresendOtp', userController.resendOtp);
 
 router.get('/forgotPassword', passwordController.getForgotPasswordPage);
 router.post('/forgotPassword', passwordController.forgotPassword);
 router.get('/forgotOtp', passwordController.getVerifyOTP);
-router.post('/forgotOtp', passwordController.verifyOTP); 
+router.post('/forgotOtp', passwordController.verifyOTP);
 router.get('/resetPassword', passwordController.getResetPassword);
-router.post('/resetPassword', passwordController.resetPassword)
+router.post('/resetPassword', passwordController.resetPassword);
 
 // Product routes
 router.get('/', userController.loadHomePage);

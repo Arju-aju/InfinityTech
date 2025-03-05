@@ -148,7 +148,7 @@
                             title: 'Account Blocked',
                             text: data.message,
                             confirmButtonColor: '#d33',
-                            confirmButtonText:'Back to home'
+                            confirmButtonText: 'Back to home'
                         }).then(() => {
                             window.location.href = '/';
                         });
@@ -168,13 +168,9 @@
                     });
                 }
             });
-        });
-    </script>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
+            // Check for blocked status from Google auth
             const urlParams = new URLSearchParams(window.location.search);
-            
             if (urlParams.get('blocked') === 'true') {
                 Swal.fire({
                     icon: 'error',

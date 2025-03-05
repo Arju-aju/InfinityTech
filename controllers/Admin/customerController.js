@@ -1,10 +1,10 @@
 const User = require('../../models/userSchema');
 
-// Controller: customerController.js
+// Controller to fetch and display customer information
 const customerInfo = async (req, res) => {
     try {
         const page = parseInt(req.query.page) || 1;
-        const limit = 3;
+        const limit = 7;
         const skip = (page - 1) * limit;
 
         // Get search and filter parameters
@@ -12,9 +12,8 @@ const customerInfo = async (req, res) => {
         const statusFilter = req.query.status || 'all';
         
         // Build filter conditions
-        let filterConditions = { isAdmin: 0 };
+        let filterConditions = { isAdmin: false }; // Updated to Boolean
         
-        // Add search condition if search query exists
         if (searchQuery) {
             filterConditions.$or = [
                 { name: { $regex: searchQuery, $options: 'i' } },
@@ -23,16 +22,13 @@ const customerInfo = async (req, res) => {
             ];
         }
 
-        // Add status filter if not 'all'
         if (statusFilter !== 'all') {
             filterConditions.isBlocked = statusFilter === 'blocked';
         }
 
-        // Get total count for pagination
         const totalItems = await User.countDocuments(filterConditions);
         const totalPages = Math.ceil(totalItems / limit);
 
-        // Fetch filtered customers
         const customers = await User.find(filterConditions)
             .skip(skip)
             .limit(limit)
@@ -61,29 +57,45 @@ const customerInfo = async (req, res) => {
         });
     } catch (error) {
         console.error('Error fetching customers:', error);
+        req.flash('error', 'Server Error');
         res.status(500).send('Server Error');
     }
 };
 
+// Controller to block/unblock a user
 const blockUser = async (req, res) => {
     try {
         const userId = req.params.id;
+        console.log(`Attempting to block/unblock user ${userId}`);
         const user = await User.findById(userId);
         
         if (!user) {
-            return res.status(404).json({ success: false, message: "User not found" });
+            console.log(`User ${userId} not found`);
+            req.flash('error', 'User not found');
+            return res.status(404).json({ 
+                success: false, 
+                message: 'User not found' 
+            });
         }
 
         user.isBlocked = !user.isBlocked;
         await user.save();
+        console.log(`User ${userId} updated, isBlocked: ${user.isBlocked}`);
 
+        const action = user.isBlocked ? 'blocked' : 'unblocked';
+        req.flash('success', `User has been ${action} successfully`);
         res.status(200).json({
             success: true,
-            message: `User has been ${user.isBlocked ? 'blocked' : 'unblocked'} successfully`,
+            message: `User has been ${action} successfully`,
+            isBlocked: user.isBlocked
         });
     } catch (error) {
         console.error('Error in blockUser:', error);
-        res.status(500).json({ success: false, message: "Failed to update user status" });
+        req.flash('error', 'Failed to update user status');
+        res.status(500).json({ 
+            success: false, 
+            message: 'Failed to update user status' 
+        });
     }
 };
 

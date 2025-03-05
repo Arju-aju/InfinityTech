@@ -25,8 +25,8 @@ router.get('/sales-report', admin.isAdmin , adminControllers.getSalesReport);
 router.get('/top-sellers', admin.isAdmin , adminControllers.getTopSellers);
 
 // User Management Routes
-router.get('/users', admin.isAdmin , customerController.customerInfo); 
-router.put('/users/block/:id', admin.isAdmin ,  customerController.blockUser);
+router.get('/users', admin.isAdmin, customerController.customerInfo);
+router.put('/users/block/:id', admin.isAdmin, customerController.blockUser);
 
 // Category Management Routes
 router.get('/categories', admin.isAdmin , categoryController.categoryInfo);

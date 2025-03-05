@@ -1,7 +1,7 @@
 const passport = require('passport');
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
-const User = require('../models/userSchema'); // Correct model import
-require('dotenv').config(); // Load environment variables
+const User = require('../models/userSchema'); 
+require('dotenv').config(); 
 
 passport.use(
     new GoogleStrategy(
@@ -10,38 +10,44 @@ passport.use(
             clientSecret: process.env.GOOGLE_CLIENT_SECRET,
             callbackURL: '/auth/google/callback',
         },
-        async (req,accessToken, refreshToken, profile, done) => {
+        async (accessToken, refreshToken, profile, done) => {
             try {
-                // Check if profile.id exists
-                if (!profile.id) {
-                    throw new Error('Google profile ID is missing');
+                // Validate profile data
+                if (!profile.id || !profile.emails?.[0]?.value) {
+                    throw new Error('Google profile is missing required fields (ID or email)');
                 }
+
+                const email = profile.emails[0].value;
+                const googleId = profile.id;
+                const displayName = profile.displayName || 'Anonymous';
+
                 // Check if user already exists in the database
-                let existingUser = await User.findOne({ email:profile.emails?.[0].value});
+                let user = await User.findOne({ email });
 
-                if (existingUser) {
-                    let user=existingUser
-                    return done(null, user); // User exists
+                if (user) {
+                    // Update Google ID if missing
+                    if (!user.googleId) {
+                        user.googleId = googleId;
+                        await user.save();
+                    }
+                    return done(null, user); 
                 }
+
                 // Create a new user if not found
-                const newUser = new User({
-                    name: profile.displayName || 'Anonymous', // Fallback for displayName
-                    email: profile.emails?.[0]?.value || 'NoEmailProvided', // Fallback for email
-                    googleId: profile.id, // Google ID
+                user = new User({
+                    name: displayName,
+                    email: email,
+                    googleId: googleId,
+                    isVerified: true, 
+                    isBlocked: false, 
                 });
-                if (!newUser.googleId || !newUser.email) {
-                    throw new Error('Missing required fields from Google profile');
-                }
-                console.log("new user",newUser);
-                await newUser.save();
-                // req.session.user = newUser;
 
-                // console.log("x",req.session.user);
-                let user =newUser
-                return done(null, user); // Pass new user to Passport
+                await user.save();
+                console.log('New Google user created:', user);
+                return done(null, user); 
             } catch (error) {
                 console.error('Error in Google strategy:', error);
-                return done(error, null); // Handle error
+                return done(error, null); 
             }
         }
     )
@@ -49,15 +55,21 @@ passport.use(
 
 // Serialize user into the session
 passport.serializeUser((user, done) => {
-    done(null, user.id); // Serialize by user ID
+    done(null, user._id.toString()); 
 });
 
 // Deserialize user from the session
-passport.deserializeUser((id, done) => {
-    User
-        .findById(id) // Correct model usage
-        .then((user) => done(null, user))
-        .catch((err) => done(err, null));
+passport.deserializeUser(async (id, done) => {
+    try {
+        const user = await User.findById(id);
+        if (!user) {
+            return done(null, false); 
+        }
+        done(null, user); 
+    } catch (error) {
+        console.error('Error deserializing user:', error);
+        done(error, null);
+    }
 });
 
 module.exports = passport;
