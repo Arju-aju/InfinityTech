@@ -5,7 +5,7 @@
         <h2 class="text-3xl font-bold text-center mb-8">Your Wishlist</h2>
     
         <% if (wishlistItems.length === 0) { %>
-            <div class="">
+            <div>
                 <p class="text-center text-gray-500">Your wishlist is empty.</p>
             </div>
         <% } else { %>
@@ -17,19 +17,16 @@
                             <h3 class="text-xl font-semibold"><%= item.product.name %></h3>
                             <p class="text-gray-700 mt-2 text-lg font-medium">₹<%= item.product.price %></p>
                             <div class="mt-4 flex justify-between">
-                            <button 
-                                onclick="addToCart('<%= item.product._id %>')" 
-                                class="flex-1 mr-2 bg-gray-200 hover:bg-gray-300 text-gray-800 py-2 px-3 rounded-md text-sm font-medium transition duration-200">
-                                Add to Cart
-                            </button>
-                            
-                            <button 
-                                onclick="confirmRemoveFromWishlist('<%= item._id %>', '<%= item.product.name %>')" 
-                                class="flex-1 ml-2 bg-primary hover:bg-primary-dark text-white py-2 px-3 rounded-md text-sm font-medium transition duration-200">
-                                ❌ Remove
-                            </button>
-                            
-                            
+                                <button 
+                                    onclick="addToCart('<%= item.product._id %>')" 
+                                    class="flex-1 mr-2 bg-gray-200 hover:bg-gray-300 text-gray-800 py-2 px-3 rounded-md text-sm font-medium transition duration-200">
+                                    Add to Cart
+                                </button>
+                                <button 
+                                    onclick="confirmRemoveFromWishlist('<%= item._id %>', '<%= item.product.name %>')" 
+                                    class="flex-1 ml-2 bg-primary hover:bg-primary-dark text-white py-2 px-3 rounded-md text-sm font-medium transition duration-200">
+                                    ❌ Remove
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -37,14 +34,15 @@
             </div>
         <% } %>
     </div>
-    
-
 </div>
 
 <%- include("partials/footer") %>
 
 <script>
-        function addToCart(productId) {
+    // Ensure SweetAlert2 is included in your header or footer
+    // e.g., <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    function addToCart(productId) {
         showNotification('Adding to cart...', 'info');
     
         fetch('/api/cart/add', {
@@ -91,34 +89,22 @@
             case 'info':
                 bgColor = '#007bff'; // Blue
                 break;
-            case 'warning':
-                bgColor = '#ffc107'; // Yellow
-                break;
             default:
-                bgColor = '#6c757d'; // Gray (fallback)
+                bgColor = '#6c757d'; // Gray
         }
     
         Swal.fire({
             text: message,
-            icon: type, // Matches Swal's built-in icons (success, error, warning, info)
+            icon: type,
             toast: true,
             position: 'bottom-end',
             timer: 3000,
             timerProgressBar: true,
             showConfirmButton: false,
             background: bgColor,
-            color: '#fff', // Ensures text is visible on all backgrounds
+            color: '#fff',
         });
     }
-    
-    document.querySelectorAll('.add-to-cart-btn').forEach(button => {
-        button.addEventListener('click', function() {
-            const productId = this.getAttribute('data-product-id');
-            if (productId) {
-                addToCart(productId);
-            }
-        });
-    });
 
     function confirmRemoveFromWishlist(wishlistItemId, productName) {
         Swal.fire({
@@ -156,9 +142,9 @@
         .then(data => {
             if (data.success) {
                 showNotification('Item removed from wishlist!', 'success');
-                location.reload(); // Refresh the page to update the wishlist
+                location.reload(); // Refresh to reflect updated wishlist
             } else {
-                showNotification('Failed to remove item. Please try again.', 'error');
+                showNotification('Failed to remove item: ' + data.message, 'error');
             }
         })
         .catch(error => {
@@ -166,4 +152,7 @@
             showNotification('Failed to remove item. Please try again.', 'error');
         });
     }
+
+    // Remove any erroneous API calls to '/api/user/wishlist/products'
+    // If this was here, it’s removed now since the page is server-rendered
 </script>

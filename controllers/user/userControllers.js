@@ -35,6 +35,24 @@ const sendVerificationEmail = async (email, otp) => {
     }
 };
 
+// Check if user is blocked
+const checkUserBlockedStatus = async (user, req, res) => {
+    try {
+        if (user.isBlocked) {
+            console.log(`User ${user.email} is blocked`);
+            req.session.destroy((err) => {
+                if (err) console.error('Session destroy error:', err);
+                res.redirect('/login?error=blocked');
+            });
+            return true;
+        }
+        return false;
+    } catch (error) {
+        console.error('Error in checkUserBlockedStatus:', error);
+        throw error; // Propagate error to caller
+    }
+};
+
 // Page not found
 const pageNotFound = async (req, res) => {
     try {
@@ -249,13 +267,17 @@ const logout = async (req, res) => {
 // Load Home Page
 const loadHomePage = async (req, res) => {
     try {
+        console.log('Session in loadHomePage:', req.session); // Debug session
         if (req.session.user) {
             const user = await User.findById(req.session.user._id);
+            console.log('User found in loadHomePage:', user);
             if (!user) {
+                console.log('User not found, destroying session');
                 req.session.destroy(() => res.redirect('/login?error=session_expired'));
                 return;
             }
             if (user.isBlocked) {
+                console.log('User is blocked, destroying session');
                 req.session.destroy(() => res.redirect('/login?error=blocked'));
                 return;
             }
@@ -335,9 +357,17 @@ const loadContactPage = async (req, res) => {
 
 // Handle Google Callback
 const handleGoogleCallback = async (req, res) => {
+    console.log('Entered handleGoogleCallback');
     try {
+        console.log('req.user from Passport:', req.user);
+        if (!req.user) {
+            throw new Error('Passport failed to provide user data');
+        }
+
         const user = req.user; // Provided by Passport
+        console.log('Looking up user with email:', user.email);
         const existingUser = await User.findOne({ email: user.email });
+        console.log('Existing user:', existingUser);
 
         if (!existingUser) {
             const newUser = new User({
@@ -347,6 +377,7 @@ const handleGoogleCallback = async (req, res) => {
                 isVerified: true,
                 isBlocked: false,
             });
+            console.log('Saving new user:', newUser);
             await newUser.save();
             req.session.user = {
                 _id: newUser._id,
@@ -354,9 +385,11 @@ const handleGoogleCallback = async (req, res) => {
                 email: newUser.email,
                 isVerified: true,
             };
+            console.log('Session after new user:', req.session);
             return res.redirect('/');
         }
 
+        console.log('Checking blocked status for:', existingUser.email);
         if (await checkUserBlockedStatus(existingUser, req, res)) {
             return; // Redirects to login if blocked
         }
@@ -367,10 +400,11 @@ const handleGoogleCallback = async (req, res) => {
             email: existingUser.email,
             isVerified: existingUser.isVerified,
         };
-        res.redirect('/');
+        console.log('Session after existing user:', req.session);
+        return res.redirect('/');
     } catch (error) {
-        console.error('Google callback error:', error);
-        res.redirect('/login?error=auth_failed');
+        console.error('Google callback error:', error.message, error.stack);
+        return res.redirect('/login?error=auth_failed');
     }
 };
 
@@ -404,7 +438,7 @@ const sendOTPForPasswordChange = async (req, res) => {
         };
         await user.save();
 
-        await sendOTPEmail(email, otp);
+        await sendVerificationEmail(email, otp); // Reusing existing function
 
         res.status(200).json({
             success: true,
@@ -423,7 +457,6 @@ const changePassword = async (req, res) => {
     try {
         const { email, otp, newPassword } = req.body;
 
-        // Validate input
         if (!email || !otp || !newPassword) {
             return res.status(400).json({ success: false, message: 'All fields are required' });
         }
@@ -431,37 +464,29 @@ const changePassword = async (req, res) => {
         const user = await User.findOne({ email });
 
         if (!user) {
-            return res.status(404).json({ success: false, message: 'User not found' });
+            return res.status(400).json({ success: false, message: 'User not found' });
         }
 
-        // Validate OTP
         if (!user.resetPasswordOTP || user.resetPasswordOTP.code !== otp || user.resetPasswordOTP.expiresAt < Date.now()) {
             return res.status(400).json({ success: false, message: 'Invalid or expired OTP' });
         }
 
-        // Password strength validation
         const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
         if (!passwordRegex.test(newPassword)) {
             return res.status(400).json({ success: false, message: 'Password does not meet complexity requirements' });
         }
 
-        // Hash new password
         const hashedPassword = await bcrypt.hash(newPassword, 10);
-
-        // Update password and clear OTP
         user.password = hashedPassword;
         user.resetPasswordOTP = undefined;
-
         await user.save();
 
         return res.json({ success: true, message: 'Password changed successfully' });
-
     } catch (error) {
         console.error('Error changing password:', error);
         return res.status(500).json({ success: false, message: 'Server error. Please try again later.' });
     }
 };
-
 
 module.exports = {
     pageNotFound,
@@ -476,7 +501,7 @@ module.exports = {
     loadAboutPage,
     loadContactPage,
     loadHomePage,
-    changePassword ,
+    changePassword,
     loadPassword,
     handleGoogleCallback,
     sendOTPForPasswordChange,
