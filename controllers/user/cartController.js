@@ -6,7 +6,6 @@ const Product = require('../../models/productSchema');
 // Utility function to get the best offer for a product
 const getBestOfferForProduct = async (product) => {
     try {
-        // Check if product is null or undefined
         if (!product) {
             console.warn('Null or undefined product passed to getBestOfferForProduct');
             return {
@@ -45,7 +44,6 @@ const cleanupCart = async (userId) => {
         const cart = await Cart.findOne({ user: userId });
         if (!cart) return;
 
-        // Remove items with null products
         const originalLength = cart.items.length;
         cart.items = cart.items.filter(item => item.product != null);
         
@@ -63,7 +61,6 @@ const getCart = async (req, res) => {
         const userId = req.session.user._id;
         console.log('Fetching cart for user ID:', userId);
 
-        // Clean up the cart first
         await cleanupCart(userId);
 
         const cart = await Cart.findOne({ user: userId }).populate({
@@ -83,9 +80,6 @@ const getCart = async (req, res) => {
             });
         }
 
-        console.log('Cart details:', cart);
-
-        // Filter out items with null products
         const validCartItems = cart.items.filter(item => item.product !== null);
         
         if (validCartItems.length === 0) {
@@ -111,13 +105,13 @@ const getCart = async (req, res) => {
             };
         }));
 
-        const cartTotal = cartItems.reduce((total, item) => total + item.total, 0);
-        console.log('Cart Items:', cartItems);
-        console.log('Cart Total:', cartTotal);
+        const cartSubtotal = cartItems.reduce((total, item) => total + item.total, 0);
+        const shippingCharge = 30; // Hardcoded shipping charge
+        const cartTotal = cartSubtotal + shippingCharge;
 
         res.render('user/cart', {
             cartItems,
-            cartTotal,
+            cartTotal: cartSubtotal, // Pass subtotal to the view
             message: {
                 type: req.flash('error').length ? 'error' : 'success',
                 content: req.flash('error')[0] || req.flash('success')[0]
@@ -129,7 +123,6 @@ const getCart = async (req, res) => {
         res.redirect('/');
     }
 };
-
 
 const addToCart = async (req, res) => {
     try {
@@ -208,7 +201,6 @@ const addToCart = async (req, res) => {
     }
 };
 
-
 const removeFromCart = async (req, res) => {
     try {
         if (!req.session.user) {
@@ -221,7 +213,6 @@ const removeFromCart = async (req, res) => {
         const { productId } = req.params;
         const userId = req.session.user._id;
 
-        // Find the user's cart
         const cart = await Cart.findOne({ user: userId });
 
         if (!cart) {
@@ -231,7 +222,6 @@ const removeFromCart = async (req, res) => {
             });
         }
 
-        // Find the item being removed to get its quantity
         const removedItem = cart.items.find(item => 
             item.product && item.product.toString() === productId.toString()
         );
@@ -243,37 +233,34 @@ const removeFromCart = async (req, res) => {
             });
         }
 
-        // Update product stock
         const product = await Product.findById(productId);
         if (product) {
-            // Add the removed quantity back to stock (only if product exists)
             product.stock += removedItem.quantity;
             await product.save();
         }
 
-        // Remove the item from cart
         cart.items = cart.items.filter(item => 
             !item.product || item.product.toString() !== productId.toString()
         );
 
-        // Save the updated cart
         await cart.save();
 
-        // Calculate new cart total with protection against null products
-        const cartTotal = cart.items.reduce((sum, item) => {
+        const cartSubtotal = cart.items.reduce((sum, item) => {
             if (item.product && item.price && item.quantity) {
                 return sum + (item.price * item.quantity);
             }
             return sum;
         }, 0);
+        const shippingCharge = 30; // Hardcoded shipping charge
+        const cartTotal = cartSubtotal + shippingCharge;
 
         res.json({
             success: true,
             message: 'Item removed from cart successfully',
-            cartTotal: cartTotal,
+            cartSubtotal: cartSubtotal.toFixed(2),
+            cartTotal: cartTotal.toFixed(2),
             isEmpty: cart.items.length === 0
         });
-
     } catch (error) {
         console.error('Error in removeFromCart:', error);
         res.status(500).json({
@@ -281,7 +268,7 @@ const removeFromCart = async (req, res) => {
             message: 'Error removing item from cart'
         });
     }
-}
+};
 
 const updateCartQuantity = async (req, res) => {
     try {
@@ -351,36 +338,35 @@ const updateCartQuantity = async (req, res) => {
             });
         }
 
-        // Use the getBestOfferForProduct function for consistency
         const offerDetails = await getBestOfferForProduct(product);
         const discountedPrice = offerDetails.finalPrice;
         
         cart.items[cartItemIndex].quantity = newQuantity;
         cart.items[cartItemIndex].price = discountedPrice;
 
-        // Adjust the stock based on the difference in quantity
         const quantityDifference = newQuantity - currentQuantity;
         product.stock -= quantityDifference;
         await product.save();
 
         await cart.save();
 
-        // Calculate new cart total with protection against null products
-        const cartTotal = cart.items.reduce((sum, item) => {
+        const cartSubtotal = cart.items.reduce((sum, item) => {
             if (item.product && item.price && item.quantity) {
                 return sum + (item.price * item.quantity);
             }
             return sum;
         }, 0);
+        const shippingCharge = 30; // Hardcoded shipping charge
+        const cartTotal = cartSubtotal + shippingCharge;
 
         res.json({
             success: true,
             message: 'Cart quantity updated successfully',
             newQuantity: newQuantity,
             itemTotal: (discountedPrice * newQuantity).toFixed(2),
+            cartSubtotal: cartSubtotal.toFixed(2),
             cartTotal: cartTotal.toFixed(2)
         });
-
     } catch (error) {
         console.error('Error in updateCartQuantity:', error);
         res.status(500).json({
@@ -388,12 +374,12 @@ const updateCartQuantity = async (req, res) => {
             message: 'Error updating cart quantity'
         });
     }
-}
+};
 
 module.exports = {
     getCart,
     addToCart,
     removeFromCart,
     updateCartQuantity,
-    getBestOfferForProduct  // Export the utility function
+    getBestOfferForProduct
 };
