@@ -2,6 +2,8 @@ const Address = require('../../models/addressSchema');
 
 exports.getAddress = async (req, res) => {
     try {
+
+        
         const userID = req.session?.user?._id;
 
         if (!userID) {

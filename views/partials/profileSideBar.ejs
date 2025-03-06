@@ -1,41 +1,40 @@
-<div class="w-64 bg-white/10 text-white p-6 overflow-y-auto">
-    <div class="mb-10 text-center">
+<div class="w-72 bg-white/5 text-white p-8 flex flex-col h-screen overflow-y-auto shadow-xl">
+    <div class="mb-12 text-center">
         <img id="sidebar-profile-image" src="images/default-avatar.svg" 
-             alt="Profile" class="w-24 h-24 rounded-full mx-auto mb-4 object-cover">
-        <h2 id="sidebar-profile-name" class="text-xl font-semibold"></h2>
-        <p id="sidebar-profile-email" class="text-white/70"></p>
+             alt="Profile" class="w-28 h-28 rounded-full mx-auto mb-6 object-cover border-4 border-white/20 shadow-md">
+        <h2 id="sidebar-profile-name" class="text-2xl font-bold"><%= userProfile.name %></h2>
+        <p id="sidebar-profile-email" class="text-white/60 text-sm"><%= userProfile.email %></p>
     </div>
     <nav>
-        <ul class="space-y-2">
-            <li class="bg-white/20 rounded">
-                <a href="/profile" class="block p-3 hover:bg-white/30">
-                    <i class="fas fa-user mr-3"></i>Profile
+        <ul class="space-y-3">
+            <li class="sidebar-link bg-white/20 rounded-xl">
+                <a href="/profile" class="block p-4 flex items-center text-white font-semibold">
+                    <i class="fas fa-user mr-4 text-indigo-300"></i>Profile
                 </a>
             </li>
-            <li>
-                <a href="/address" class="block p-3 hover:bg-white/20">
-                    <i class="fas fa-address-book mr-3"></i>Address Book
+            <li class="sidebar-link rounded-xl">
+                <a href="/address" class="block p-4 flex items-center text-white/80 hover:text-white">
+                    <i class="fas fa-address-book mr-4 text-indigo-300"></i>Address Book
                 </a>
             </li>
-            <li>
-                <a href="/orders" class="block p-3 hover:bg-white/20">
-                    <i class="fas fa-shopping-cart mr-3"></i>Orders
+            <li class="sidebar-link rounded-xl">
+                <a href="/orders" class="block p-4 flex items-center text-white/80 hover:text-white">
+                    <i class="fas fa-shopping-cart mr-4 text-indigo-300"></i>Orders
                 </a>
             </li>
-            <li>
-                <a href="/wallet" class="block p-3 hover:bg-white/20">
-                    <i class="fas fa-wallet mr-3"></i>Wallet
+            <li class="sidebar-link rounded-xl">
+                <a href="/wallet" class="block p-4 flex items-center text-white/80 hover:text-white">
+                    <i class="fas fa-wallet mr-4 text-indigo-300"></i>Wallet
                 </a>
             </li>
-            <li>
-                <a href="/changePassword" class="block p-3 hover:bg-white/20">
-                    <i class="fas fa-key mr-3"></i>Password
+            <li class="sidebar-link rounded-xl">
+                <a href="/changePassword" class="block p-4 flex items-center text-white/80 hover:text-white">
+                    <i class="fas fa-key mr-4 text-indigo-300"></i>Password
                 </a>
             </li>
-            <li>
-                <a href="/logout" class="block p-3 hover:bg-white/20">
-                    <i class="fas fa-sign-out-alt mr-3"></i>Logout
-
+            <li class="sidebar-link rounded-xl">
+                <a href="/logout" class="block p-4 flex items-center text-white/80 hover:text-white">
+                    <i class="fas fa-sign-out-alt mr-4 text-indigo-300"></i>Logout
                 </a>
             </li>
         </ul>

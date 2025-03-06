@@ -1,394 +1,412 @@
 <%- include('../partials/header') %>
 
-<!-- Hero Section -->
-<main class="flex-grow pt-20">
-  <!-- Hero Section -->
-  <section class="relative bg-gradient-to-r from-indigo-900 to-indigo-600 overflow-hidden">
-    <div class="absolute inset-0">
-      <img src="/images/hero-bg.jpg" alt="Hero Background" class="w-full h-full object-cover opacity-30">
-    </div>
-    <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 md:py-32 text-center">
-      <h1 class="text-4xl md:text-5xl font-bold text-white mb-6 tracking-tight animate-fade-in">
-        Discover the Latest Gaming Laptops
-      </h1>
-      <p class="text-lg md:text-xl text-gray-200 mb-8 animate-slide-up">
-        Experience next-level performance with our premium selection
-      </p>
-      <a href="/products" class="inline-flex items-center px-6 py-3 text-base font-medium text-indigo-600 bg-white rounded-lg hover:bg-gray-100 transition-all duration-300">
-        Explore Now
-        <svg class="ml-2 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
-        </svg>
-      </a>
-    </div>
-  </section>
+    <main class="flex-grow pt-24">
+        <section class="relative bg-gradient-to-br from-indigo-900 via-indigo-700 to-indigo-500 overflow-hidden">
+            <div class="absolute inset-0">
+                <img src="/images/hero-bg.jpg" alt="Hero Background" class="w-full h-full object-cover opacity-20 transform scale-110">
+            </div>
+            <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-28 text-center">
+                <h1 class="text-5xl md:text-6xl font-extrabold text-white mb-6 tracking-tight fade-in">Discover Next-Gen Gaming Laptops</h1>
+                <p class="text-xl md:text-2xl text-gray-100 mb-10 slide-up">Unleash unparalleled performance with our premium lineup</p>
+                <a href="/products" class="inline-flex items-center px-8 py-4 text-lg font-semibold text-indigo-900 bg-white rounded-full hover:bg-yellow-400 hover:text-gray-900 transition-all duration-300 shadow-lg">Explore Now
+                    <svg class="ml-3 w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                    </svg>
+                </a>
+            </div>
+        </section>
 
-  <!-- New Arrivals Section -->
-  <section class="py-16 bg-gray-50">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <h2 class="text-3xl md:text-4xl font-bold text-center mb-12 text-gray-800">New Arrivals</h2>
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        <% if (typeof newArrivals !== 'undefined' && newArrivals.length > 0) { %>
-          <% newArrivals.forEach(function(product) { %>
-            <div class="bg-white rounded-xl shadow-md overflow-hidden transition-all duration-300 hover:shadow-lg hover:-translate-y-1">
-              <div class="relative">
-                <a href="/product/<%= product._id %>">
-                  <img src="<%= product.images[0] %>" alt="<%= product.name %>" class="w-full h-48 object-cover">
-                </a>
-                <button class="wishlist-btn absolute top-3 right-3 bg-white p-2 rounded-full shadow-sm hover:bg-gray-100" data-product-id="<%= product._id %>">
-                  <svg class="h-5 w-5 text-gray-500 hover:text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                  </svg>
-                </button>
-              </div>
-              <div class="p-4">
-                <a href="/product/<%= product._id %>">
-                  <h3 class="text-lg font-semibold text-gray-800 hover:text-indigo-600 transition-colors duration-200"><%= product.name %></h3>
-                  <div class="flex items-center justify-between mt-2">
-                    <div>
-                      <% if (product.offerDetails && product.offerDetails.discountPercentage > 0 && product.offerDetails.finalPrice >= 0) { %>
-                        <span class="text-gray-500 line-through text-sm">₹<%= product.offerDetails.originalPrice.toFixed(2) %></span>
-                        <span class="text-xl font-bold text-indigo-600 ml-2">₹<%= Math.max(0, product.offerDetails.finalPrice).toFixed(2) %></span>
-                        <span class="text-sm text-green-600 ml-2"><%= product.offerDetails.discountPercentage.toFixed(0) %>% OFF</span>
-                        <% if (product.offerDetails.appliedOfferType) { %>
-                          <span class="text-sm text-indigo-600 block">(<%= product.offerDetails.appliedOfferType.charAt(0).toUpperCase() + product.offerDetails.appliedOfferType.slice(1) %> Offer)</span>
-                        <% } %>
-                      <% } else { %>
-                        <span class="text-xl font-bold text-indigo-600">₹<%= Math.max(0, (product.offerDetails ? product.offerDetails.finalPrice : product.price)).toFixed(2) %></span>
-                      <% } %>
-                    </div>
-                    <span class="bg-green-100 text-green-700 text-xs font-medium px-2 py-1 rounded-full">New</span>
-                  </div>
-                </a>
-                <div class="flex space-x-2 mt-4">
-                  <button class="add-to-cart-btn flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 py-2 rounded-md text-sm font-medium transition duration-200" data-product-id="<%= product._id %>">
-                    Add to Cart
-                  </button>
-                  <button class="buy-now-btn flex-1 bg-indigo-600 hover:bg-indigo-700 text-white py-2 rounded-md text-sm font-medium transition duration-200" data-product-id="<%= product._id %>">
-                    Buy Now
-                  </button>
+        <section class="py-20 bg-gradient-to-b from-gray-50 to-white">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <h2 class="text-4xl md:text-5xl font-bold text-center mb-16 text-gray-900 fade-in">New Arrivals</h2>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+                    <% if (typeof newArrivals !== 'undefined' && newArrivals.length > 0) { %>
+                        <% newArrivals.forEach(function(product) { %>
+                            <div class="bg-white rounded-2xl shadow-lg card-hover overflow-hidden">
+                                <div class="relative">
+                                    <a href="/product/<%= product._id %>">
+                                        <img src="<%= product.images[0] %>" alt="<%= product.name %>" class="w-full h-56 object-cover transition-transform duration-500 hover:scale-105">
+                                    </a>
+                                    <button class="wishlist-btn absolute top-4 right-4 bg-white p-2 rounded-full shadow-md hover:bg-yellow-400 transition-all" data-product-id="<%= product._id %>">
+                                        <svg class="h-6 w-6 text-gray-600 hover:text-gray-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                                        </svg>
+                                    </button>
+                                </div>
+                                <div class="p-6">
+                                    <a href="/product/<%= product._id %>">
+                                        <h3 class="text-xl font-semibold text-gray-900 hover:text-indigo-600 transition-colors"><%= product.name %></h3>
+                                        <div class="flex items-center justify-between mt-3">
+                                            <div>
+                                                <% if (product.offerDetails && product.offerDetails.discountPercentage > 0 && product.offerDetails.finalPrice >= 0) { %>
+                                                    <span class="text-gray-500 line-through text-sm">₹<%= product.offerDetails.originalPrice.toFixed(2) %></span>
+                                                    <span class="text-2xl font-bold text-indigo-600 ml-2">₹<%= Math.max(0, product.offerDetails.finalPrice).toFixed(2) %></span>
+                                                    <span class="text-sm text-green-500 ml-2"><%= product.offerDetails.discountPercentage.toFixed(0) %>% OFF</span>
+                                                <% } else { %>
+                                                    <span class="text-2xl font-bold text-indigo-600">₹<%= Math.max(0, (product.offerDetails ? product.offerDetails.finalPrice : product.price)).toFixed(2) %></span>
+                                                <% } %>
+                                            </div>
+                                            <span class="bg-green-100 text-green-700 text-xs font-semibold px-3 py-1 rounded-full">New</span>
+                                        </div>
+                                    </a>
+                                    <div class="flex space-x-3 mt-5">
+                                        <button class="add-to-cart-btn flex-1 bg-gray-100 hover:bg-gray-200 text-gray-800 py-3 rounded-lg font-semibold transition-all" data-product-id="<%= product._id %>">Add to Cart</button>
+                                        <button class="buy-now-btn flex-1 bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-lg font-semibold transition-all" data-product-id="<%= product._id %>">Buy Now</button>
+                                    </div>
+                                </div>
+                            </div>
+                        <% }); %>
+                    <% } else { %>
+                        <div class="col-span-full text-center text-gray-500 text-lg">No new arrivals available at the moment.</div>
+                    <% } %>
                 </div>
-              </div>
             </div>
-          <% }); %>
-        <% } else { %>
-          <div class="col-span-full text-center text-gray-500">No new arrivals available at the moment.</div>
-        <% } %>
-      </div>
-    </div>
-  </section>
+        </section>
 
-  <!-- Featured Products Section -->
-  <section class="py-16 bg-white">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <h2 class="text-3xl md:text-4xl font-bold text-center mb-12 text-gray-800">Featured Products</h2>
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        <% if (typeof featuredProducts !== 'undefined' && featuredProducts.length > 0) { %>
-          <% featuredProducts.forEach(function(product) { %>
-            <div class="bg-white rounded-xl shadow-md overflow-hidden transition-all duration-300 hover:shadow-lg hover:-translate-y-1">
-              <div class="relative">
-                <a href="/product/<%= product._id %>">
-                  <img src="<%= product.images[0] %>" alt="<%= product.name %>" class="w-full h-48 object-cover">
-                </a>
-                <button class="absolute top-3 right-3 bg-white p-2 rounded-full shadow-sm hover:bg-gray-100" onclick="toggleWishlist(event, '<%= product._id %>')">
-                  <svg class="h-5 w-5 text-gray-500 hover:text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                  </svg>
-                </button>
-              </div>
-              <div class="p-4">
-                <a href="/product/<%= product._id %>">
-                  <h3 class="text-lg font-semibold text-gray-800 hover:text-indigo-600 transition-colors duration-200"><%= product.name %></h3>
-                  <div class="flex items-center justify-between mt-2">
-                    <div>
-                      <% if (product.offerDetails && product.offerDetails.discountPercentage > 0 && product.offerDetails.finalPrice >= 0) { %>
-                        <span class="text-gray-500 line-through text-sm">₹<%= product.offerDetails.originalPrice.toFixed(2) %></span>
-                        <span class="text-xl font-bold text-indigo-600 ml-2">₹<%= Math.max(0, product.offerDetails.finalPrice).toFixed(2) %></span>
-                        <span class="text-sm text-green-600 ml-2"><%= product.offerDetails.discountPercentage.toFixed(0) %>% OFF</span>
-                        <% if (product.offerDetails.appliedOfferType) { %>
-                          <span class="text-sm text-indigo-600 block">(<%= product.offerDetails.appliedOfferType.charAt(0).toUpperCase() + product.offerDetails.appliedOfferType.slice(1) %> Offer)</span>
-                        <% } %>
-                      <% } else { %>
-                        <span class="text-xl font-bold text-indigo-600">₹<%= Math.max(0, (product.offerDetails ? product.offerDetails.finalPrice : product.price)).toFixed(2) %></span>
-                      <% } %>
-                    </div>
-                  </div>
-                </a>
-                <div class="flex space-x-2 mt-4">
-                  <button onclick="addToCart('<%= product._id %>')" class="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 py-2 rounded-md text-sm font-medium transition duration-200">
-                    Add to Cart
-                  </button>
-                  <button onclick="buyNow('<%= product._id %>')" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white py-2 rounded-md text-sm font-medium transition duration-200">
-                    Buy Now
-                  </button>
+        <section class="py-20 bg-white">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <h2 class="text-4xl md:text-5xl font-bold text-center mb-16 text-gray-900 fade-in">Featured Products</h2>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+                    <% if (typeof featuredProducts !== 'undefined' && featuredProducts.length > 0) { %>
+                        <% featuredProducts.forEach(function(product) { %>
+                            <div class="bg-white rounded-2xl shadow-lg card-hover overflow-hidden">
+                                <div class="relative">
+                                    <a href="/product/<%= product._id %>">
+                                        <img src="<%= product.images[0] %>" alt="<%= product.name %>" class="w-full h-56 object-cover transition-transform duration-500 hover:scale-105">
+                                    </a>
+                                    <button class="absolute top-4 right-4 bg-white p-2 rounded-full shadow-md hover:bg-yellow-400 transition-all" onclick="toggleWishlist(event, '<%= product._id %>')">
+                                        <svg class="h-6 w-6 text-gray-600 hover:text-gray-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                                        </svg>
+                                    </button>
+                                </div>
+                                <div class="p-6">
+                                    <a href="/product/<%= product._id %>">
+                                        <h3 class="text-xl font-semibold text-gray-900 hover:text-indigo-600 transition-colors"><%= product.name %></h3>
+                                        <div class="flex items-center justify-between mt-3">
+                                            <div>
+                                                <% if (product.offerDetails && product.offerDetails.discountPercentage > 0 && product.offerDetails.finalPrice >= 0) { %>
+                                                    <span class="text-gray-500 line-through text-sm">₹<%= product.offerDetails.originalPrice.toFixed(2) %></span>
+                                                    <span class="text-2xl font-bold text-indigo-600 ml-2">₹<%= Math.max(0, product.offerDetails.finalPrice).toFixed(2) %></span>
+                                                    <span class="text-sm text-green-500 ml-2"><%= product.offerDetails.discountPercentage.toFixed(0) %>% OFF</span>
+                                                <% } else { %>
+                                                    <span class="text-2xl font-bold text-indigo-600">₹<%= Math.max(0, (product.offerDetails ? product.offerDetails.finalPrice : product.price)).toFixed(2) %></span>
+                                                <% } %>
+                                            </div>
+                                        </div>
+                                    </a>
+                                    <div class="flex space-x-3 mt-5">
+                                        <button onclick="addToCart('<%= product._id %>')" class="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-800 py-3 rounded-lg font-semibold transition-all">Add to Cart</button>
+                                        <button onclick="buyNow('<%= product._id %>')" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-lg font-semibold transition-all">Buy Now</button>
+                                    </div>
+                                </div>
+                            </div>
+                        <% }); %>
+                    <% } else { %>
+                        <div class="col-span-full text-center text-gray-500 text-lg">No featured products available at the moment.</div>
+                    <% } %>
                 </div>
-              </div>
             </div>
-          <% }); %>
-        <% } else { %>
-          <div class="col-span-full text-center text-gray-500">No featured products available at the moment.</div>
-        <% } %>
-      </div>
-    </div>
-  </section>
+        </section>
 
-  <!-- Why Choose Us Section -->
-  <section class="py-16 bg-gray-50">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <h2 class="text-3xl md:text-4xl font-bold text-center mb-12 text-gray-800">Why Choose InfinityTech</h2>
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-        <div class="text-center group">
-          <div class="inline-block p-4 bg-white rounded-full shadow-md mb-4 transition-transform duration-300 group-hover:scale-110">
-            <svg class="w-8 h-8 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-            </svg>
-          </div>
-          <h3 class="text-xl font-semibold mb-2 text-gray-800">Free Shipping</h3>
-          <p class="text-gray-600 text-sm">On all orders over $999</p>
-        </div>
-        <div class="text-center group">
-          <div class="inline-block p-4 bg-white rounded-full shadow-md mb-4 transition-transform duration-300 group-hover:scale-110">
-            <svg class="w-8 h-8 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-            </svg>
-          </div>
-          <h3 class="text-xl font-semibold mb-2 text-gray-800">Easy Returns</h3>
-          <p class="text-gray-600 text-sm">30-day return policy</p>
-        </div>
-        <div class="text-center group">
-          <div class="inline-block p-4 bg-white rounded-full shadow-md mb-4 transition-transform duration-300 group-hover:scale-110">
-            <svg class="w-8 h-8 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-            </svg>
-          </div>
-          <h3 class="text-xl font-semibold mb-2 text-gray-800">2-Year Warranty</h3>
-          <p class="text-gray-600 text-sm">Extended coverage available</p>
-        </div>
-        <div class="text-center group">
-          <div class="inline-block p-4 bg-white rounded-full shadow-md mb-4 transition-transform duration-300 group-hover:scale-110">
-            <svg class="w-8 h-8 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z" />
-            </svg>
-          </div>
-          <h3 class="text-xl font-semibold mb-2 text-gray-800">24/7 Support</h3>
-          <p class="text-gray-600 text-sm">Expert assistance anytime</p>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Testimonials Section -->
-  <section class="py-16 bg-white">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8" x-data="{ slideIndex: 0 }">
-      <h2 class="text-3xl md:text-4xl font-bold text-center mb-12 text-gray-800">What Our Customers Say</h2>
-      <div class="relative">
-        <div class="overflow-hidden">
-          <div class="flex transition-transform duration-500" x-ref="slider" x-bind:style="`transform: translateX(-${slideIndex * 100}%);`">
-            <!-- Testimonial 1 -->
-            <div class="w-full flex-shrink-0">
-              <div class="max-w-3xl mx-auto text-center">
-                <img src="/images/testimonial1.jpg" alt="Customer" class="w-16 h-16 rounded-full mx-auto mb-4 object-cover shadow-sm">
-                <p class="text-lg text-gray-600 mb-4">"The gaming laptop I purchased exceeded my expectations. The performance is incredible, and the customer service was exceptional!"</p>
-                <div class="font-semibold text-gray-800">John Doe</div>
-                <div class="text-gray-500 text-sm">Professional Gamer</div>
-              </div>
+        <section class="py-20 bg-gradient-to-t from-gray-50 to-white">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <h2 class="text-4xl md:text-5xl font-bold text-center mb-16 text-gray-900 fade-in">Why Choose InfinityTech</h2>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10">
+                    <div class="text-center group">
+                        <div class="inline-block p-5 bg-indigo-600 text-white rounded-full shadow-lg mb-5 transition-transform duration-300 group-hover:scale-110">
+                            <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                            </svg>
+                        </div>
+                        <h3 class="text-xl font-semibold mb-3 text-gray-900">Free Shipping</h3>
+                        <p class="text-gray-600">On all orders over $999</p>
+                    </div>
+                    <div class="text-center group">
+                        <div class="inline-block p-5 bg-indigo-600 text-white rounded-full shadow-lg mb-5 transition-transform duration-300 group-hover:scale-110">
+                            <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                            </svg>
+                        </div>
+                        <h3 class="text-xl font-semibold mb-3 text-gray-900">Easy Returns</h3>
+                        <p class="text-gray-600">30-day return policy</p>
+                    </div>
+                    <div class="text-center group">
+                        <div class="inline-block p-5 bg-indigo-600 text-white rounded-full shadow-lg mb-5 transition-transform duration-300 group-hover:scale-110">
+                            <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                            </svg>
+                        </div>
+                        <h3 class="text-xl font-semibold mb-3 text-gray-900">2-Year Warranty</h3>
+                        <p class="text-gray-600">Extended coverage available</p>
+                    </div>
+                    <div class="text-center group">
+                        <div class="inline-block p-5 bg-indigo-600 text-white rounded-full shadow-lg mb-5 transition-transform duration-300 group-hover:scale-110">
+                            <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z" />
+                            </svg>
+                        </div>
+                        <h3 class="text-xl font-semibold mb-3 text-gray-900">24/7 Support</h3>
+                        <p class="text-gray-600">Expert assistance anytime</p>
+                    </div>
+                </div>
             </div>
-            <!-- Testimonial 2 -->
-            <div class="w-full flex-shrink-0">
-              <div class="max-w-3xl mx-auto text-center">
-                <img src="/images/testimonial2.jpg" alt="Customer" class="w-16 h-16 rounded-full mx-auto mb-4 object-cover shadow-sm">
-                <p class="text-lg text-gray-600 mb-4">"Perfect laptop for my business needs. The build quality is outstanding, and the battery life is impressive!"</p>
-                <div class="font-semibold text-gray-800">Jane Smith</div>
-                <div class="text-gray-500 text-sm">Business Executive</div>
-              </div>
+        </section>
+
+        <section class="py-20 bg-white">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8" x-data="{ slideIndex: 0 }">
+                <h2 class="text-4xl md:text-5xl font-bold text-center mb-16 text-gray-900 fade-in">What Our Customers Say</h2>
+                <div class="relative">
+                    <div class="overflow-hidden">
+                        <div class="flex transition-transform duration-500" x-ref="slider" x-bind:style="`transform: translateX(-${slideIndex * 100}%);`">
+                            <div class="w-full flex-shrink-0">
+                                <div class="max-w-3xl mx-auto text-center bg-gray-50 p-8 rounded-2xl shadow-lg">
+                                    <img src="/images/testimonial1.jpg" alt="Customer" class="w-20 h-20 rounded-full mx-auto mb-6 object-cover shadow-md">
+                                    <p class="text-lg text-gray-700 mb-5">"The gaming laptop I purchased exceeded my expectations. The performance is incredible, and the customer service was exceptional!"</p>
+                                    <div class="font-semibold text-gray-900 text-xl">John Doe</div>
+                                    <div class="text-gray-500 text-sm">Professional Gamer</div>
+                                </div>
+                            </div>
+                            <div class="w-full flex-shrink-0">
+                                <div class="max-w-3xl mx-auto text-center bg-gray-50 p-8 rounded-2xl shadow-lg">
+                                    <img src="/images/testimonial2.jpg" alt="Customer" class="w-20 h-20 rounded-full mx-auto mb-6 object-cover shadow-md">
+                                    <p class="text-lg text-gray-700 mb-5">"Perfect laptop for my business needs. The build quality is outstanding, and the battery life is impressive!"</p>
+                                    <div class="font-semibold text-gray-900 text-xl">Jane Smith</div>
+                                    <div class="text-gray-500 text-sm">Business Executive</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <button @click="slideIndex = slideIndex === 0 ? 1 : 0" class="absolute top-1/2 left-6 -translate-y-1/2 bg-indigo-600 text-white p-3 rounded-full shadow-lg hover:bg-indigo-700 transition-all">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                        </svg>
+                    </button>
+                    <button @click="slideIndex = slideIndex === 0 ? 1 : 0" class="absolute top-1/2 right-6 -translate-y-1/2 bg-indigo-600 text-white p-3 rounded-full shadow-lg hover:bg-indigo-700 transition-all">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                        </svg>
+                    </button>
+                </div>
             </div>
-          </div>
+        </section>
+    </main>
+
+    <footer class="w-full bg-gray-900 text-white mt-auto">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-12">
+                <div class="space-y-6">
+                    <div class="flex items-center space-x-3">
+                        <span class="text-2xl font-bold tracking-tight">InfinityTech</span>
+                    </div>
+                    <p class="text-sm text-gray-300 leading-relaxed">Your trusted destination for premium laptops and tech accessories.</p>
+                </div>
+                <div>
+                    <h3 class="text-lg font-semibold mb-6 text-yellow-400">Quick Links</h3>
+                    <ul class="space-y-3">
+                        <li><a href="/shop" class="text-sm text-gray-300 hover:text-yellow-400 transition-colors">Shop</a></li>
+                        <li><a href="/about" class="text-sm text-gray-300 hover:text-yellow-400 transition-colors">About Us</a></li>
+                        <li><a href="/contact" class="text-sm text-gray-300 hover:text-yellow-400 transition-colors">Contact</a></li>
+                        <li><a href="/privacy-policy" class="text-sm text-gray-300 hover:text-yellow-400 transition-colors">Privacy Policy</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 class="text-lg font-semibold mb-6 text-yellow-400">Customer Service</h3>
+                    <ul class="space-y-3">
+                        <li><a href="/shipping" class="text-sm text-gray-300 hover:text-yellow-400 transition-colors">Shipping Info</a></li>
+                        <li><a href="/returns" class="text-sm text-gray-300 hover:text-yellow-400 transition-colors">Returns</a></li>
+                        <li><a href="/faq" class="text-sm text-gray-300 hover:text-yellow-400 transition-colors">FAQ</a></li>
+                        <li><a href="/warranty" class="text-sm text-gray-300 hover:text-yellow-400 transition-colors">Warranty</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 class="text-lg font-semibold mb-6 text-yellow-400">Contact Us</h3>
+                    <ul class="space-y-4">
+                        <li class="text-sm text-gray-300"><span class="block">Email:</span><a href="mailto:support@infinitytech.com" class="hover:text-yellow-400">support@infinitytech.com</a></li>
+                        <li class="text-sm text-gray-300"><span class="block">Phone:</span><a href="tel:+1234567890" class="hover:text-yellow-400">+1 (234) 567-890</a></li>
+                        <li class="text-sm text-gray-300"><span class="block">Address:</span>123 Tech Street, Silicon Valley, CA 94025</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="mt-12 pt-8 border-t border-gray-800">
+                <div class="flex flex-col md:flex-row justify-between items-center space-y-6 md:space-y-0">
+                    <p class="text-sm text-gray-400">© 2025 InfinityTech. All rights reserved.</p>
+                    <div class="flex space-x-6">
+                        <a href="#" class="text-gray-300 hover:text-yellow-400 transition-colors">
+                            <svg class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24"><path fill-rule="evenodd" d="M22 12c0-5.523-4.477-10-10-10S2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.878v-6.987h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.988C18.343 21.128 22 16.991 22 12z" clip-rule="evenodd" /></svg>
+                        </a>
+                        <a href="#" class="text-gray-300 hover:text-yellow-400 transition-colors">
+                            <svg class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24"><path fill-rule="evenodd" d="M12.315 2c2.43 0 2.784.013 3.808.06 1.064.049 1.791.218 2.427.465a4.902 4.902 0 011.772 1.153 4.902 4.902 0 011.153 1.772c.247.636.416 1.363.465 2.427.048 1.067.06 1.407.06 4.123v.08c0 2.643-.012 2.987-.06 4.043-.049 1.064-.218 1.791-.465 2.427a4.902 4.902 0 01-1.153 1.772 4.902 4.902 0 01-1.772 1.153c-.636.247-1.363.416-2.427.465-1.067.048-1.407.06-4.123.06h-.08c-2.643 0-2.987-.012-4.043-.06-1.064-.049-1.791-.218-2.427-.465a4.902 4.902 0 01-1.772-1.153 4.902 4.902 0 01-1.153-1.772c-.247-.636-.416-1.363-.465-2.427-.047-1.024-.06-1.379-.06-3.808v-.63c0-2.43.013-2.784.06-3.808.049-1.064.218-1.791.465-2.427a4.902 4.902 0 011.153-1.772A4.902 4.902 0 015.45 2.525c.636-.247 1.363-.416 2.427-.465C8.901 2.013 9.256 2 11.685 2h.63zm-.081 1.802h-.468c-2.456 0-2.784.011-3.807.058-.975.045-1.504.207-1.857.344-.467.182-.8.398-1.15.748-.35.35-.566.683-.748 1.15-.137.353-.3.882-.344 1.857-.047 1.023-.058 1.351-.058 3.807v.468c0 2.456.011 2.784.058 3.807.045.975.207 1.504.344 1.857.182.466.399.8.748 1.15.35.35.683.566 1.15.748.353.137.882.3 1.857.344 1.054.048 1.37.058 4.041.058h.08c2.597 0 2.917-.01 3.96-.058.976-.045 1.505-.207 1.858-.344.466-.182.8-.398 1.15-.748.35-.35.566-.683.748-1.15.137-.353.3-.882.344-1.857.048-1.055.058-1.37.058-4.041v-.08c0-2.597-.01-2.917-.058-3.96-.045-.976-.207-1.505-.344-1.858a3.097 3.097 0 00-.748-1.15 3.098 3.098 0 00-1.15-.748c-.353-.137-.882-.3-1.857-.344-1.023-.047-1.351-.058-3.807-.058zM12 6.865a5.135 5.135 0 110 10.27 5.135 5.135 0 010-10.27zm0 1.802a3.333 3.333 0 100 6.666 3.333 3.333 0 000-6.666zm5.338-3.205a1.2 1.2 0 110 2.4 1.2 1.2 0 010-2.4z" clip-rule="evenodd" /></svg>
+                        </a>
+                        <a href="#" class="text-gray-300 hover:text-yellow-400 transition-colors">
+                            <svg class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24"><path d="M8.29 20.251c7.547 0 11.675-6.253 11.675-11.675 0-.178 0-.355-.012-.53A8.348 8.348 0 0022 5.92a8.19 8.19 0 01-2.357.646 4.118 4.118 0 001.804-2.27 8.224 8.224 0 01-2.605.996 4.107 4.107 0 00-6.993 3.743 11.65 11.65 0 01-8.457-4.287 4.106 4.106 0 001.27 5.477A4.072 4.072 0 012.8 9.713v.052a4.105 4.105 0 003.292 4.022 4.095 4.095 0 01-1.853.07 4.108 4.108 0 003.834 2.85A8.233 8.233 0 012 18.407a11.616 11.616 0 006.29 1.84" /></svg>
+                        </a>
+                    </div>
+                </div>
+            </div>
         </div>
-        <button @click="slideIndex = slideIndex === 0 ? 1 : 0" class="absolute top-1/2 left-4 -translate-y-1/2 bg-white p-2 rounded-full shadow-md hover:bg-gray-100 transition-all duration-200">
-          <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-          </svg>
-        </button>
-        <button @click="slideIndex = slideIndex === 0 ? 1 : 0" class="absolute top-1/2 right-4 -translate-y-1/2 bg-white p-2 rounded-full shadow-md hover:bg-gray-100 transition-all duration-200">
-          <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-          </svg>
-        </button>
-      </div>
-    </div>
-  </section>
-</main>
+    </footer>
 
-<%- include('../partials/footer') %>
-
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://unpkg.com/swiper/swiper-bundle.min.js"></script>
     <script>
-      // Function to add a product to the cart
-      function addToCart(productId) {
-        showNotification('Adding to cart...', 'info');
-        fetch('/api/cart/add', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ productId: productId, quantity: 1 }),
-          credentials: 'same-origin'
-        })
-        .then(response => {
-          if (!response.ok) throw new Error('Network response was not ok');
-          return response.json();
-        })
-        .then(data => {
-          const cartCounter = document.getElementById('cart-counter');
-          if (cartCounter && data.totalItems) {
-            cartCounter.textContent = data.totalItems;
-            cartCounter.classList.remove('hidden');
-          }
-          showNotification('Product added to cart!', 'success');
-        })
-        .catch(error => {
-          console.error('Error adding to cart:', error);
-          showNotification('Failed to add product to cart. Please try again.', 'error');
-        });
-      }
-
-      // Function to buy product now
-      function buyNow(productId) {
-        showNotification('Processing...', 'info');
-        fetch('/api/cart/add', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ productId: productId, quantity: 1, buyNow: true }),
-          credentials: 'same-origin'
-        })
-        .then(response => {
-          if (!response.ok) throw new Error('Network response was not ok');
-          return response.json();
-        })
-        .then(data => {
-          window.location.href = '/checkout?source=buy_now';
-        })
-        .catch(error => {
-          console.error('Error processing buy now:', error);
-          showNotification('Failed to process. Please try again.', 'error');
-        });
-      }
-
-      // Function to toggle wishlist
-      function toggleWishlist(event, productId) {
-        event.preventDefault();
-        const wishlistBtn = event.currentTarget;
-        const wishlistIcon = wishlistBtn.querySelector('svg');
-
-        wishlistIcon.classList.toggle('text-red-500');
-        wishlistIcon.classList.toggle('text-gray-500');
-
-        const isAdding = wishlistIcon.classList.contains('text-red-500');
-        showNotification(isAdding ? 'Adding to wishlist...' : 'Removing from wishlist...', 'info');
-
-        fetch('/api/wishlist/toggle', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ productId }),
-          credentials: 'same-origin'
-        })
-        .then(response => {
-          if (!response.ok) {
-            if (response.status === 401) {
-              wishlistIcon.classList.toggle('text-red-500');
-              wishlistIcon.classList.toggle('text-gray-500');
-              showNotification('Please log in to modify wishlist', 'error');
-              return { success: false };
-            }
-            throw new Error('Network response was not ok');
-          }
-          return response.json();
-        })
-        .then(data => {
-          if (data.success) {
-            showNotification(data.added ? 'Product added to wishlist!' : 'Product removed from wishlist', 'success');
-          } else {
-            wishlistIcon.classList.toggle('text-red-500');
-            wishlistIcon.classList.toggle('text-gray-500');
-            showNotification(data.message || 'Error updating wishlist', 'error');
-          }
-        })
-        .catch(error => {
-          console.error('Error toggling wishlist:', error);
-          wishlistIcon.classList.toggle('text-red-500');
-          wishlistIcon.classList.toggle('text-gray-500');
-          showNotification('Failed to update wishlist. Please try again.', 'error');
-        });
-      }
-
-      // Function to show notifications using SweetAlert2
-      function showNotification(message, type = 'info') {
-        let bgColor;
-        switch (type) {
-          case 'success': bgColor = '#28a745'; break;
-          case 'error': bgColor = '#dc3545'; break;
-          case 'info': bgColor = '#007bff'; break;
-          case 'warning': bgColor = '#ffc107'; break;
-          default: bgColor = '#6c757d';
+        function addToCart(productId) {
+            showNotification('Adding to cart...', 'info');
+            fetch('/api/cart/add', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ productId: productId, quantity: 1 }),
+                credentials: 'same-origin'
+            })
+            .then(response => {
+                if (!response.ok) throw new Error('Network response was not ok');
+                return response.json();
+            })
+            .then(data => {
+                const cartCounter = document.getElementById('cart-counter');
+                if (cartCounter && data.totalItems) {
+                    cartCounter.textContent = data.totalItems;
+                    cartCounter.classList.remove('hidden');
+                }
+                showNotification('Product added to cart!', 'success');
+            })
+            .catch(error => {
+                console.error('Error adding to cart:', error);
+                showNotification('Failed to add product to cart. Please try again.', 'error');
+            });
         }
-        Swal.fire({
-          text: message,
-          icon: type,
-          toast: true,
-          position: 'bottom-end',
-          timer: 3000,
-          timerProgressBar: true,
-          showConfirmButton: false,
-          background: bgColor,
-          color: '#fff',
-        });
-      }
 
-      // Initialize functionality when DOM is loaded
-      document.addEventListener('DOMContentLoaded', function() {
-        document.querySelectorAll('.wishlist-btn').forEach(button => {
-          button.addEventListener('click', function(event) {
-            const productId = this.getAttribute('data-product-id');
-            if (productId) toggleWishlist(event, productId);
-          });
-        });
+        function buyNow(productId) {
+            showNotification('Processing...', 'info');
+            fetch('/api/cart/add', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ productId: productId, quantity: 1, buyNow: true }),
+                credentials: 'same-origin'
+            })
+            .then(response => {
+                if (!response.ok) throw new Error('Network response was not ok');
+                return response.json();
+            })
+            .then(data => {
+                window.location.href = '/checkout?source=buy_now';
+            })
+            .catch(error => {
+                console.error('Error processing buy now:', error);
+                showNotification('Failed to process. Please try again.', 'error');
+            });
+        }
 
-        document.querySelectorAll('.add-to-cart-btn').forEach(button => {
-          button.addEventListener('click', function() {
-            const productId = this.getAttribute('data-product-id');
-            if (productId) addToCart(productId);
-          });
-        });
-
-        document.querySelectorAll('.buy-now-btn').forEach(button => {
-          button.addEventListener('click', function() {
-            const productId = this.getAttribute('data-product-id');
-            if (productId) buyNow(productId);
-          });
-        });
-
-        fetch('/api/user/wishlist/products')
-          .then(response => {
-            if (!response.ok) {
-              if (response.status === 401) return null;
-              throw new Error('Network response was not ok');
-            }
-            return response.json();
-          })
-          .then(data => {
-            if (data && data.wishlistItems) {
-              data.wishlistItems.forEach(itemId => {
-                const wishlistBtns = document.querySelectorAll(`[data-product-id="${itemId}"]`);
-                wishlistBtns.forEach(btn => {
-                  if (btn.classList.contains('wishlist-btn')) {
-                    const wishlistIcon = btn.querySelector('svg');
-                    if (wishlistIcon) {
-                      wishlistIcon.classList.remove('text-gray-500');
-                      wishlistIcon.classList.add('text-red-500');
+        function toggleWishlist(event, productId) {
+            event.preventDefault();
+            const wishlistBtn = event.currentTarget;
+            const wishlistIcon = wishlistBtn.querySelector('svg');
+            wishlistIcon.classList.toggle('text-red-500');
+            wishlistIcon.classList.toggle('text-gray-600');
+            const isAdding = wishlistIcon.classList.contains('text-red-500');
+            showNotification(isAdding ? 'Adding to wishlist...' : 'Removing from wishlist...', 'info');
+            fetch('/api/wishlist/toggle', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ productId }),
+                credentials: 'same-origin'
+            })
+            .then(response => {
+                if (!response.ok) {
+                    if (response.status === 401) {
+                        wishlistIcon.classList.toggle('text-red-500');
+                        wishlistIcon.classList.toggle('text-gray-600');
+                        showNotification('Please log in to modify wishlist', 'error');
+                        return { success: false };
                     }
-                  }
-                });
-              });
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    showNotification(data.added ? 'Product added to wishlist!' : 'Product removed from wishlist', 'success');
+                } else {
+                    wishlistIcon.classList.toggle('text-red-500');
+                    wishlistIcon.classList.toggle('text-gray-600');
+                    showNotification(data.message || 'Error updating wishlist', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error toggling wishlist:', error);
+                wishlistIcon.classList.toggle('text-red-500');
+                wishlistIcon.classList.toggle('text-gray-600');
+                showNotification('Failed to update wishlist. Please try again.', 'error');
+            });
+        }
+
+        function showNotification(message, type = 'info') {
+            let bgColor;
+            switch (type) {
+                case 'success': bgColor = '#28a745'; break;
+                case 'error': bgColor = '#dc3545'; break;
+                case 'info': bgColor = '#007bff'; break;
+                case 'warning': bgColor = '#ffc107'; break;
+                default: bgColor = '#6c757d';
             }
-          })
-          .catch(error => console.error('Error fetching wishlist data:', error));
-      });
+            Swal.fire({
+                text: message,
+                icon: type,
+                toast: true,
+                position: 'bottom-end',
+                timer: 3000,
+                timerProgressBar: true,
+                showConfirmButton: false,
+                background: bgColor,
+                color: '#fff',
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.wishlist-btn').forEach(button => {
+                button.addEventListener('click', function(event) {
+                    const productId = this.getAttribute('data-product-id');
+                    if (productId) toggleWishlist(event, productId);
+                });
+            });
+            document.querySelectorAll('.add-to-cart-btn').forEach(button => {
+                button.addEventListener('click', function() {
+                    const productId = this.getAttribute('data-product-id');
+                    if (productId) addToCart(productId);
+                });
+            });
+            document.querySelectorAll('.buy-now-btn').forEach(button => {
+                button.addEventListener('click', function() {
+                    const productId = this.getAttribute('data-product-id');
+                    if (productId) buyNow(productId);
+                });
+            });
+            fetch('/api/user/wishlist/products')
+                .then(response => {
+                    if (!response.ok) {
+                        if (response.status === 401) return null;
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data && data.wishlistItems) {
+                        data.wishlistItems.forEach(itemId => {
+                            const wishlistBtns = document.querySelectorAll(`[data-product-id="${itemId}"]`);
+                            wishlistBtns.forEach(btn => {
+                                if (btn.classList.contains('wishlist-btn')) {
+                                    const wishlistIcon = btn.querySelector('svg');
+                                    if (wishlistIcon) {
+                                        wishlistIcon.classList.remove('text-gray-600');
+                                        wishlistIcon.classList.add('text-red-500');
+                                    }
+                                }
+                            });
+                        });
+                    }
+                })
+                .catch(error => console.error('Error fetching wishlist data:', error));
+        });
     </script>
+</body>
+</html>
