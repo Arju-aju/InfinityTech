@@ -1,6 +1,6 @@
 const Product = require('../../models/productSchema');
 const LaptopCategory = require('../../models/categorySchema');
-const User = require('../../models/userSchema'); 
+const User = require('../../models/userSchema');
 const Cart = require('../../models/cartSchema');
 const { getBestOfferForProduct } = require('../../utils/offer');
 const { default: mongoose } = require('mongoose');
@@ -14,32 +14,31 @@ const getHomePageProducts = async (req, res) => {
         const activeCategories = await LaptopCategory.find({ isActive: true }).select('_id');
         const activeCategoryIds = activeCategories.map(cat => cat._id);
 
-        const newArrivals = await Product.find({ 
+        const newArrivals = await Product.find({
             isListed: true,
             isDeleted: false,
             category: { $in: activeCategoryIds },
             createdAt: { $gte: sevenDaysAgo }
         }).sort({ createdAt: -1 }).limit(8).lean();
 
-        const featuredProducts = await Product.find({ 
+        const featuredProducts = await Product.find({
             isListed: true,
             isDeleted: false,
             category: { $in: activeCategoryIds }
         }).sort({ createdAt: -1 }).limit(8).lean();
 
-        const topSellingProducts = await Product.find({ 
+        const topSellingProducts = await Product.find({
             isListed: true,
             isDeleted: false,
             category: { $in: activeCategoryIds }
         }).sort({ salesCount: -1 }).limit(8).lean();
 
-        const dealProducts = await Product.find({ 
+        const dealProducts = await Product.find({
             isListed: true,
             isDeleted: false,
             category: { $in: activeCategoryIds }
         }).sort({ createdAt: -1 }).limit(8).lean();
 
-        // Ensure offerDetails is always defined
         const enhanceProducts = async (products) => {
             return await Promise.all(products.map(async (product) => {
                 try {
@@ -47,7 +46,6 @@ const getHomePageProducts = async (req, res) => {
                     return { ...product, offerDetails };
                 } catch (error) {
                     console.error(`Error calculating offer for product ${product._id}:`, error);
-                    // Provide default offerDetails if calculation fails
                     return {
                         ...product,
                         offerDetails: {
@@ -84,9 +82,7 @@ const getHomePageProducts = async (req, res) => {
     }
 };
 
-
 // Get Single Product Details
-
 const getSingleProduct = async (req, res) => {
     try {
         const productId = req.params.id;
@@ -139,15 +135,13 @@ const getSingleProduct = async (req, res) => {
     }
 };
 
-
 // Get All Categories
 const getAllCategories = async (req, res) => {
     try {
-        const categories = await LaptopCategory.find({isActive:true})
+        const categories = await LaptopCategory.find({ isActive: true })
             .sort('name')
             .lean();
 
-        // Get product count for each category
         const categoriesWithCount = await Promise.all(categories.map(async category => {
             const count = await Product.countDocuments({ category: category._id });
             return { ...category, productCount: count };
@@ -172,7 +166,6 @@ const getCategoryProducts = async (req, res) => {
     try {
         const categoryId = req.params.id;
 
-        // Ensure category is active
         const category = await LaptopCategory.findOne({ _id: categoryId, isActive: true });
         if (!category) {
             req.flash('error', 'Category not found or inactive');
@@ -184,32 +177,33 @@ const getCategoryProducts = async (req, res) => {
         const skip = (page - 1) * limit;
 
         const [products, totalProducts] = await Promise.all([
-            Product.find({ 
+            Product.find({
                 category: categoryId,
                 isListed: true,
                 isDeleted: false
             })
-            .populate('category')
-            .skip(skip)
-            .limit(limit)
-            .sort('-createdAt')
-            .lean(),
-            Product.countDocuments({ 
+                .populate('category')
+                .skip(skip)
+                .limit(limit)
+                .sort('-createdAt')
+                .lean(),
+            Product.countDocuments({
                 category: categoryId,
                 isListed: true,
                 isDeleted: false
             })
         ]);
 
-        products.forEach(product => {
-            product.discountedPrice = product.price - (product.price * (product.discountPercentage / 100));
-        });
+        const productsWithOffers = await Promise.all(products.map(async (product) => {
+            const offerDetails = await getBestOfferForProduct(product);
+            return { ...product, offerDetails };
+        }));
 
         const totalPages = Math.ceil(totalProducts / limit);
 
         res.render('user/categoryProducts', {
             category,
-            products,
+            products: productsWithOffers,
             currentPage: page,
             totalPages,
             totalProducts,
@@ -225,8 +219,7 @@ const getCategoryProducts = async (req, res) => {
     }
 };
 
-
-
+// Load Shop Page
 // Load Shop Page
 const loadShop = async (req, res) => {
     try {
@@ -234,19 +227,18 @@ const loadShop = async (req, res) => {
         const limit = parseInt(req.query.limit) || 12;
         const skip = (page - 1) * limit;
 
-        const selectedCategory = req.query.category || null;
+        const selectedCategories = req.query.category ? (Array.isArray(req.query.category) ? req.query.category : [req.query.category]) : [];
         const sortOption = req.query.sort || 'newest';
         const searchQuery = req.query.search || '';
-        const minPrice = parseFloat(req.query.minPrice) || 0;
-        const maxPrice = parseFloat(req.query.maxPrice) || Number.MAX_VALUE;
+        const minPrice = req.query.minPrice ? parseFloat(req.query.minPrice) : null;
+        const maxPrice = req.query.maxPrice ? parseFloat(req.query.maxPrice) : null;
 
-        const activeCategories = await LaptopCategory.find({ isActive: true }).select('_id name');
-        const activeCategoryIds = activeCategories.map(cat => cat._id);
+        const activeCategories = await LaptopCategory.find({ isActive: true }).select('_id name').lean();
 
         const filter = {
             isListed: true,
             isDeleted: false,
-            category: { $in: activeCategoryIds }
+            category: { $in: activeCategories.map(cat => cat._id) }
         };
 
         if (searchQuery) {
@@ -256,39 +248,38 @@ const loadShop = async (req, res) => {
             ];
         }
 
-        if (selectedCategory) {
-            filter.category = selectedCategory;
+        if (selectedCategories.length > 0) {
+            filter.category = { $in: selectedCategories };
         }
 
         const allProducts = await Product.find(filter).populate('category').lean();
 
-        // Apply offer logic to all products
         const productsWithOffers = await Promise.all(allProducts.map(async (product) => {
             const offerDetails = await getBestOfferForProduct(product);
             return { ...product, offerDetails };
         }));
 
-        // Filter by price range using finalPrice
-        const filteredProducts = productsWithOffers.filter(product => {
-            return product.offerDetails.finalPrice >= minPrice && product.offerDetails.finalPrice <= maxPrice;
-        });
+        // Filter by price range
+        let filteredProducts = productsWithOffers;
+        if (minPrice !== null) {
+            filteredProducts = filteredProducts.filter(p => p.offerDetails.finalPrice >= minPrice);
+        }
+        if (maxPrice !== null) {
+            filteredProducts = filteredProducts.filter(p => p.offerDetails.finalPrice <= maxPrice);
+        }
 
-        // Sort based on the selected sort option
+        // Sort products
         const sortQuery = {
             'price_low_to_high': (a, b) => a.offerDetails.finalPrice - b.offerDetails.finalPrice,
             'price_high_to_low': (a, b) => b.offerDetails.finalPrice - a.offerDetails.finalPrice,
-            'newest': (a, b) => new Date(b.createdAt) - new Date(a.createdAt),
-            'name_a_to_z': (a, b) => a.name.localeCompare(b.name),
-            'name_z_to_a': (a, b) => b.name.localeCompare(a.name),
-            'popularity': (a, b) => (b.viewCount || 0) - (a.viewCount || 0),
-            'average_rating': (a, b) => (b.averageRating || 0) - (a.averageRating || 0)
+            'newest': (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
         }[sortOption] || ((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
         filteredProducts.sort(sortQuery);
 
         const paginatedProducts = filteredProducts.slice(skip, skip + limit);
 
-        const finalPrices = filteredProducts.map(product => product.offerDetails.finalPrice);
+        const finalPrices = productsWithOffers.map(p => p.offerDetails.finalPrice);
         const minPriceInDb = finalPrices.length > 0 ? Math.min(...finalPrices) : 0;
         const maxPriceInDb = finalPrices.length > 0 ? Math.max(...finalPrices) : 0;
 
@@ -301,13 +292,13 @@ const loadShop = async (req, res) => {
             currentPage: page,
             totalPages,
             totalProducts,
-            selectedCategory,
+            selectedCategory: selectedCategories.length > 0 ? selectedCategories[0] : '', // For simplicity, using first selected category in view
             sortOption,
             searchQuery,
             minPrice: minPriceInDb,
             maxPrice: maxPriceInDb,
-            selectedMinPrice: minPrice,
-            selectedMaxPrice: maxPrice === Number.MAX_VALUE ? maxPriceInDb : maxPrice,
+            selectedMinPrice: minPrice || minPriceInDb,
+            selectedMaxPrice: maxPrice || maxPriceInDb,
             message: {
                 type: req.flash('error').length ? 'error' : 'success',
                 content: req.flash('error')[0] || req.flash('success')[0]
@@ -319,8 +310,6 @@ const loadShop = async (req, res) => {
         res.redirect('/');
     }
 };
-
-
 
 // Search Products
 const searchProducts = async (req, res) => {
@@ -394,12 +383,12 @@ const searchProducts = async (req, res) => {
     }
 };
 
+// Add to Wishlist
 const addToWishlist = async (req, res) => {
     try {
         const { productId } = req.body;
         const userId = req.session.user._id;
 
-        // Find the product
         const product = await Product.findById(productId);
         if (!product || product.isDeleted) {
             return res.status(404).json({
@@ -408,7 +397,6 @@ const addToWishlist = async (req, res) => {
             });
         }
 
-        // Add to wishlist logic
         const user = await User.findById(userId);
         if (user.wishlist.includes(productId)) {
             return res.json({
@@ -433,9 +421,8 @@ const addToWishlist = async (req, res) => {
     }
 };
 
-
-
-const getWishlst = async (req, res) => {
+// Get Wishlist
+const getWishlist = async (req, res) => {
     try {
         const userId = req.session.user._id;
         const user = await User.findById(userId)
@@ -445,14 +432,10 @@ const getWishlst = async (req, res) => {
                 match: { isDeleted: false }
             });
 
-        const wishlistItems = user.wishlist.map(product => {
-            const price = product.price;
-            const discountedPrice = price - (price * (product.discountPercentage / 100));
-            return {
-                ...product.toObject(),
-                discountedPrice
-            };
-        });
+        const wishlistItems = await Promise.all(user.wishlist.map(async (product) => {
+            const offerDetails = await getBestOfferForProduct(product);
+            return { ...product.toObject(), offerDetails };
+        }));
 
         res.render('user/wishlist', {
             wishlistItems,
@@ -468,14 +451,14 @@ const getWishlst = async (req, res) => {
     }
 };
 
-
+// Remove from Wishlist
 const removeFromWishlist = async (req, res) => {
     try {
         const { productId } = req.params;
         const userId = req.session.user._id;
 
         const user = await User.findById(userId);
-        user.wishlist = user.wishlist.filter(id => 
+        user.wishlist = user.wishlist.filter(id =>
             id.toString() !== productId
         );
         await user.save();
@@ -493,7 +476,6 @@ const removeFromWishlist = async (req, res) => {
     }
 };
 
-
 module.exports = {
     getHomePageProducts,
     getSingleProduct,
@@ -502,6 +484,6 @@ module.exports = {
     loadShop,
     searchProducts,
     addToWishlist,
+    getWishlist,
     removeFromWishlist,
 };
-
