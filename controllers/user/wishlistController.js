@@ -12,9 +12,6 @@ exports.getWishlist = async (req, res) => {
             .populate('product')
             .sort({ createdAt: -1 });
 
-        console.log('User ID:', user); // Debugging log
-        console.log('Wishlist Items:', wishlistItems); // Debugging log
-
         res.render('wishlist', { wishlistItems });
     } catch (error) {
         console.error('Error fetching wishlist:', error);
@@ -46,11 +43,19 @@ exports.toggleWishlist = async (req, res) => {
 
         if (existingItem) {
             await Wishlist.deleteOne({ user: userId, product: productId });
-            return res.json({ success: true, message: 'Product removed from wishlist', added: false });
+            return res.json({ 
+                success: true, 
+                message: 'Product removed from wishlist successfully', 
+                added: false 
+            });
         } else {
             const wishlistItem = new Wishlist({ user: userId, product: productId });
             await wishlistItem.save();
-            return res.json({ success: true, message: 'Product added to wishlist', added: true });
+            return res.json({ 
+                success: true, 
+                message: 'Product added to wishlist successfully', 
+                added: true 
+            });
         }
     } catch (error) {
         console.error('Error toggling wishlist:', error);
@@ -87,7 +92,6 @@ exports.removeFromWishlist = async (req, res) => {
         return res.status(500).json({
             success: false,
             message: 'Server error while removing item from wishlist',
-            error: process.env.NODE_ENV === 'development' ? error.message : undefined,
         });
     }
 };

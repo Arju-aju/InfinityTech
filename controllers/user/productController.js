@@ -421,60 +421,7 @@ const addToWishlist = async (req, res) => {
     }
 };
 
-// Get Wishlist
-const getWishlist = async (req, res) => {
-    try {
-        const userId = req.session.user._id;
-        const user = await User.findById(userId)
-            .populate({
-                path: 'wishlist',
-                select: 'name images price discountPercentage',
-                match: { isDeleted: false }
-            });
 
-        const wishlistItems = await Promise.all(user.wishlist.map(async (product) => {
-            const offerDetails = await getBestOfferForProduct(product);
-            return { ...product.toObject(), offerDetails };
-        }));
-
-        res.render('user/wishlist', {
-            wishlistItems,
-            message: {
-                type: req.flash('error').length ? 'error' : 'success',
-                content: req.flash('error')[0] || req.flash('success')[0]
-            }
-        });
-    } catch (error) {
-        console.error('Error in getWishlist:', error);
-        req.flash('error', 'Error loading wishlist');
-        res.redirect('/');
-    }
-};
-
-// Remove from Wishlist
-const removeFromWishlist = async (req, res) => {
-    try {
-        const { productId } = req.params;
-        const userId = req.session.user._id;
-
-        const user = await User.findById(userId);
-        user.wishlist = user.wishlist.filter(id =>
-            id.toString() !== productId
-        );
-        await user.save();
-
-        res.json({
-            success: true,
-            message: 'Product removed from wishlist successfully'
-        });
-    } catch (error) {
-        console.error('Error in removeFromWishlist:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Error removing product from wishlist'
-        });
-    }
-};
 
 module.exports = {
     getHomePageProducts,
@@ -484,6 +431,4 @@ module.exports = {
     loadShop,
     searchProducts,
     addToWishlist,
-    getWishlist,
-    removeFromWishlist,
 };
