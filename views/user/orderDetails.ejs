@@ -6,6 +6,7 @@
     <title>Order Status</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         .status-bar { transition: width 0.5s ease-in-out; }
         .status-point { transition: all 0.3s ease-in-out; }
@@ -13,7 +14,6 @@
         .status-point.completed { background-color: #10B981; border-color: #10B981; }
         .status-point.cancelled { background-color: #EF4444; border-color: #EF4444; }
         .status-point.returned { background-color: #F59E0B; border-color: #F59E0B; }
-        .status-line { transition: background-color 0.3s ease-in-out; }
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.5); z-index: 50; overflow: auto; }
         .modal-content { animation: modalFadeIn 0.3s; }
         @keyframes modalFadeIn { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
@@ -193,12 +193,12 @@
             <!-- Action Buttons -->
             <div class="flex justify-end space-x-4">
                 <% if (['Pending', 'Processing', 'Out for Delivery', 'Shipped'].includes(order.status)) { %>
-                    <button id="cancelOrder" class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors">
+                    <button id="cancelOrderBtn" class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors">
                         Cancel Order
                     </button>
                 <% } %>
                 <% if (order.status === 'Delivered' && !order.status.includes('Return')) { %>
-                    <button id="returnOrder" class="px-4 py-2 bg-yellow-600 text-white rounded hover:bg-yellow-700 transition-colors">
+                    <button id="returnOrderBtn" class="px-4 py-2 bg-yellow-600 text-white rounded hover:bg-yellow-700 transition-colors">
                         Return Order
                     </button>
                 <% } %>
@@ -216,7 +216,7 @@
             <div class="modal-content bg-white rounded-lg shadow-xl w-full max-w-md mx-auto p-6">
                 <div class="flex justify-between items-center mb-4">
                     <h3 class="text-xl font-semibold text-gray-900">Cancel Order</h3>
-                    <button id="closeModal" class="text-gray-400 hover:text-gray-500">
+                    <button id="closeCancellationModal" class="text-gray-400 hover:text-gray-500">
                         <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                         </svg>
@@ -231,15 +231,15 @@
                         <div><label class="block text-sm font-medium text-gray-700"><input type="radio" name="cancellationReason" value="Shipping time is too long" class="mr-2">Shipping time is too long</label></div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700">
-                                <input type="radio" name="cancellationReason" value="Other" class="mr-2" id="otherReason">Other
+                                <input type="radio" name="cancellationReason" value="Other" class="mr-2" id="otherCancellationReason">Other
                             </label>
-                            <div id="otherReasonContainer" class="mt-2 hidden">
-                                <textarea id="otherReasonText" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" rows="3" placeholder="Please specify your reason"></textarea>
+                            <div id="otherCancellationReasonContainer" class="mt-2 hidden">
+                                <textarea id="otherCancellationReasonText" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" rows="3" placeholder="Please specify your reason"></textarea>
                             </div>
                         </div>
                     </div>
                     <div class="mt-6 flex justify-end space-x-3">
-                        <button type="button" id="cancelModalBtn" class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">Cancel</button>
+                        <button type="button" id="cancelCancellationModalBtn" class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">Cancel</button>
                         <button type="submit" class="px-4 py-2 border border-transparent rounded-md shadow-sm text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">Submit</button>
                     </div>
                 </form>
@@ -290,7 +290,7 @@
             <div class="modal-content bg-white rounded-lg shadow-xl w-full max-w-md mx-auto p-6">
                 <div class="flex justify-between items-center mb-4">
                     <h3 class="text-xl font-semibold text-gray-900">Cancel Product</h3>
-                    <button id="closeProductModal" class="text-gray-400 hover:text-gray-500">
+                    <button id="closeProductCancellationModal" class="text-gray-400 hover:text-gray-500">
                         <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                         </svg>
@@ -303,13 +303,13 @@
                         <div><label class="block text-sm font-medium text-gray-700"><input type="radio" name="productCancellationReason" value="Changed my mind" class="mr-2">Changed my mind</label></div>
                         <div><label class="block text-sm font-medium text-gray-700"><input type="radio" name="productCancellationReason" value="Found better price elsewhere" class="mr-2">Found better price elsewhere</label></div>
                         <div><label class="block text-sm font-medium text-gray-700"><input type="radio" name="productCancellationReason" value="Ordered by mistake" class="mr-2">Ordered by mistake</label></div>
-                        <div><label class="block text-sm font-medium text-gray-700"><input type="radio" name="productCancellationReason" value="Other" class="mr-2" id="otherProductReason">Other</label></div>
-                        <div id="otherProductReasonContainer" class="mt-2 hidden">
-                            <textarea id="otherProductReasonText" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" rows="3" placeholder="Please specify your reason"></textarea>
+                        <div><label class="block text-sm font-medium text-gray-700"><input type="radio" name="productCancellationReason" value="Other" class="mr-2" id="otherProductCancellationReason">Other</label></div>
+                        <div id="otherProductCancellationReasonContainer" class="mt-2 hidden">
+                            <textarea id="otherProductCancellationReasonText" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" rows="3" placeholder="Please specify your reason"></textarea>
                         </div>
                     </div>
                     <div class="mt-6 flex justify-end space-x-3">
-                        <button type="button" id="cancelProductModalBtn" class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 bg-white hover:bg-gray-50">Cancel</button>
+                        <button type="button" id="cancelProductCancellationModalBtn" class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 bg-white hover:bg-gray-50">Cancel</button>
                         <button type="submit" class="px-4 py-2 border border-transparent rounded-md shadow-sm text-white bg-red-600 hover:bg-red-700">Submit</button>
                     </div>
                 </form>
@@ -363,8 +363,6 @@
             const currentStatus = '<%= order && order.status ? order.status : "Pending" %>';
             const statuses = ['Pending', 'Processing', 'Shipped', 'Out for Delivery', 'Delivered'];
 
-            console.log('Current Status:', currentStatus);
-
             if (currentStatus && statuses.includes(currentStatus)) {
                 const currentIndex = statuses.indexOf(currentStatus);
                 statusPoints.forEach((point, index) => {
@@ -376,24 +374,26 @@
             // Modal Elements
             const cancellationModal = document.getElementById('cancellationModal');
             const cancellationForm = document.getElementById('cancellationForm');
-            const closeModalBtn = document.getElementById('closeModal');
-            const cancelModalBtn = document.getElementById('cancelModalBtn');
-            const otherReason = document.getElementById('otherReason');
-            const otherReasonContainer = document.getElementById('otherReasonContainer');
+            const closeCancellationModalBtn = document.getElementById('closeCancellationModal');
+            const cancelCancellationModalBtn = document.getElementById('cancelCancellationModalBtn');
+            const cancelOrderBtn = document.getElementById('cancelOrderBtn');
+            const otherCancellationReason = document.getElementById('otherCancellationReason');
+            const otherCancellationReasonContainer = document.getElementById('otherCancellationReasonContainer');
 
             const returnModal = document.getElementById('returnModal');
             const returnForm = document.getElementById('returnForm');
             const closeReturnModalBtn = document.getElementById('closeReturnModal');
             const cancelReturnModalBtn = document.getElementById('cancelReturnModalBtn');
+            const returnOrderBtn = document.getElementById('returnOrderBtn');
             const otherReturnReason = document.getElementById('otherReturnReason');
             const otherReturnReasonContainer = document.getElementById('otherReturnReasonContainer');
 
             const productCancellationModal = document.getElementById('productCancellationModal');
             const productCancellationForm = document.getElementById('productCancellationForm');
-            const closeProductModalBtn = document.getElementById('closeProductModal');
-            const cancelProductModalBtn = document.getElementById('cancelProductModalBtn');
-            const otherProductReason = document.getElementById('otherProductReason');
-            const otherProductReasonContainer = document.getElementById('otherProductReasonContainer');
+            const closeProductCancellationModalBtn = document.getElementById('closeProductCancellationModal');
+            const cancelProductCancellationModalBtn = document.getElementById('cancelProductCancellationModalBtn');
+            const otherProductCancellationReason = document.getElementById('otherProductCancellationReason');
+            const otherProductCancellationReasonContainer = document.getElementById('otherProductCancellationReasonContainer');
             const productIndexInput = document.getElementById('productIndex');
 
             const productReturnModal = document.getElementById('productReturnModal');
@@ -404,15 +404,15 @@
             const otherProductReturnReasonContainer = document.getElementById('otherProductReturnReasonContainer');
             const productReturnIndexInput = document.getElementById('productReturnIndex');
 
-            // Toggle "Other" Reason Textarea
-            otherReason.addEventListener('change', () => {
-                otherReasonContainer.classList.toggle('hidden', !otherReason.checked);
+            // Toggle "Other" Reason Textareas
+            otherCancellationReason.addEventListener('change', () => {
+                otherCancellationReasonContainer.classList.toggle('hidden', !otherCancellationReason.checked);
             });
             otherReturnReason.addEventListener('change', () => {
                 otherReturnReasonContainer.classList.toggle('hidden', !otherReturnReason.checked);
             });
-            otherProductReason.addEventListener('change', () => {
-                otherProductReasonContainer.classList.toggle('hidden', !otherProductReason.checked);
+            otherProductCancellationReason.addEventListener('change', () => {
+                otherProductCancellationReasonContainer.classList.toggle('hidden', !otherProductCancellationReason.checked);
             });
             otherProductReturnReason.addEventListener('change', () => {
                 otherProductReturnReasonContainer.classList.toggle('hidden', !otherProductReturnReason.checked);
@@ -426,6 +426,8 @@
             const closeCancellationModal = () => {
                 cancellationModal.style.display = 'none';
                 document.body.style.overflow = '';
+                cancellationForm.reset();
+                otherCancellationReasonContainer.classList.add('hidden');
             };
 
             const openReturnModal = () => {
@@ -435,6 +437,8 @@
             const closeReturnModal = () => {
                 returnModal.style.display = 'none';
                 document.body.style.overflow = '';
+                returnForm.reset();
+                otherReturnReasonContainer.classList.add('hidden');
             };
 
             const openProductCancellationModal = (index) => {
@@ -446,7 +450,7 @@
                 productCancellationModal.style.display = 'none';
                 document.body.style.overflow = '';
                 productCancellationForm.reset();
-                otherProductReasonContainer.classList.add('hidden');
+                otherProductCancellationReasonContainer.classList.add('hidden');
             };
 
             const openProductReturnModal = (index) => {
@@ -462,8 +466,12 @@
             };
 
             // Button Event Listeners
-            document.getElementById('cancelOrder')?.addEventListener('click', openCancellationModal);
-            document.getElementById('returnOrder')?.addEventListener('click', openReturnModal);
+            if (cancelOrderBtn) {
+                cancelOrderBtn.addEventListener('click', openCancellationModal);
+            }
+            if (returnOrderBtn) {
+                returnOrderBtn.addEventListener('click', openReturnModal);
+            }
             document.querySelectorAll('.cancel-product-btn').forEach(btn => {
                 btn.addEventListener('click', () => openProductCancellationModal(btn.getAttribute('data-product-index')));
             });
@@ -472,12 +480,12 @@
             });
 
             // Close Modal Buttons
-            closeModalBtn.addEventListener('click', closeCancellationModal);
-            cancelModalBtn.addEventListener('click', closeCancellationModal);
+            closeCancellationModalBtn.addEventListener('click', closeCancellationModal);
+            cancelCancellationModalBtn.addEventListener('click', closeCancellationModal);
             closeReturnModalBtn.addEventListener('click', closeReturnModal);
             cancelReturnModalBtn.addEventListener('click', closeReturnModal);
-            closeProductModalBtn.addEventListener('click', closeProductCancellationModal);
-            cancelProductModalBtn.addEventListener('click', closeProductCancellationModal);
+            closeProductCancellationModalBtn.addEventListener('click', closeProductCancellationModal);
+            cancelProductCancellationModalBtn.addEventListener('click', closeProductCancellationModal);
             closeProductReturnModalBtn.addEventListener('click', closeProductReturnModal);
             cancelProductReturnModalBtn.addEventListener('click', closeProductReturnModal);
 
@@ -492,7 +500,10 @@
                 e.preventDefault();
                 const formData = new FormData(cancellationForm);
                 let reason = formData.get('cancellationReason');
-                if (reason === 'Other') reason = document.getElementById('otherReasonText').value.trim() || null;
+                if (reason === 'Other') {
+                    reason = document.getElementById('otherCancellationReasonText').value.trim();
+                    if (!reason) return Swal.fire('Error', 'Please specify a reason', 'error');
+                }
                 if (!reason) return Swal.fire('Error', 'Please select a reason', 'error');
 
                 closeCancellationModal();
@@ -513,11 +524,12 @@
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({ reason })
                         });
+                        const data = await response.json();
                         if (response.ok) {
                             await Swal.fire('Cancelled!', 'Your order has been cancelled.', 'success');
                             window.location.reload();
                         } else {
-                            throw new Error((await response.json()).message || 'Failed to cancel order');
+                            throw new Error(data.message || 'Failed to cancel order');
                         }
                     } catch (error) {
                         Swal.fire('Error', error.message, 'error');
@@ -529,7 +541,10 @@
                 e.preventDefault();
                 const formData = new FormData(returnForm);
                 let reason = formData.get('returnReason');
-                if (reason === 'Other') reason = document.getElementById('otherReturnReasonText').value.trim() || null;
+                if (reason === 'Other') {
+                    reason = document.getElementById('otherReturnReasonText').value.trim();
+                    if (!reason) return Swal.fire('Error', 'Please specify a reason', 'error');
+                }
                 if (!reason) return Swal.fire('Error', 'Please select a reason', 'error');
 
                 closeReturnModal();
@@ -539,11 +554,12 @@
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ reason })
                     });
+                    const data = await response.json();
                     if (response.ok) {
                         await Swal.fire('Return Requested', 'Your return request has been submitted.', 'success');
                         window.location.reload();
                     } else {
-                        throw new Error((await response.json()).message || 'Failed to submit return request');
+                        throw new Error(data.message || 'Failed to submit return request');
                     }
                 } catch (error) {
                     Swal.fire('Error', error.message, 'error');
@@ -555,7 +571,10 @@
                 const formData = new FormData(productCancellationForm);
                 const productIndex = formData.get('productIndex');
                 let reason = formData.get('productCancellationReason');
-                if (reason === 'Other') reason = document.getElementById('otherProductReasonText').value.trim() || null;
+                if (reason === 'Other') {
+                    reason = document.getElementById('otherProductCancellationReasonText').value.trim();
+                    if (!reason) return Swal.fire('Error', 'Please specify a reason', 'error');
+                }
                 if (!reason) return Swal.fire('Error', 'Please select a reason', 'error');
 
                 closeProductCancellationModal();
@@ -576,12 +595,12 @@
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({ productIndex, reason })
                         });
+                        const data = await response.json();
                         if (response.ok) {
                             await Swal.fire('Cancelled!', 'The product has been cancelled.', 'success');
                             window.location.reload();
                         } else {
-                            throw new Error((await response.json()).
-                            message || 'Failed to cancel product');
+                            throw new Error(data.message || 'Failed to cancel product');
                         }
                     } catch (error) {
                         Swal.fire('Error', error.message, 'error');
@@ -594,7 +613,10 @@
                 const formData = new FormData(productReturnForm);
                 const productIndex = formData.get('productIndex');
                 let reason = formData.get('productReturnReason');
-                if (reason === 'Other') reason = document.getElementById('otherProductReturnReasonText').value.trim() || null;
+                if (reason === 'Other') {
+                    reason = document.getElementById('otherProductReturnReasonText').value.trim();
+                    if (!reason) return Swal.fire('Error', 'Please specify a reason', 'error');
+                }
                 if (!reason) return Swal.fire('Error', 'Please select a reason', 'error');
 
                 closeProductReturnModal();
@@ -604,11 +626,12 @@
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ productIndex, reason })
                     });
+                    const data = await response.json();
                     if (response.ok) {
                         await Swal.fire('Return Requested', 'Your return request for the product has been submitted.', 'success');
                         window.location.reload();
                     } else {
-                        throw new Error((await response.json()).message || 'Failed to submit return request');
+                        throw new Error(data.message || 'Failed to submit return request');
                     }
                 } catch (error) {
                     Swal.fire('Error', error.message, 'error');
@@ -620,4 +643,3 @@
     <%- include('../partials/footer') %>
 </body>
 </html>
-                            
