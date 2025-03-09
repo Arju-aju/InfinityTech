@@ -32,62 +32,71 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Helmet configuration with CSP
-app.use(
-    helmet({
-        contentSecurityPolicy: {
-            directives: {
-                defaultSrc: ["'self'"],
-                styleSrc: [
-                    "'self'",
-                    "'unsafe-inline'",
-                    'https://fonts.googleapis.com',
-                    'https://cdn.jsdelivr.net',
-                    'https://unpkg.com',
-                    'https://cdn.tailwindcss.com',
-                    'https://cdnjs.cloudflare.com',
-                    'https://fonts.cdnjs.cloudflare.com',
-                ],
-                scriptSrc: [
-                    "'self'",
-                    "'unsafe-inline'", // Add this to allow inline scripts
-                    "'unsafe-eval'",   // Add this to allow Alpine.js initialization
-                    'https://cdn.jsdelivr.net',
-                    'https://unpkg.com',
-                    'https://cdn.tailwindcss.com',
-                    'https://code.jquery.com',
-                    'https://cdn.jsdelivr.net/npm/sweetalert2@11',
-                    'https://cdnjs.cloudflare.com',
-                    'https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js', // Specific Alpine.js CDN
-                    
-                  ],
-                imgSrc: [
-                    "'self'",
-                    'data:',
-                    'https://ui-avatars.com',
-                ],
-                fontSrc: [
-                    "'self'",
-                    'https://fonts.gstatic.com',
-                    'data:',
-                    'https://fonts.cdnjs.cloudflare.com',
-                    'https://cdnjs.cloudflare.com',
-                ],
-                connectSrc: ["'self'", 'https://unpkg.com', 'https://cdn.jsdelivr.net'],
-                upgradeInsecureRequests: [],
-            },
-        },
-        crossOriginEmbedderPolicy: false,
-    })
-);
+// Helmet configuration with updated CSP for Razorpay
+// app.use(
+//     helmet({
+//         contentSecurityPolicy: {
+//             useDefaults: true,
+//             directives: {
+//                 defaultSrc: ["'self'"],
+//                 styleSrc: [
+//                     "'self'",
+//                     "'unsafe-inline'",
+//                     'https://fonts.googleapis.com',
+//                     'https://cdn.jsdelivr.net',
+//                     'https://unpkg.com',
+//                     'https://cdn.tailwindcss.com',
+//                     'https://cdnjs.cloudflare.com',
+//                 ],
+//                 scriptSrc: [
+//                     "'self'",
+//                     "'unsafe-inline'",
+//                     "'unsafe-eval'",
+//                     'https://cdn.jsdelivr.net',
+//                     'https://unpkg.com',
+//                     'https://cdn.tailwindcss.com',
+//                     'https://code.jquery.com',
+//                     'https://cdn.jsdelivr.net/npm/sweetalert2@11',
+//                     'https://cdnjs.cloudflare.com',
+//                     'https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js',
+//                     'https://checkout.razorpay.com',
+//                 ],
+//                 frameSrc: [
+//                     "'self'",
+//                     'https://api.razorpay.com',
+//                     'https://checkout.razorpay.com',
+//                 ],
+//                 connectSrc: [
+//                     "'self'",
+//                     'https://unpkg.com',
+//                     'https://cdn.jsdelivr.net',
+//                     'https://lumberjack.razorpay.com',
+//                     'https://api.razorpay.com',
+//                     'https://checkout.razorpay.com',
+//                 ],
+//                 imgSrc: [
+//                     "'self'",
+//                     'data:',
+//                     'https://ui-avatars.com',
+//                 ],
+//                 fontSrc: [
+//                     "'self'",
+//                     'https://fonts.gstatic.com',
+//                     'data:',
+//                 ],
+//                 upgradeInsecureRequests: [],
+//             },
+//         },
+//         crossOriginEmbedderPolicy: false,
+//     })
+// );
+
 
 // Custom middleware for AJAX responses
 app.use((req, res, next) => {
     if (req.xhr || req.headers.accept?.includes('json')) {
-        res.error = (status, message) =>
-            res.status(status).json({ success: false, message });
-        res.success = (data, message = 'Success') =>
-            res.json({ success: true, message, data });
+        res.error = (status, message) => res.status(status).json({ success: false, message });
+        res.success = (data, message = 'Success') => res.json({ success: true, message, data });
     }
     next();
 });
@@ -98,7 +107,7 @@ app.use(
         secret: process.env.SESSION_SECRET || 'default-secret',
         resave: false,
         saveUninitialized: false,
-        cookie: { maxAge: 1000 * 60 * 60 * 24 }, // 1 day
+        cookie: { maxAge: 1000 * 60 * 60 * 24, httpOnly: true, secure: process.env.NODE_ENV === 'production' },
     })
 );
 
@@ -107,11 +116,13 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 // Debug session and user
-app.use((req, res, next) => {
-    console.log('Session:', req.session);
-    console.log('User:', req.user);
-    next();
-});
+if (process.env.NODE_ENV !== 'production') {
+    app.use((req, res, next) => {
+        console.log('Session:', req.session);
+        console.log('User:', req.user);
+        next();
+    });
+}
 
 // Flash messages
 app.use(flash());

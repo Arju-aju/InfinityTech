@@ -8,80 +8,84 @@ const razorpayInstance = createRazorpayInstance();
 
 exports.createRazorpayOrder = async (req, res) => {
     try {
-        console.log('Creating Razorpay order:', req.body);
+        console.log('Creating Razorpay order with body:', JSON.stringify(req.body, null, 2));
         const { amount, addressId } = req.body;
 
+        if (!amount || isNaN(amount) || amount <= 0) {
+            return res.status(400).json({ success: false, message: 'Invalid amount' });
+        }
+        if (!addressId) {
+            return res.status(400).json({ success: false, message: 'Address ID is required' });
+        }
+
         const options = {
-            amount: Math.round(amount * 100),
+            amount: Math.round(amount * 100), // Convert to paise
             currency: 'INR',
-            receipt: `receipt_${Date.now()}`
+            receipt: `receipt_${Date.now()}`,
         };
 
         const order = await razorpayInstance.orders.create(options);
-        console.log('Razorpay order created:', order);
+        console.log('Razorpay order created successfully:', JSON.stringify(order, null, 2));
 
         res.json({
             success: true,
             orderId: order.id,
             amount: order.amount,
             key: process.env.Test_Key_ID,
-            addressId
+            addressId,
         });
     } catch (error) {
         console.error('Razorpay order creation error:', error.message, error.stack);
-        res.status(500).json({ success: false, message: 'Error creating order' });
+        res.status(500).json({ success: false, message: `Error creating order: ${error.message}` });
     }
 };
 
 exports.verifyPayment = async (req, res) => {
     try {
-        console.log('Verifying Razorpay payment:', req.body);
+        console.log('Verifying Razorpay payment with body:', JSON.stringify(req.body, null, 2));
         const { razorpay_order_id, razorpay_payment_id, razorpay_signature, addressId, totalAmount } = req.body;
+
+        if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
+            return res.status(400).json({ success: false, message: 'Missing payment details' });
+        }
 
         const generatedSignature = crypto
             .createHmac('sha256', process.env.Test_Key_Secret)
-            .update(razorpay_order_id + '|' + razorpay_payment_id)
+            .update(`${razorpay_order_id}|${razorpay_payment_id}`)
             .digest('hex');
 
         console.log('Generated signature:', generatedSignature);
+        console.log('Received signature:', razorpay_signature);
+
         if (generatedSignature !== razorpay_signature) {
-            console.log('Signature mismatch');
-            return res.status(400).json({ success: false, message: 'Payment verification failed' });
+            console.log('Signature mismatch detected');
+            return res.status(400).json({ success: false, message: 'Payment verification failed - Invalid signature' });
         }
 
         const cart = await Cart.findOne({ user: req.user._id }).populate('items.product');
-        console.log('Cart:', cart);
         if (!cart || !cart.items.length) {
-            console.log('Cart is empty or not found');
             return res.status(400).json({ success: false, message: 'Cart is empty or not found' });
         }
 
         const addressDoc = await Address.findOne({ userID: req.user._id });
-        console.log('Address doc:', addressDoc);
         const selectedAddress = addressDoc?.address.find(addr => addr._id.toString() === addressId);
-        console.log('Selected address:', selectedAddress);
         if (!selectedAddress) {
-            console.log('Invalid address');
             return res.status(400).json({ success: false, message: 'Invalid delivery address' });
         }
 
         const validCartItems = cart.items.filter(item => item.product);
         if (validCartItems.length === 0) {
-            console.log('No valid items in cart');
             return res.status(400).json({ success: false, message: 'No valid products in cart' });
         }
 
-        const orderProducts = validCartItems.map(item => {
-            console.log('Processing cart item:', item);
-            return {
-                productId: item.product._id,
-                quantity: item.quantity,
-                price: item.product.price,
-                finalPrice: item.product.price, // Adjust if offers are applied
-                totalPrice: item.product.price * item.quantity,
-                status: 'Pending'
-            };
-        });
+        const orderProducts = validCartItems.map(item => ({
+            productId: item.product._id,
+            quantity: item.quantity,
+            price: item.product.price,
+            finalPrice: item.product.price,
+            totalPrice: item.product.price * item.quantity,
+            status: 'Pending',
+        }));
 
         const cartTotal = validCartItems.reduce((acc, item) => acc + (item.product.price * item.quantity), 0);
         const shippingCharge = cartTotal < 500 ? 30 : 0;
@@ -98,21 +102,17 @@ exports.verifyPayment = async (req, res) => {
             razorpayDetails: {
                 orderId: razorpay_order_id,
                 paymentId: razorpay_payment_id,
-                signature: razorpay_signature
-            }
+                signature: razorpay_signature,
+            },
         });
 
-        console.log('Order before saving:', order.toObject());
         await order.save();
-        console.log('Order saved successfully:', order._id);
-
-        // Only delete the cart after successful order creation
         await Cart.findByIdAndDelete(cart._id);
-        console.log('Cart deleted successfully after order:', cart._id);
+        console.log('Order saved and cart deleted:', order._id);
 
         res.json({ success: true, orderId: order._id });
     } catch (error) {
         console.error('Payment verification error:', error.message, error.stack);
-        res.status(500).json({ success: false, message: 'Error verifying payment', error: error.message });
+        res.status(500).json({ success: false, message: `Error verifying payment: ${error.message}` });
     }
 };

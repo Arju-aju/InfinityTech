@@ -2,8 +2,6 @@ const Address = require('../../models/addressSchema');
 
 exports.getAddress = async (req, res) => {
     try {
-
-        
         const userID = req.session?.user?._id;
 
         if (!userID) {
@@ -11,10 +9,22 @@ exports.getAddress = async (req, res) => {
             return res.redirect('/login');
         }
 
+        // Fetch user profile from session (assuming it contains name and email)
+        const userProfile = req.session.user;
+
+        if (!userProfile || !userProfile.name || !userProfile.email) {
+            req.flash('error', 'User profile data incomplete');
+            return res.redirect('/login');
+        }
+
         const userAddress = await Address.findOne({ userID });
 
         res.render('user/address', {
             userAddresses: userAddress ? userAddress.address : [],
+            userProfile: {
+                name: userProfile.name,
+                email: userProfile.email
+            },
             messages: {
                 success: req.flash('success'),
                 error: req.flash('error')
@@ -93,8 +103,26 @@ exports.addAddress = async (req, res) => {
 
 exports.editAddress = async (req, res) => {
     try {
-        const address = await Address.findById(req.params.id);
-        res.render('/editAddress', { address });
+        const userID = req.session?.user?._id;
+        if (!userID) {
+            req.flash('error', 'User not authenticated');
+            return res.redirect('/login');
+        }
+
+        const userAddress = await Address.findOne({ userID });
+        if (!userAddress) {
+            req.flash('error', 'No addresses found');
+            return res.redirect('/address');
+        }
+
+        const address = userAddress.address.id(req.params.id);
+        if (!address) {
+            req.flash('error', 'Address not found');
+            return res.redirect('/address');
+        }
+
+        // Since editing happens via a modal in address.ejs, redirect back to /address with the data
+        res.redirect('/address');
     } catch (error) {
         console.error(error);
         req.flash('error', 'Failed to load address for editing');
@@ -107,6 +135,11 @@ exports.updateAddress = async (req, res) => {
         const { id } = req.params;
         const userID = req.session?.user?._id;
         const { addressType, name, address, city, landmark, state, pincode, phone } = req.body;
+
+        if (!userID) {
+            req.flash('error', 'User not authenticated');
+            return res.redirect('/login');
+        }
 
         let userAddress = await Address.findOne({ userID });
 
@@ -162,7 +195,7 @@ exports.setDefaultAddress = async (req, res) => {
         }
 
         userAddress.address = userAddress.address.map(addr => ({
-            ...addr,
+            ...addr._doc,
             isDefault: false
         }));
 

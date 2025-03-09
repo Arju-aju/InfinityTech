@@ -19,7 +19,7 @@ const orderSchema = new Schema({
             type: Number,
             required: true
         },
-        finalPrice: { // Added since checkoutController uses this
+        finalPrice: { 
             type: Number,
             required: true
         },
@@ -29,6 +29,7 @@ const orderSchema = new Schema({
         },
         status: {
             type: String,
+            enum: ["Pending", "Processing", "Shipped", "Out for Delivery", "Delivered", "Cancelled", "Return Requested", "Return Approved", "Returned Rejected", "Returned"],
             default: 'Pending'
         },
         createdAt: {
@@ -51,17 +52,26 @@ const orderSchema = new Schema({
     },
     shippingCharge: {
         type: Number,
-        default: 0
+        required: true, // Ensure this is required
+        default: 50 // Default shipping charge
     },
     paymentMethod: {
         type: String,
-        enum: ['Credit Card', 'Debit Card', 'cod', 'razorpay', 'cash'],
+        enum: ['Credit Card', 'Debit Card', 'cod', 'razorpay', 'wallet'], // Added 'wallet'
         required: true
     },
     paymentStatus: {
         type: String,
         enum: ['pending', 'paid', 'failed'],
         default: 'pending'
+    },
+    couponCode: { // New field for tracking coupon code
+        type: String,
+        default: null
+    },
+    couponDiscount: { // New field for tracking coupon deduction amount
+        type: Number,
+        default: 0
     },
     cancellationReason: {
         type: String,
@@ -81,7 +91,7 @@ const orderSchema = new Schema({
     },
     couponApplied: {
         type: Schema.Types.ObjectId,
-        ref: 'Coupoun',
+        ref: 'Coupon',
         default: null
     },
     offerApplied: {

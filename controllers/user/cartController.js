@@ -38,7 +38,7 @@ const getBestOfferForProduct = async (product) => {
     }
 };
 
-// Clean up cart function to remove invalid items
+// Clean up cart function
 const cleanupCart = async (userId) => {
     try {
         const cart = await Cart.findOne({ user: userId });
@@ -72,6 +72,8 @@ const getCart = async (req, res) => {
             console.log('Cart is empty for this user.');
             return res.render('user/cart', {
                 cartItems: [],
+                cartSubtotal: 0,
+                shippingCharge: 0,
                 cartTotal: 0,
                 message: {
                     type: req.flash('error').length ? 'error' : 'success',
@@ -86,6 +88,8 @@ const getCart = async (req, res) => {
             console.log('No valid products in cart.');
             return res.render('user/cart', {
                 cartItems: [],
+                cartSubtotal: 0,
+                shippingCharge: 0,
                 cartTotal: 0,
                 message: {
                     type: 'error',
@@ -106,12 +110,14 @@ const getCart = async (req, res) => {
         }));
 
         const cartSubtotal = cartItems.reduce((total, item) => total + item.total, 0);
-        const shippingCharge = 30; // Hardcoded shipping charge
+        const shippingCharge = 50;
         const cartTotal = cartSubtotal + shippingCharge;
 
         res.render('user/cart', {
             cartItems,
-            cartTotal: cartSubtotal, // Pass subtotal to the view
+            cartSubtotal,
+            shippingCharge,
+            cartTotal,
             message: {
                 type: req.flash('error').length ? 'error' : 'success',
                 content: req.flash('error')[0] || req.flash('success')[0]
@@ -251,15 +257,16 @@ const removeFromCart = async (req, res) => {
             }
             return sum;
         }, 0);
-        const shippingCharge = 30; // Hardcoded shipping charge
-        const cartTotal = cartSubtotal + shippingCharge;
+        const shippingCharge = cart.items.length > 0 ? 50 : 0;
 
         res.json({
             success: true,
             message: 'Item removed from cart successfully',
             cartSubtotal: cartSubtotal.toFixed(2),
-            cartTotal: cartTotal.toFixed(2),
-            isEmpty: cart.items.length === 0
+            shippingCharge: shippingCharge.toFixed(2),
+            cartTotal: (cartSubtotal + shippingCharge).toFixed(2),
+            isEmpty: cart.items.length === 0,
+            remainingStock: product ? product.stock : null
         });
     } catch (error) {
         console.error('Error in removeFromCart:', error);
@@ -330,7 +337,7 @@ const updateCartQuantity = async (req, res) => {
             });
         }
 
-        if (newQuantity > product.stock) {
+        if (newQuantity > product.stock + currentQuantity) {
             return res.status(400).json({
                 success: false,
                 message: 'Requested quantity exceeds available stock',
@@ -356,8 +363,7 @@ const updateCartQuantity = async (req, res) => {
             }
             return sum;
         }, 0);
-        const shippingCharge = 30; // Hardcoded shipping charge
-        const cartTotal = cartSubtotal + shippingCharge;
+        const shippingCharge = cart.items.length > 0 ? 50 : 0;
 
         res.json({
             success: true,
@@ -365,7 +371,9 @@ const updateCartQuantity = async (req, res) => {
             newQuantity: newQuantity,
             itemTotal: (discountedPrice * newQuantity).toFixed(2),
             cartSubtotal: cartSubtotal.toFixed(2),
-            cartTotal: cartTotal.toFixed(2)
+            shippingCharge: shippingCharge.toFixed(2),
+            cartTotal: (cartSubtotal + shippingCharge).toFixed(2),
+            remainingStock: product.stock
         });
     } catch (error) {
         console.error('Error in updateCartQuantity:', error);

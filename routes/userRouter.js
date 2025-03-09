@@ -71,7 +71,7 @@ router.post('/verify-payment', auth, paymentController.verifyPayment);
 router.get('/orders', auth, orderController.getOrdersList);
 router.get('/orders/:id', auth, orderController.getOrderDetails);
 router.post('/api/orders/:id/cancel', auth, orderController.cancelOrder);
-router.post('/api/orders/:orderId/return', auth, orderController.returnOrder);
+router.post('/api/orders/:id/return-product', auth, orderController.returnOrder);
 
 // Static pages
 router.get('/about', userController.loadAboutPage);

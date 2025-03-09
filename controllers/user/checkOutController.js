@@ -1,66 +1,43 @@
 const Cart = require('../../models/cartSchema');
 const Order = require('../../models/orderSchema');
 const Address = require('../../models/addressSchema');
-const Coupon = require('../../models/coupounSchema');
+const Coupon = require('../../models/coupounSchema'); // Assuming 'Coupon' model, update if different
+const Wallet = require('../../models/walletSchema');
 const { getBestOfferForProduct } = require('../../utils/offer');
 
-// Get Checkout Page: Loads the checkout page with cart, addresses, and totals
+// Get Checkout Page: Loads the checkout page with cart, addresses, wallet balance, and totals
 exports.getCheckout = async (req, res) => {
   try {
     console.log('Fetching checkout page for user:', req.user._id);
     const cart = await Cart.findOne({ user: req.user._id })
       .populate({ path: 'items.product', select: 'name images price' });
 
-    if (!cart) {
-      console.log('No cart found for user, redirecting to cart');
+    if (!cart || cart.items.length === 0 || cart.items.filter(item => item.product).length === 0) {
+      console.log('No valid cart found, redirecting to cart');
       return res.redirect('/cart');
     }
-
-    if (cart.items.length === 0) {
-      console.log('Cart is empty (items array is empty), redirecting to cart');
-      return res.redirect('/cart');
-    }
-
-    const validCartItems = cart.items.filter(item => item.product);
-    if (validCartItems.length === 0) {
-      console.log('No valid items in cart after filtering, redirecting to cart');
-      return res.redirect('/cart');
-    }
-    cart.items = validCartItems;
+    cart.items = cart.items.filter(item => item.product);
 
     const addressDoc = await Address.findOne({ userID: req.user._id });
     const addresses = addressDoc ? addressDoc.address : [];
-    const defaultAddressIndex = addresses.findIndex(addr => addr.isDefault);
-    const selectedIndex = defaultAddressIndex !== -1 ? defaultAddressIndex : 0;
+    const defaultAddressIndex = addresses.findIndex(addr => addr.isDefault) !== -1 ? addresses.findIndex(addr => addr.isDefault) : 0;
+
+    const wallet = await Wallet.findOne({ userId: req.user._id }) || { balance: 0 };
 
     const cartItemsWithOffers = await Promise.all(cart.items.map(async (item) => {
-      try {
-        const offerDetails = await getBestOfferForProduct(item.product);
-        return {
-          ...item.toObject(),
-          offerDetails: offerDetails || {
-            finalPrice: item.product.price,
-            discountPercentage: 0,
-            appliedOfferType: 'none'
-          },
-          total: (offerDetails ? offerDetails.finalPrice : item.product.price) * item.quantity
-        };
-      } catch (err) {
+      const offerDetails = await getBestOfferForProduct(item.product).catch(err => {
         console.error(`Error getting offer for product ${item.product._id}:`, err);
-        return {
-          ...item.toObject(),
-          offerDetails: {
-            finalPrice: item.product.price,
-            discountPercentage: 0,
-            appliedOfferType: 'none'
-          },
-          total: item.product.price * item.quantity
-        };
-      }
+        return null;
+      });
+      return {
+        ...item.toObject(),
+        offerDetails: offerDetails || { finalPrice: item.product.price, discountPercentage: 0, appliedOfferType: 'none' },
+        total: (offerDetails?.finalPrice || item.product.price) * item.quantity
+      };
     }));
 
     const subtotal = cartItemsWithOffers.reduce((acc, item) => acc + item.total, 0);
-    const shippingCharge = subtotal < 500 ? 30 : 0;
+    const shippingCharge = 50; // Fixed shipping charge of ₹50
     const totalAmount = subtotal + shippingCharge;
 
     console.log('Rendering checkout page with totals:', { subtotal, shippingCharge, totalAmount });
@@ -68,10 +45,11 @@ exports.getCheckout = async (req, res) => {
       cart,
       cartItemsWithOffers,
       addresses,
-      defaultAddressIndex: selectedIndex,
+      defaultAddressIndex,
       subtotal,
       shippingCharge,
       totalAmount,
+      walletBalance: wallet.balance,
       user: req.user
     });
   } catch (error) {
@@ -80,97 +58,92 @@ exports.getCheckout = async (req, res) => {
   }
 };
 
-// Place Order: Handles order placement for COD
+// Place Order: Handles order placement for COD, Wallet, and other methods
 exports.placeOrder = async (req, res) => {
   try {
     console.log('Place order request received:', req.body);
-    console.log('User ID:', req.user._id);
+    const { addressId, paymentMethod, totalAmount, couponCode, couponDiscount } = req.body;
 
     if (!req.user || !req.user._id) {
-      console.log('User not authenticated');
       return res.status(401).json({ success: false, message: 'User not authenticated' });
     }
 
-    const { addressId, paymentMethod, totalAmount } = req.body;
-    if (paymentMethod !== 'cod') {
-      return res.status(400).json({ success: false, message: 'Use Razorpay endpoint for non-COD payments' });
-    }
-
     const cart = await Cart.findOne({ user: req.user._id }).populate('items.product');
-    console.log('Cart found:', cart);
-
-    if (!cart) {
-      console.log('No cart found for user');
-      return res.status(400).json({ success: false, message: 'No cart found for user' });
-    }
-
-    if (cart.items.length === 0) {
-      console.log('Cart is empty');
-      return res.status(400).json({ success: false, message: 'Cart is empty' });
-    }
-
-    const validCartItems = cart.items.filter(item => item.product);
-    console.log('Valid cart items:', validCartItems);
-
-    if (validCartItems.length === 0) {
-      console.log('No valid items in cart');
-      return res.status(400).json({ success: false, message: 'No valid products in cart' });
+    if (!cart || cart.items.length === 0 || cart.items.filter(item => item.product).length === 0) {
+      return res.status(400).json({ success: false, message: 'No valid cart found' });
     }
 
     const addressDoc = await Address.findOne({ userID: req.user._id });
     const selectedAddress = addressDoc?.address.find(addr => addr._id.toString() === addressId);
     if (!selectedAddress) {
-      console.log('Invalid address');
       return res.status(400).json({ success: false, message: 'Invalid delivery address' });
     }
 
-    const cartItemsWithOffers = await Promise.all(validCartItems.map(async (item) => {
-      try {
-        const offerDetails = await getBestOfferForProduct(item.product);
-        const finalPrice = offerDetails ? offerDetails.finalPrice : item.product.price;
-        return {
-          productId: item.product._id,
-          quantity: item.quantity,
-          price: item.product.price,
-          finalPrice: finalPrice,
-          totalPrice: finalPrice * item.quantity,
-          status: 'Pending'
-        };
-      } catch (err) {
+    const cartItemsWithOffers = await Promise.all(cart.items.filter(item => item.product).map(async (item) => {
+      const offerDetails = await getBestOfferForProduct(item.product).catch(err => {
         console.error(`Error getting offer for product ${item.product._id}:`, err);
-        return {
-          productId: item.product._id,
-          quantity: item.quantity,
-          price: item.product.price,
-          finalPrice: item.product.price,
-          totalPrice: item.product.price * item.quantity,
-          status: 'Pending'
-        };
-      }
+        return null;
+      });
+      const finalPrice = offerDetails?.finalPrice || item.product.price;
+      return {
+        productId: item.product._id,
+        quantity: item.quantity,
+        price: item.product.price,
+        finalPrice,
+        totalPrice: finalPrice * item.quantity,
+        status: 'Pending'
+      };
     }));
 
     const subtotal = cartItemsWithOffers.reduce((acc, item) => acc + item.totalPrice, 0);
-    const shippingCharge = subtotal < 500 ? 30 : 0;
-    const orderAmount = subtotal + shippingCharge;
+    const shippingCharge = 50; // Fixed shipping charge of ₹50
+    const orderAmount = totalAmount || (subtotal + shippingCharge - (couponDiscount || 0));
+
+    // COD restriction
+    if (paymentMethod === 'cod' && orderAmount > 4000) {
+      return res.status(400).json({ success: false, message: 'Cash on Delivery is not available for orders above ₹4000' });
+    }
+
+    // Wallet payment logic
+    if (paymentMethod === 'wallet') {
+      let wallet = await Wallet.findOne({ userId: req.user._id });
+      if (!wallet) {
+        wallet = new Wallet({ userId: req.user._id, balance: 0 });
+        await wallet.save();
+      }
+      if (wallet.balance < orderAmount) {
+        return res.status(400).json({ success: false, message: 'Insufficient wallet balance' });
+      }
+      wallet.balance -= orderAmount;
+      wallet.transactions.push({
+        amount: orderAmount,
+        type: 'debit',
+        description: `Order payment for order ID: ${new Date().getTime()}`,
+        date: new Date(),
+        time: new Date()
+      });
+      await wallet.save();
+    } else if (paymentMethod !== 'cod' && paymentMethod !== 'razorpay') {
+      return res.status(400).json({ success: false, message: 'Invalid payment method' });
+    }
 
     const order = new Order({
       user: req.user._id,
       products: cartItemsWithOffers,
       deliveryAddress: selectedAddress,
-      orderAmount: totalAmount || orderAmount,
+      orderAmount,
       shippingCharge,
       paymentMethod,
-      paymentStatus: 'pending',
+      paymentStatus: paymentMethod === 'wallet' ? 'paid' : 'pending',
       orderStatus: 'Processing',
-      orderDate: new Date()
+      orderDate: new Date(),
+      couponCode: couponCode || null, // Store coupon code
+      couponDiscount: couponDiscount || 0, // Store coupon discount
+      couponApplied: couponCode ? (await Coupon.findOne({ code: couponCode }))._id : null // Reference to coupon
     });
 
-    console.log('Saving order:', order.toObject());
     await order.save();
-    console.log('Order saved successfully:', order._id);
-
     await Cart.findByIdAndDelete(cart._id);
-    console.log('Cart deleted successfully:', cart._id);
 
     res.json({ success: true, orderId: order._id, redirectUrl: `/orders/${order._id}` });
   } catch (error) {
@@ -186,64 +159,38 @@ exports.applyCoupon = async (req, res) => {
     const { couponCode } = req.body;
 
     if (!couponCode) {
-      console.log('No coupon code provided');
       return res.status(400).json({ success: false, message: 'Coupon code is required' });
     }
 
     const cart = await Cart.findOne({ user: req.user._id }).populate('items.product');
-    console.log('Cart:', cart);
-    if (!cart || cart.items.length === 0) {
-      console.log('Cart is empty');
+    if (!cart || cart.items.length === 0 || cart.items.filter(item => item.product).length === 0) {
       return res.status(400).json({ success: false, message: 'Cart is empty' });
     }
 
-    const validItems = cart.items.filter(item => item.product);
-    console.log('Valid items:', validItems);
-    if (validItems.length === 0) {
-      console.log('No valid items in cart');
-      return res.status(400).json({ success: false, message: 'No valid products in cart' });
-    }
-
     const coupon = await Coupon.findOne({ code: couponCode, isActive: true });
-    console.log('Coupon found:', coupon);
-    if (!coupon) {
-      console.log('Invalid or inactive coupon');
-      return res.status(400).json({ success: false, message: 'Invalid or inactive coupon' });
-    }
-
-    const isExpired = new Date(coupon.expiredOn).getTime() < Date.now();
-    console.log('Is coupon expired?', isExpired, 'Expired on:', coupon.expiredOn, 'Now:', new Date());
-    if (isExpired) {
-      console.log('Coupon expired');
-      return res.status(400).json({ success: false, message: 'Coupon has expired' });
+    if (!coupon || new Date(coupon.expiredOn) < Date.now()) {
+      return res.status(400).json({ success: false, message: 'Invalid or expired coupon' });
     }
 
     if (coupon.usageLimit && coupon.couponUsed >= coupon.usageLimit) {
-      console.log('Coupon usage limit reached');
       return res.status(400).json({ success: false, message: 'Coupon usage limit reached' });
     }
 
     let userCouponData = coupon.users.find(u => u.userId.toString() === req.user._id.toString());
     if (userCouponData && userCouponData.usageCount >= coupon.usagePerUserLimit) {
-      console.log('User has reached usage limit for this coupon');
       return res.status(400).json({ success: false, message: 'You have reached the usage limit for this coupon' });
     }
 
-    const subtotal = validItems.reduce((acc, item) => acc + item.product.price * item.quantity, 0);
-    console.log('Subtotal:', subtotal, 'Minimum Price:', coupon.minimumPrice);
+    const subtotal = cart.items.filter(item => item.product).reduce((acc, item) => acc + item.product.price * item.quantity, 0);
     if (subtotal < coupon.minimumPrice) {
-      console.log('Minimum purchase not met');
       return res.status(400).json({ success: false, message: `Minimum purchase of ₹${coupon.minimumPrice} required` });
     }
 
-    let discount = 0;
-    if (coupon.offerType === 'percentage') {
-      discount = Math.min((subtotal * coupon.offerValue) / 100, coupon.maxDiscount || Infinity);
-    } else {
-      discount = coupon.offerValue;
-    }
+    let discount = coupon.offerType === 'percentage' 
+      ? Math.min((subtotal * coupon.offerValue) / 100, coupon.maxDiscount || Infinity) 
+      : coupon.offerValue;
 
-    const shippingCharge = subtotal < 500 ? 30 : 0;
+    const shippingCharge = 50; // Fixed shipping charge of ₹50
     const discountedTotal = subtotal + shippingCharge - discount;
 
     if (!userCouponData) {
@@ -251,20 +198,18 @@ exports.applyCoupon = async (req, res) => {
     } else {
       userCouponData.usageCount += 1;
     }
-
     coupon.couponUsed += 1;
     if (coupon.usageLimit && coupon.couponUsed >= coupon.usageLimit) {
       coupon.isActive = false;
-      console.log('Coupon deactivated as usage limit reached');
     }
-
     await coupon.save();
-    console.log('Coupon applied successfully:', { discount, discountedTotal, couponUsed: coupon.couponUsed });
 
     res.json({ 
       success: true, 
       discount, 
       discountedTotal, 
+      shippingCharge,
+      couponCode, // Include couponCode in response
       message: 'Coupon applied successfully' 
     });
   } catch (error) {

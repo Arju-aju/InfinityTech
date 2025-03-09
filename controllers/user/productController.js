@@ -2,6 +2,7 @@ const Product = require('../../models/productSchema');
 const LaptopCategory = require('../../models/categorySchema');
 const User = require('../../models/userSchema');
 const Cart = require('../../models/cartSchema');
+const Wishlist = require('../../models/wishlistSchema');
 const { getBestOfferForProduct } = require('../../utils/offer');
 const { default: mongoose } = require('mongoose');
 
@@ -220,7 +221,6 @@ const getCategoryProducts = async (req, res) => {
 };
 
 // Load Shop Page
-// Load Shop Page
 const loadShop = async (req, res) => {
     try {
         const page = parseInt(req.query.page) || 1;
@@ -233,12 +233,19 @@ const loadShop = async (req, res) => {
         const minPrice = req.query.minPrice ? parseFloat(req.query.minPrice) : null;
         const maxPrice = req.query.maxPrice ? parseFloat(req.query.maxPrice) : null;
 
-        const activeCategories = await LaptopCategory.find({ isActive: true }).select('_id name').lean();
+        // Fetch active categories with fallback
+        let activeCategories = [];
+        try {
+            activeCategories = await LaptopCategory.find({ isActive: true }).select('_id name').lean();
+        } catch (err) {
+            console.error('Error fetching categories:', err);
+            activeCategories = []; // Fallback to empty array
+        }
 
         const filter = {
             isListed: true,
             isDeleted: false,
-            category: { $in: activeCategories.map(cat => cat._id) }
+            category: { $in: activeCategories.length > 0 ? activeCategories.map(cat => cat._id) : [] }
         };
 
         if (searchQuery) {
@@ -252,11 +259,33 @@ const loadShop = async (req, res) => {
             filter.category = { $in: selectedCategories };
         }
 
-        const allProducts = await Product.find(filter).populate('category').lean();
+        // Fetch products with fallback
+        let allProducts = [];
+        try {
+            allProducts = await Product.find(filter).populate('category').lean();
+        } catch (err) {
+            console.error('Error fetching products:', err);
+            allProducts = []; // Fallback to empty array
+        }
 
+        // Calculate offers with error handling
         const productsWithOffers = await Promise.all(allProducts.map(async (product) => {
-            const offerDetails = await getBestOfferForProduct(product);
-            return { ...product, offerDetails };
+            try {
+                const offerDetails = await getBestOfferForProduct(product);
+                return { ...product, offerDetails };
+            } catch (err) {
+                console.error(`Error calculating offer for product ${product._id}:`, err);
+                return {
+                    ...product,
+                    offerDetails: {
+                        originalPrice: product.price,
+                        finalPrice: product.price,
+                        discountAmount: 0,
+                        discountPercentage: 0,
+                        appliedOfferType: null
+                    }
+                };
+            }
         }));
 
         // Filter by price range
@@ -286,28 +315,61 @@ const loadShop = async (req, res) => {
         const totalProducts = filteredProducts.length;
         const totalPages = Math.ceil(totalProducts / limit);
 
+        // Fetch wishlist with fallback
+        let wishlist = [];
+        if (req.user && req.user._id) {
+            try {
+                const user = await User.findById(req.user._id).select('wishlist').lean();
+                wishlist = user ? user.wishlist.map(id => id.toString()) : [];
+            } catch (err) {
+                console.error('Error fetching wishlist:', err);
+                wishlist = []; // Fallback to empty array
+            }
+        }
+
+        // Render shop page even if data is partial
         res.render('user/shop', {
             products: paginatedProducts,
             categories: activeCategories,
             currentPage: page,
             totalPages,
             totalProducts,
-            selectedCategory: selectedCategories.length > 0 ? selectedCategories[0] : '', // For simplicity, using first selected category in view
+            selectedCategory: selectedCategories.length > 0 ? selectedCategories[0] : '',
             sortOption,
             searchQuery,
             minPrice: minPriceInDb,
             maxPrice: maxPriceInDb,
             selectedMinPrice: minPrice || minPriceInDb,
             selectedMaxPrice: maxPrice || maxPriceInDb,
+            wishlist,
             message: {
                 type: req.flash('error').length ? 'error' : 'success',
                 content: req.flash('error')[0] || req.flash('success')[0]
             }
         });
     } catch (error) {
-        console.error('Error in loadShop:', error);
-        req.flash('error', 'Error loading shop page');
-        res.redirect('/');
+        // Log the error but render the page with fallback data instead of redirecting
+        console.error('Unexpected error in loadShop:', error);
+        req.flash('error', 'Something went wrong while loading the shop page.');
+        res.render('user/shop', {
+            products: [],
+            categories: [],
+            currentPage: 1,
+            totalPages: 1,
+            totalProducts: 0,
+            selectedCategory: '',
+            sortOption: 'newest',
+            searchQuery: '',
+            minPrice: 0,
+            maxPrice: 0,
+            selectedMinPrice: 0,
+            selectedMaxPrice: 0,
+            wishlist: [],
+            message: {
+                type: 'error',
+                content: 'Failed to load shop data. Please try again later.'
+            }
+        });
     }
 };
 
@@ -319,7 +381,7 @@ const searchProducts = async (req, res) => {
             isListed: true,
             isDeleted: false,
             $or: [
-                { name: { $regex: searchQuery, $options: 'i' } }, // Case-insensitive search
+                { name: { $regex: searchQuery, $options: 'i' } },
                 { description: { $regex: searchQuery, $options: 'i' } }
             ]
         })
@@ -420,8 +482,6 @@ const addToWishlist = async (req, res) => {
         });
     }
 };
-
-
 
 module.exports = {
     getHomePageProducts,
