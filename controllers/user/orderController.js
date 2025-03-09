@@ -41,7 +41,7 @@ exports.getOrderDetails = async (req, res) => {
                 path: 'products.productId',
                 select: 'name images price'
             })
-            .populate('couponApplied', 'code offerValue offerType'); // Populate coupon details if needed
+            .populate('couponApplied', 'code offerValue offerType');
 
         const userProfile = await User.findById(userId).select('name email');
 
@@ -52,7 +52,6 @@ exports.getOrderDetails = async (req, res) => {
             });
         }
 
-        // Fallback for undefined status
         order.status = order.status || 'Pending';
 
         console.log('Order found:', JSON.stringify(order, null, 2));
@@ -79,22 +78,28 @@ exports.cancelOrder = async (req, res) => {
 
         const order = await Order.findOne({ _id: orderId, user: req.user._id });
         if (!order) {
-            return res.status(404).json({ message: 'Order not found' });
+            return res.status(404).json({ success: false, message: 'Order not found' });
         }
 
         if (!['Pending', 'Processing', 'Out for Delivery', 'Shipped'].includes(order.status)) {
-            return res.status(400).json({ message: 'Order cannot be cancelled at this stage' });
+            return res.status(400).json({ success: false, message: 'Order cannot be cancelled at this stage' });
         }
 
         order.status = 'Cancelled';
         order.cancellationReason = reason;
         order.cancelDate = new Date();
+
+        // Refund to wallet if payment was made online
+        if (order.paymentMethod !== 'COD') {
+            await refundToWallet(order._id, order.user, order.orderAmount, `Refund for cancelled order #${order._id}`);
+        }
+
         await order.save();
 
         res.status(200).json({ success: true, message: 'Order cancelled successfully' });
     } catch (error) {
         console.error('Cancel order error:', error);
-        res.status(500).json({ message: 'Error cancelling order' });
+        res.status(500).json({ success: false, message: 'Error cancelling order' });
     }
 };
 
@@ -105,11 +110,11 @@ exports.returnOrder = async (req, res) => {
 
         const order = await Order.findOne({ _id: orderId, user: req.user._id });
         if (!order) {
-            return res.status(404).json({ message: 'Order not found' });
+            return res.status(404).json({ success: false, message: 'Order not found' });
         }
 
         if (order.status !== 'Delivered') {
-            return res.status(400).json({ message: 'Only delivered orders can be returned' });
+            return res.status(400).json({ success: false, message: 'Only delivered orders can be returned' });
         }
 
         order.status = 'Return Requested';
@@ -120,7 +125,7 @@ exports.returnOrder = async (req, res) => {
         res.status(200).json({ success: true, message: 'Return request submitted successfully' });
     } catch (error) {
         console.error('Return order error:', error);
-        res.status(500).json({ message: 'Error submitting return request' });
+        res.status(500).json({ success: false, message: 'Error submitting return request' });
     }
 };
 
@@ -143,7 +148,6 @@ exports.approveReturn = async (req, res) => {
         order.status = 'Returned';
         order.returnApprovedAt = new Date();
 
-        // Update all "Return Requested" products to "Returned"
         order.products.forEach(product => {
             if (product.status === 'Return Requested') {
                 product.status = 'Returned';
@@ -167,33 +171,44 @@ exports.approveReturn = async (req, res) => {
     }
 };
 
-exports.returnProduct = async (req, res) => {
+exports.cancelProduct = async (req, res) => {
     try {
         const orderId = req.params.id;
         const { productIndex, reason } = req.body;
 
         const order = await Order.findOne({ _id: orderId, user: req.user._id });
         if (!order) {
-            return res.status(404).json({ message: 'Order not found' });
+            return res.status(404).json({ success: false, message: 'Order not found' });
         }
 
-        if (order.status !== 'Delivered') {
-            return res.status(400).json({ message: 'Only delivered products can be returned' });
+        if (!['Pending', 'Processing'].includes(order.status)) {
+            return res.status(400).json({ success: false, message: 'Products can only be cancelled in Pending or Processing status' });
         }
 
         const product = order.products[productIndex];
-        if (!product || product.status !== 'Delivered') {
-            return res.status(400).json({ message: 'Product cannot be returned' });
+        if (!product || product.status !== 'Active') {
+            return res.status(400).json({ success: false, message: 'Product cannot be cancelled' });
         }
 
-        product.status = 'Return Requested';
-        product.returnReason = reason;
+        product.status = 'Cancelled';
+        product.cancellationReason = reason;
+        product.cancelDate = new Date();
+
+        // Update order amount if necessary
+        order.orderAmount -= product.totalPrice;
+
+        // Check if all products are cancelled
+        const activeProducts = order.products.filter(p => p.status === 'Active');
+        if (activeProducts.length === 0) {
+            order.status = 'Cancelled';
+        }
+
         await order.save();
 
-        res.status(200).json({ success: true, message: 'Return request for product submitted successfully' });
+        res.status(200).json({ success: true, message: 'Product cancelled successfully' });
     } catch (error) {
-        console.error('Return product error:', error);
-        res.status(500).json({ message: 'Error submitting return request for product' });
+        console.error('Cancel product error:', error);
+        res.status(500).json({ success: false, message: 'Error cancelling product' });
     }
 };
 
@@ -202,34 +217,25 @@ exports.returnProduct = async (req, res) => {
         const orderId = req.params.id;
         const { productIndex, reason } = req.body;
 
-        if (!reason) {
-            req.flash('error_msg', 'Return reason is required');
-            return res.redirect(`/orders/${orderId}`);
-        }
-
-        const order = await Order.findById(orderId);
+        const order = await Order.findOne({ _id: orderId, user: req.user._id });
         if (!order) {
-            req.flash('error_msg', 'Order not found');
-            return res.redirect('/orders');
+            return res.status(404).json({ success: false, message: 'Order not found' });
         }
 
         if (order.status !== 'Delivered') {
-            req.flash('error_msg', 'Products can only be returned from delivered orders');
-            return res.redirect(`/orders/${orderId}`);
+            return res.status(400).json({ success: false, message: 'Only delivered products can be returned' });
         }
 
         const product = order.products[productIndex];
         if (!product || product.status !== 'Active') {
-            req.flash('error_msg', 'Product cannot be returned');
-            return res.redirect(`/orders/${orderId}`);
+            return res.status(400).json({ success: false, message: 'Product cannot be returned' });
         }
 
-        // Update product status
         product.status = 'Return Requested';
         product.returnReason = reason;
         product.returnRequestedAt = new Date();
 
-        // Update overall order status if all products are requested for return
+        // Check if all products are requested for return
         const activeProducts = order.products.filter(p => p.status === 'Active');
         if (activeProducts.length === 0) {
             order.status = 'Return Requested';
@@ -247,12 +253,10 @@ exports.returnProduct = async (req, res) => {
         });
         await returnDoc.save();
 
-        req.flash('success_msg', 'Product return request submitted successfully');
-        res.redirect(`/orders/${orderId}`);
+        res.status(200).json({ success: true, message: 'Product return request submitted successfully' });
     } catch (error) {
-        console.error('Error returning product:', error);
-        req.flash('error_msg', 'Server error while submitting product return request');
-        res.redirect(`/orders/${orderId}`);
+        console.error('Return product error:', error);
+        res.status(500).json({ success: false, message: 'Error submitting return request for product' });
     }
 };
 
