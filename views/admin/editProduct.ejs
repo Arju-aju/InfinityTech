@@ -154,18 +154,31 @@
             e.preventDefault();
             const url = form.action;
             const imageDiv = form.closest('.relative');
+            const deleteButton = form.querySelector('button[type="submit"]');
+
+            // Disable button and show loading state
+            deleteButton.disabled = true;
+            deleteButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+
             try {
                 const response = await fetch(url, {
                     method: 'POST',
                     body: new FormData(form),
                 });
-                if (response.redirected) {
-                    fadeOut(imageDiv, () => {
-                        window.location.href = response.url; // Follow redirect for flash messages
-                    });
+                const data = await response.json();
+
+                if (data.success) {
+                    fadeOut(imageDiv);
+                } else {
+                    alert(data.message); // Show error message to user
+                    deleteButton.disabled = false;
+                    deleteButton.innerHTML = '<i class="fas fa-times"></i>';
                 }
             } catch (error) {
                 console.error('Error deleting image:', error);
+                alert('An unexpected error occurred while deleting the image');
+                deleteButton.disabled = false;
+                deleteButton.innerHTML = '<i class="fas fa-times"></i>';
             }
         });
     });

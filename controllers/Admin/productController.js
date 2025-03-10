@@ -362,21 +362,47 @@ const deleteProductImage = async (req, res) => {
         const { productId } = req.params;
         const { imagePath } = req.body;
 
-        const product = await Product.findById(productId);
-        if (!product) throw new Error('Product not found');
-        if (!product.images.includes(imagePath)) throw new Error('Image not found');
-        if (product.images.length <= 1) throw new Error('Cannot delete the last image');
+        // Validate inputs
+        if (!productId || !imagePath) {
+            return res.status(400).json({ success: false, message: 'Product ID and image path are required' });
+        }
 
+        // Find the product
+        const product = await Product.findById(productId);
+        if (!product) {
+            return res.status(404).json({ success: false, message: 'Product not found' });
+        }
+
+        // Check if the image exists in the product
+        if (!product.images.includes(imagePath)) {
+            return res.status(400).json({ success: false, message: 'Image not found in product' });
+        }
+
+        // Prevent deletion of the last image
+        if (product.images.length <= 1) {
+            return res.status(400).json({ success: false, message: 'Cannot delete the last image' });
+        }
+
+        // Delete the image file from the filesystem
         const absolutePath = path.join(__dirname, '../../public', imagePath);
-        await fs.unlink(absolutePath).catch(err => console.warn('Warning: Could not delete image file:', err));
+        try {
+            await fs.unlink(absolutePath);
+        } catch (err) {
+            throw new Error(`Failed to delete image file: ${err.message}`);
+        }
+
+        // Remove the image from the product's images array
         product.images = product.images.filter(img => img !== imagePath);
         await product.save();
 
-        req.flash('success', 'Image deleted successfully');
-        res.redirect(`/admin/editProduct/${productId}`);
+        // Return success response
+        return res.status(200).json({ success: true, message: 'Image deleted successfully' });
     } catch (error) {
-        req.flash('error', error.message || 'Error deleting image');
-        res.redirect(`/admin/editProduct/${req.params.productId}`);
+        console.error('Error deleting image:', error);
+        return res.status(500).json({
+            success: false,
+            message: error.message || 'Server error while deleting image'
+        });
     }
 };
 

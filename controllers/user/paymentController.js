@@ -84,7 +84,7 @@ exports.verifyPayment = async (req, res) => {
             price: item.product.price,
             finalPrice: item.product.price,
             totalPrice: item.product.price * item.quantity,
-            status: 'Pending',
+            status: 'Ordered', // Corrected to a valid enum value
         }));
 
         const cartTotal = validCartItems.reduce((acc, item) => acc + (item.product.price * item.quantity), 0);
@@ -98,7 +98,7 @@ exports.verifyPayment = async (req, res) => {
             shippingCharge,
             paymentMethod: 'razorpay',
             paymentStatus: 'paid',
-            orderStatus: 'Processing',
+            status: 'Processing', // Corrected field name and valid value
             razorpayDetails: {
                 orderId: razorpay_order_id,
                 paymentId: razorpay_payment_id,

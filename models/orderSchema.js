@@ -27,10 +27,10 @@ const orderSchema = new Schema({
             type: Number,
             required: true
         },
-        status: {
+        status: {  
             type: String,
-            enum: ["Pending", "Processing", "Shipped", "Out for Delivery", "Delivered", "Cancelled", "Return Requested", "Return Approved", "Returned Rejected", "Returned"],
-            default: 'Pending'
+            enum: ["Ordered", "Cancelled", "Return Requested", "Returned"],
+            default: "Ordered"
         },
         createdAt: {
             type: Date,
@@ -52,8 +52,8 @@ const orderSchema = new Schema({
     },
     shippingCharge: {
         type: Number,
-        required: true, // Ensure this is required
-        default: 50 // Default shipping charge
+        required: true,
+        default: 50 
     },
     paymentMethod: {
         type: String,
@@ -65,11 +65,11 @@ const orderSchema = new Schema({
         enum: ['pending', 'paid', 'failed'],
         default: 'pending'
     },
-    couponCode: { // New field for tracking coupon code
+    couponCode: { 
         type: String,
         default: null
     },
-    couponDiscount: { // New field for tracking coupon deduction amount
+    couponDiscount: { 
         type: Number,
         default: 0
     },

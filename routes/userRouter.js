@@ -70,10 +70,11 @@ router.post('/verify-payment', auth, paymentController.verifyPayment);
 // Order routes
 router.get('/orders', auth, orderController.getOrdersList);
 router.get('/orders/:id', auth, orderController.getOrderDetails);
-router.post('/api/orders/:id/cancel', auth, orderController.cancelOrder);
-router.post('/api/orders/:id/return-product', auth, orderController.returnOrder);
-router.post('/api/orders/:id/cancel-product', auth, orderController.cancelProduct); // Added this line
-router.get('/orders/:id/invoice', auth, orderController.downloadInvoice);
+router.put('/api/orders/:id/cancel', auth, orderController.cancelOrder);
+router.put('/api/orders/:id/return', auth, orderController.returnOrder);
+router.put('/api/orders/:id/cancel-product/:productId', auth, orderController.cancelProduct);
+router.put('/api/orders/:id/return-product/:productId', auth, orderController.requestReturn); 
+router.get('/api/orders/download-invoice/:id', auth, orderController.downloadInvoice);
 
 // Static pages
 router.get('/about', userController.loadAboutPage);

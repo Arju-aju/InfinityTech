@@ -14,13 +14,7 @@
             font-family: 'Poppins', sans-serif;
             min-height: 100vh;
         }
-
-        .container {
-            max-width: 1280px;
-            margin: 0 auto;
-            padding: 2rem;
-        }
-
+        .container { max-width: 1280px; margin: 0 auto; padding: 2rem; }
         .card {
             background: rgba(255, 255, 255, 0.95);
             border-radius: 1.5rem;
@@ -29,107 +23,25 @@
             border: 1px solid rgba(255, 255, 255, 0.18);
             transition: all 0.3s ease;
         }
-
-        .card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 12px 40px rgba(31, 38, 135, 0.2);
-        }
-
-        .status-timeline {
-            position: relative;
-            padding: 2rem 0;
-        }
-
+        .card:hover { transform: translateY(-5px); box-shadow: 0 12px 40px rgba(31, 38, 135, 0.2); }
+        .status-timeline { position: relative; padding: 2rem 0; }
         .status-point {
-            width: 2.5rem;
-            height: 2.5rem;
-            border-radius: 50%;
-            background: #e2e8f0;
-            border: 4px solid white;
-            position: relative;
-            z-index: 10;
-            transition: all 0.3s ease;
+            width: 2.5rem; height: 2.5rem; border-radius: 50%; background: #e2e8f0;
+            border: 4px solid white; position: relative; z-index: 10; transition: all 0.3s ease;
         }
-
-        .status-point.completed {
-            background: linear-gradient(45deg, #34d399, #10b981);
-        }
-
-        .status-point.active {
-            background: linear-gradient(45deg, #6366f1, #4f46e5);
-            transform: scale(1.15);
-            box-shadow: 0 0 15px rgba(79, 70, 229, 0.5);
-        }
-
-        .status-point.cancelled {
-            background: linear-gradient(45deg, #f87171, #ef4444);
-        }
-
-        .status-point.returned {
-            background: linear-gradient(45deg, #fbbf24, #f59e0b);
-        }
-
-        .status-line {
-            position: absolute;
-            top: 50%;
-            left: 0;
-            height: 4px;
-            background: #e2e8f0;
-            transform: translateY(-50%);
-            border-radius: 2px;
-        }
-
-        .status-progress {
-            height: 100%;
-            background: linear-gradient(90deg, #6366f1, #10b981);
-            border-radius: 2px;
-            transition: width 0.5s ease;
-        }
-
-        .btn {
-            padding: 0.75rem 1.5rem;
-            border-radius: 0.75rem;
-            font-weight: 500;
-            transition: all 0.3s ease;
-        }
-
-        .btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-        }
-
-        .modal {
-            background: rgba(0, 0, 0, 0.6);
-            backdrop-filter: blur(2px);
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 50;
-            overflow: auto;
-        }
-
-        .modal-content {
-            animation: fadeInUp 0.3s ease-out;
-            border-radius: 1.5rem;
-            background: rgba(255, 255, 255, 0.98);
-            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2);
-        }
-
-        @keyframes fadeInUp {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .product-img {
-            transition: transform 0.3s ease;
-        }
-
-        .product-img:hover {
-            transform: scale(1.05);
-        }
+        .status-point.completed { background: linear-gradient(45deg, #34d399, #10b981); }
+        .status-point.active { background: linear-gradient(45deg, #6366f1, #4f46e5); transform: scale(1.15); box-shadow: 0 0 15px rgba(79, 70, 229, 0.5); }
+        .status-point.cancelled { background: linear-gradient(45deg, #f87171, #ef4444); }
+        .status-point.returned { background: linear-gradient(45deg, #fbbf24, #f59e0b); }
+        .status-line { position: absolute; top: 50%; left: 0; height: 4px; background: #e2e8f0; transform: translateY(-50%); border-radius: 2px; }
+        .status-progress { height: 100%; background: linear-gradient(90deg, #6366f1, #10b981); border-radius: 2px; transition: width 0.5s ease; }
+        .btn { padding: 0.75rem 1.5rem; border-radius: 0.75rem; font-weight: 500; transition: all 0.3s ease; }
+        .btn:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15); }
+        .modal { background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(2px); display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 50; overflow: auto; }
+        .modal-content { animation: fadeInUp 0.3s ease-out; border-radius: 1.5rem; background: rgba(255, 255, 255, 0.98); box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2); }
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .product-img { transition: transform 0.3s ease; }
+        .product-img:hover { transform: scale(1.05); }
     </style>
 </head>
 <body>
@@ -210,7 +122,7 @@
                             </p>
                         </div>
                         <div class="bg-gray-50 p-4 rounded-lg">
-                            <p class="text-gray-600">Shipping: ₹<%= order.shippingCharge ? order.shippingCharge.toFixed(2) : "50.00" %></p>
+                            <p class="text-gray-600">Shipping: ₹<%= order.shippingCharge.toFixed(2) %></p>
                             <p class="text-gray-600">Subtotal: ₹<%= (order.orderAmount - order.shippingCharge + order.couponDiscount).toFixed(2) %></p>
                             <% if (order.couponCode) { %>
                                 <p class="text-gray-600">Coupon: <%= order.couponCode %></p>
@@ -236,7 +148,7 @@
             <div class="card p-6 mb-8">
                 <h2 class="text-xl font-semibold text-gray-800 mb-6">Items Ordered</h2>
                 <div class="space-y-6">
-                    <% order.products.forEach((product, index) => { %>
+                    <% order.products.forEach((product) => { %>
                         <div class="flex items-center justify-between border-b border-gray-100 pb-6">
                             <div class="flex items-center">
                                 <div class="relative overflow-hidden rounded-lg">
@@ -256,21 +168,26 @@
                             </div>
                             <div class="flex items-center space-x-6">
                                 <p class="text-xl font-semibold text-gray-800">₹<%= product.totalPrice.toFixed(2) %></p>
-                                <% if (['Pending', 'Processing'].includes(order.status) && product.status !== 'Cancelled') { %>
+                                <% if (['Pending', 'Processing'].includes(order.status) && product.status === 'Ordered') { %>
                                     <button class="btn bg-red-600 text-white hover:bg-red-700 cancel-product-btn" 
-                                            data-product-index="<%= index %>">
+                                            data-order-id="<%= order._id %>" 
+                                            data-product-id="<%= product.productId._id %>">
                                         Cancel Item
                                     </button>
                                 <% } else if (['Pending', 'Processing'].includes(order.status) && product.status === 'Cancelled') { %>
-                                    <button class="btn bg-gray-400 text-white cursor-not-allowed" 
-                                            disabled>
+                                    <button class="btn bg-gray-400 text-white cursor-not-allowed" disabled>
                                         Cancelled
                                     </button>
                                 <% } %>
-                                <% if (order.status === 'Delivered' && product.status === 'Active') { %>
+                                <% if (order.status === 'Delivered' && product.status === 'Ordered') { %>
                                     <button class="btn bg-yellow-600 text-white hover:bg-yellow-700 return-product-btn" 
-                                            data-product-index="<%= index %>">
-                                        Return Item
+                                            data-order-id="<%= order._id %>" 
+                                            data-product-id="<%= product.productId._id %>">
+                                        Request Return
+                                    </button>
+                                <% } else if (order.status === 'Delivered' && product.status !== 'Ordered') { %>
+                                    <button class="btn bg-gray-400 text-white cursor-not-allowed" disabled>
+                                        <%= product.status %>
                                     </button>
                                 <% } %>
                             </div>
@@ -281,7 +198,7 @@
 
             <!-- Action Buttons -->
             <div class="flex justify-end space-x-4">
-                <% if (['Pending', 'Processing', 'Out for Delivery', 'Shipped'].includes(order.status)) { %>
+                <% if (['Pending', 'Processing', 'Shipped', 'Out for Delivery'].includes(order.status)) { %>
                     <button id="cancelOrderBtn" class="btn bg-red-600 text-white hover:bg-red-700">
                         Cancel Entire Order
                     </button>
@@ -291,6 +208,9 @@
                         Return Entire Order
                     </button>
                 <% } %>
+                <a href="/api/orders/download-invoice/<%= order._id %>" class="btn bg-indigo-600 text-white hover:bg-indigo-700">
+                    Download Invoice
+                </a>
             </div>
         <% } else { %>
             <div class="card p-6 text-center">
@@ -328,7 +248,7 @@
                             <span class="ml-3">Shipping time too long</span>
                         </label>
                         <label class="flex items-center text-gray-700">
-                            <input type="radio" name="cancellationReason" value="Other" class="w-5 h-5 text-indigo-600 focus:ring-indigo-500" id="otherCancellationReason">
+                            <input type="radio" name=" productCancellationReason" value="Other" class="w-5 h-5 text-indigo-600 focus:ring-indigo-500" id="otherCancellationReason">
                             <span class="ml-3">Other</span>
                         </label>
                         <div id="otherCancellationReasonContainer" class="hidden">
@@ -365,7 +285,7 @@
                             <span class="ml-3">Wrong item received</span>
                         </label>
                         <label class="flex items-center text-gray-700">
-                            <input type="radio" name="returnReason" value="Item doesn't match description" class="w-5 h-5 text-yellow-600 focus:ring-yellow-500">
+                            <input type="radio" name="returnReason" value="Item doesn't match description" class="w-5 h-5 text-yellow-600ासाठीfocus:ring-yellow-500">
                             <span class="ml-3">Item doesn't match description</span>
                         </label>
                         <label class="flex items-center text-gray-700">
@@ -377,7 +297,7 @@
                             <span class="ml-3">Other</span>
                         </label>
                         <div id="otherReturnReasonContainer" class="hidden">
-                            <textarea id="otherReturnReasonText" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-yellow-500 focus:border-yellow-500" rows="3" SOMEplaceholder="Please specify"></textarea>
+                            <textarea id="otherReturnReasonText" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-yellow-500 focus:border-yellow-500" rows="3" placeholder="Please specify"></textarea>
                         </div>
                     </div>
                     <div class="flex justify-end space-x-4">
@@ -400,7 +320,8 @@
                     </button>
                 </div>
                 <form id="productCancellationForm" class="space-y-6">
-                    <input type="hidden" name="productIndex" id="productIndex">
+                    <input type="hidden" name="orderId" id="orderId">
+                    <input type="hidden" name="productId" id="productId">
                     <div class="space-y-4">
                         <label class="flex items-center text-gray-700">
                             <input type="radio" name="productCancellationReason" value="Changed my mind" class="w-5 h-5 text-indigo-600 focus:ring-indigo-500">
@@ -413,6 +334,10 @@
                         <label class="flex items-center text-gray-700">
                             <input type="radio" name="productCancellationReason" value="Ordered by mistake" class="w-5 h-5 text-indigo-600 focus:ring-indigo-500">
                             <span class="ml-3">Ordered by mistake</span>
+                        </label>
+                        <label class="flex items-center text-gray-700">
+                            <input type="radio" name="productCancellationReason" value="Shipping time too long" class="w-5 h-5 text-indigo-600 focus:ring-indigo-500">
+                            <span class="ml-3">Shipping time too long</span>
                         </label>
                         <label class="flex items-center text-gray-700">
                             <input type="radio" name="productCancellationReason" value="Other" class="w-5 h-5 text-indigo-600 focus:ring-indigo-500" id="otherProductCancellationReason">
@@ -442,7 +367,8 @@
                     </button>
                 </div>
                 <form id="productReturnForm" class="space-y-6">
-                    <input type="hidden" name="productIndex" id="productReturnIndex">
+                    <input type="hidden" name="orderId" id="productReturnOrderId">
+                    <input type="hidden" name="productId" id="productReturnId">
                     <div class="space-y-4">
                         <label class="flex items-center text-gray-700">
                             <input type="radio" name="productReturnReason" value="Damaged product" class="w-5 h-5 text-yellow-600 focus:ring-yellow-500">
@@ -502,7 +428,8 @@
             const cancelProductCancellationModalBtn = document.getElementById('cancelProductCancellationModalBtn');
             const otherProductCancellationReason = document.getElementById('otherProductCancellationReason');
             const otherProductCancellationReasonContainer = document.getElementById('otherProductCancellationReasonContainer');
-            const productIndexInput = document.getElementById('productIndex');
+            const orderIdInput = document.getElementById('orderId');
+            const productIdInput = document.getElementById('productId');
 
             const productReturnModal = document.getElementById('productReturnModal');
             const productReturnForm = document.getElementById('productReturnForm');
@@ -510,7 +437,8 @@
             const cancelProductReturnModalBtn = document.getElementById('cancelProductReturnModalBtn');
             const otherProductReturnReason = document.getElementById('otherProductReturnReason');
             const otherProductReturnReasonContainer = document.getElementById('otherProductReturnReasonContainer');
-            const productReturnIndexInput = document.getElementById('productReturnIndex');
+            const productReturnOrderIdInput = document.getElementById('productReturnOrderId');
+            const productReturnIdInput = document.getElementById('productReturnId');
 
             // Modal Functions
             const openModal = (modal) => {
@@ -526,38 +454,51 @@
             };
 
             // Event Listeners for Modals
-            if (cancelOrderBtn) cancelOrderBtn.addEventListener('click', () => openModal(cancellationModal));
-            if (returnOrderBtn) returnOrderBtn.addEventListener('click', () => openModal(returnModal));
+            if (cancelOrderBtn) {
+                cancelOrderBtn.addEventListener('click', () => openModal(cancellationModal));
+            }
+            if (returnOrderBtn) {
+                returnOrderBtn.addEventListener('click', () => openModal(returnModal));
+            }
             document.querySelectorAll('.cancel-product-btn').forEach(btn => {
                 btn.addEventListener('click', () => {
-                    productIndexInput.value = btn.getAttribute('data-product-index');
+                    const orderId = btn.getAttribute('data-order-id');
+                    const productId = btn.getAttribute('data-product-id');
+                    console.log('Cancel Button Clicked - Order ID:', orderId, 'Product ID:', productId);
+                    orderIdInput.value = orderId;
+                    productIdInput.value = productId;
                     openModal(productCancellationModal);
                 });
             });
             document.querySelectorAll('.return-product-btn').forEach(btn => {
                 btn.addEventListener('click', () => {
-                    productReturnIndexInput.value = btn.getAttribute('data-product-index');
+                    const orderId = btn.getAttribute('data-order-id');
+                    const productId = btn.getAttribute('data-product-id');
+                    console.log('Return Button Clicked - Order ID:', orderId, 'Product ID:', productId);
+                    productReturnOrderIdInput.value = orderId;
+                    productReturnIdInput.value = productId;
                     openModal(productReturnModal);
                 });
             });
 
-            // Close Buttons
+            // Close Modal Event Listeners
             closeCancellationModalBtn.addEventListener('click', () => closeModal(cancellationModal, cancellationForm, otherCancellationReasonContainer));
             cancelCancellationModalBtn.addEventListener('click', () => closeModal(cancellationModal, cancellationForm, otherCancellationReasonContainer));
+            cancellationModal.addEventListener('click', (e) => { if (e.target === cancellationModal) closeModal(cancellationModal, cancellationForm, otherCancellationReasonContainer); });
+
             closeReturnModalBtn.addEventListener('click', () => closeModal(returnModal, returnForm, otherReturnReasonContainer));
             cancelReturnModalBtn.addEventListener('click', () => closeModal(returnModal, returnForm, otherReturnReasonContainer));
+            returnModal.addEventListener('click', (e) => { if (e.target === returnModal) closeModal(returnModal, returnForm, otherReturnReasonContainer); });
+
             closeProductCancellationModalBtn.addEventListener('click', () => closeModal(productCancellationModal, productCancellationForm, otherProductCancellationReasonContainer));
             cancelProductCancellationModalBtn.addEventListener('click', () => closeModal(productCancellationModal, productCancellationForm, otherProductCancellationReasonContainer));
+            productCancellationModal.addEventListener('click', (e) => { if (e.target === productCancellationModal) closeModal(productCancellationModal, productCancellationForm, otherProductCancellationReasonContainer); });
+
             closeProductReturnModalBtn.addEventListener('click', () => closeModal(productReturnModal, productReturnForm, otherProductReturnReasonContainer));
             cancelProductReturnModalBtn.addEventListener('click', () => closeModal(productReturnModal, productReturnForm, otherProductReturnReasonContainer));
-
-            // Outside Click to Close
-            cancellationModal.addEventListener('click', (e) => { if (e.target === cancellationModal) closeModal(cancellationModal, cancellationForm, otherCancellationReasonContainer); });
-            returnModal.addEventListener('click', (e) => { if (e.target === returnModal) closeModal(returnModal, returnForm, otherReturnReasonContainer); });
-            productCancellationModal.addEventListener('click', (e) => { if (e.target === productCancellationModal) closeModal(productCancellationModal, productCancellationForm, otherProductCancellationReasonContainer); });
             productReturnModal.addEventListener('click', (e) => { if (e.target === productReturnModal) closeModal(productReturnModal, productReturnForm, otherProductReturnReasonContainer); });
 
-            // Toggle Other Reason Textareas
+            // Other Reason Toggle
             otherCancellationReason.addEventListener('change', () => otherCancellationReasonContainer.classList.toggle('hidden', !otherCancellationReason.checked));
             otherReturnReason.addEventListener('change', () => otherReturnReasonContainer.classList.toggle('hidden', !otherReturnReason.checked));
             otherProductCancellationReason.addEventListener('change', () => otherProductCancellationReasonContainer.classList.toggle('hidden', !otherProductCancellationReason.checked));
@@ -576,7 +517,7 @@
 
                 closeModal(cancellationModal, cancellationForm, otherCancellationReasonContainer);
                 const result = await Swal.fire({
-                    title: 'Confirm Cancellation',
+                    title: 'Confirm Order Cancellation',
                     text: "This action cannot be undone!",
                     icon: 'warning',
                     showCancelButton: true,
@@ -587,15 +528,18 @@
 
                 if (result.isConfirmed) {
                     try {
-                        const response = await fetch(`/api/orders/<%= order._id %>/cancel`, {
-                            method: 'POST',
+                        const url = `/api/orders/<%= order._id %>/cancel`;
+                        console.log('Cancel Order URL:', url);
+                        const response = await fetch(url, {
+                            method: 'PUT',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({ reason })
                         });
                         if (response.ok) {
                             Swal.fire('Cancelled!', 'Your order has been cancelled.', 'success').then(() => window.location.reload());
                         } else {
-                            throw new Error('Cancellation failed');
+                            const data = await response.json();
+                            throw new Error(data.message || 'Order cancellation failed');
                         }
                     } catch (error) {
                         Swal.fire('Error', error.message, 'error');
@@ -614,26 +558,42 @@
                 if (!reason) return Swal.fire('Error', 'Please select a reason', 'error');
 
                 closeModal(returnModal, returnForm, otherReturnReasonContainer);
-                try {
-                    const response = await fetch(`/api/orders/<%= order._id %>/return`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ reason })
-                    });
-                    if (response.ok) {
-                        Swal.fire('Return Requested!', 'Your return request has been submitted.', 'success').then(() => window.location.reload());
-                    } else {
-                        throw new Error('Return request failed');
+                const result = await Swal.fire({
+                    title: 'Confirm Order Return',
+                    text: "This will request a return approval from the admin!",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#f59e0b',
+                    cancelButtonColor: '#6b7280',
+                    confirmButtonText: 'Yes, Request Return'
+                });
+
+                if (result.isConfirmed) {
+                    try {
+                        const url = `/api/orders/<%= order._id %>/return`;
+                        console.log('Return Order URL:', url);
+                        const response = await fetch(url, {
+                            method: 'PUT',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ reason })
+                        });
+                        if (response.ok) {
+                            Swal.fire('Return Requested!', 'Your return request has been submitted.', 'success').then(() => window.location.reload());
+                        } else {
+                            const data = await response.json();
+                            throw new Error(data.message || 'Return request failed');
+                        }
+                    } catch (error) {
+                        Swal.fire('Error', error.message, 'error');
                     }
-                } catch (error) {
-                    Swal.fire('Error', error.message, 'error');
                 }
             });
 
             productCancellationForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
                 const formData = new FormData(productCancellationForm);
-                const productIndex = formData.get('productIndex');
+                const orderId = formData.get('orderId');
+                const productId = formData.get('productId');
                 let reason = formData.get('productCancellationReason');
                 if (reason === 'Other') {
                     reason = document.getElementById('otherProductCancellationReasonText').value.trim();
@@ -641,7 +601,9 @@
                 }
                 if (!reason) return Swal.fire('Error', 'Please select a reason', 'error');
 
+                console.log('Submitting Cancellation - Order ID:', orderId, 'Product ID:', productId, 'Reason:', reason);
                 closeModal(productCancellationModal, productCancellationForm, otherProductCancellationReasonContainer);
+
                 const result = await Swal.fire({
                     title: 'Confirm Product Cancellation',
                     text: "This action cannot be undone!",
@@ -654,17 +616,21 @@
 
                 if (result.isConfirmed) {
                     try {
-                        const response = await fetch(`/api/orders/<%= order._id %>/cancel-product`, {
-                            method: 'POST',
+                        const url = `/api/orders/${orderId}/cancel-product/${productId}`;
+                        console.log('Cancel Product URL:', url);
+                        const response = await fetch(url, {
+                            method: 'PUT',
                             headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ productIndex, reason })
+                            body: JSON.stringify({ reason })
                         });
+                        const data = await response.json();
                         if (response.ok) {
-                            Swal.fire('Cancelled!', 'The product has been cancelled.', 'success').then(() => window.location.reload());
+                            Swal.fire('Cancelled!', 'The product has been cancelled and the amount has been refunded to your wallet.', 'success').then(() => window.location.reload());
                         } else {
-                            throw new Error('Product cancellation failed');
+                            throw new Error(data.message || 'Product cancellation failed');
                         }
                     } catch (error) {
+                        console.error('Cancellation Error:', error);
                         Swal.fire('Error', error.message, 'error');
                     }
                 }
@@ -673,7 +639,8 @@
             productReturnForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
                 const formData = new FormData(productReturnForm);
-                const productIndex = formData.get('productIndex');
+                const orderId = formData.get('orderId');
+                const productId = formData.get('productId');
                 let reason = formData.get('productReturnReason');
                 if (reason === 'Other') {
                     reason = document.getElementById('otherProductReturnReasonText').value.trim();
@@ -681,20 +648,38 @@
                 }
                 if (!reason) return Swal.fire('Error', 'Please select a reason', 'error');
 
+                console.log('Submitting Return - Order ID:', orderId, 'Product ID:', productId, 'Reason:', reason);
                 closeModal(productReturnModal, productReturnForm, otherProductReturnReasonContainer);
-                try {
-                    const response = await fetch(`/api/orders/<%= order._id %>/return-product`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ productIndex, reason })
-                    });
-                    if (response.ok) {
-                        Swal.fire('Return Requested!', 'Your product return request has been submitted.', 'success').then(() => window.location.reload());
-                    } else {
-                        throw new Error('Product return request failed');
+
+                const result = await Swal.fire({
+                    title: 'Confirm Product Return',
+                    text: "This will request a return approval from the admin!",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#f59e0b',
+                    cancelButtonColor: '#6b7280',
+                    confirmButtonText: 'Yes, Request Return'
+                });
+
+                if (result.isConfirmed) {
+                    try {
+                        const url = `/api/orders/${orderId}/return-product/${productId}`;
+                        console.log('Return Product URL:', url);
+                        const response = await fetch(url, {
+                            method: 'PUT',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ reason })
+                        });
+                        const data = await response.json();
+                        if (response.ok) {
+                            Swal.fire('Return Requested!', 'Your product return request has been submitted for admin approval.', 'success').then(() => window.location.reload());
+                        } else {
+                            throw new Error(data.message || 'Product return request failed');
+                        }
+                    } catch (error) {
+                        console.error('Return Error:', error);
+                        Swal.fire('Error', error.message, 'error');
                     }
-                } catch (error) {
-                    Swal.fire('Error', error.message, 'error');
                 }
             });
         });
