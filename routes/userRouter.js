@@ -72,6 +72,8 @@ router.get('/orders', auth, orderController.getOrdersList);
 router.get('/orders/:id', auth, orderController.getOrderDetails);
 router.post('/api/orders/:id/cancel', auth, orderController.cancelOrder);
 router.post('/api/orders/:id/return-product', auth, orderController.returnOrder);
+router.post('/api/orders/:id/cancel-product', auth, orderController.cancelProduct); // Added this line
+router.get('/orders/:id/invoice', auth, orderController.downloadInvoice);
 
 // Static pages
 router.get('/about', userController.loadAboutPage);
