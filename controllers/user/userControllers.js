@@ -128,6 +128,7 @@ const signup = async (req, res) => {
         }
 
         const otp = generateOtp();
+        console.log(`Generated OTP for ${email} during signup: ${otp}`); // Log OTP to console
         const otpExpiry = new Date(Date.now() + 1 * 60 * 1000);
         const hashedPassword = await bcrypt.hash(password, 10);
 
@@ -232,6 +233,7 @@ const resendOtp = async (req, res) => {
         }
 
         const otp = generateOtp();
+        console.log(`Resent OTP for ${tempUser.email}: ${otp}`); // Log OTP to console
         tempUser.otp = otp;
         tempUser.otpExpiry = new Date(Date.now() + 1 * 60 * 1000);
         req.session.tempUser = tempUser;
@@ -390,8 +392,10 @@ const handleGoogleCallback = async (req, res) => {
         }
 
         console.log('Checking blocked status for:', existingUser.email);
-        if (await checkUserBlockedStatus(existingUser, req, res)) {
-            return; // Redirects to login if blocked
+        if (existingUser.isBlocked) {
+            // Set a flash message for the login page
+            req.flash('error', 'Your account has been blocked. Please contact support.');
+            return res.redirect('/login');
         }
 
         req.session.user = {
@@ -404,7 +408,8 @@ const handleGoogleCallback = async (req, res) => {
         return res.redirect('/');
     } catch (error) {
         console.error('Google callback error:', error.message, error.stack);
-        return res.redirect('/login?error=auth_failed');
+        req.flash('error', 'Authentication failed. Please try again.');
+        return res.redirect('/login');
     }
 };
 
@@ -432,6 +437,7 @@ const sendOTPForPasswordChange = async (req, res) => {
         }
 
         const otp = Math.floor(100000 + Math.random() * 900000).toString();
+        console.log(`Generated OTP for password change for ${email}: ${otp}`); // Log OTP to console
         user.resetPasswordOTP = {
             code: otp,
             expiresAt: Date.now() + 10 * 60 * 1000, // 10 minutes
