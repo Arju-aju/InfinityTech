@@ -8,7 +8,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        /* Custom Animations */
+        /* Gradient Animation */
         @keyframes gradientFlow {
             0% { background-position: 0% 50%; }
             50% { background-position: 100% 50%; }
@@ -16,7 +16,7 @@
         }
         .animate-gradient {
             background-size: 200% 200%;
-            animation: gradientFlow 10s ease infinite;
+            animation: gradientFlow 8s ease infinite;
         }
 
         /* Input Focus Animation */
@@ -24,107 +24,127 @@
             transition: all 0.3s ease;
         }
         .input-focus:focus {
-            box-shadow: 0 0 10px rgba(40, 69, 174, 0.5);
+            box-shadow: 0 0 15px rgba(40, 69, 174, 0.6);
             transform: scale(1.02);
+            border-color: #A517BA;
         }
 
         /* Button Hover Animation */
         .btn-hover {
-            transition: all 0.3s ease;
+            transition: all 0.4s ease;
         }
         .btn-hover:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 15px rgba(40, 69, 174, 0.4);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(40, 69, 174, 0.5);
+        }
+
+        /* Subtle Glow Effect */
+        .glow-effect {
+            box-shadow: 0 0 20px rgba(165, 23, 186, 0.2);
         }
     </style>
 </head>
-<body class="bg-gray-900 min-h-screen overflow-hidden">
-    <!-- Background Animation -->
+<body class="bg-gray-900 min-h-screen overflow-hidden font-sans">
+    <!-- Animated Background -->
     <div class="fixed inset-0 overflow-hidden">
-        <div class="absolute inset-0 bg-gradient-to-br from-[#2845AE] via-[#5D2E8C] to-[#A517BA] animate-gradient opacity-30"></div>
+        <div class="absolute inset-0 bg-gradient-to-tr from-[#1F2A77] via-[#5D2E8C] to-[#A517BA] animate-gradient opacity-40"></div>
         <div class="absolute inset-0 opacity-10">
-            <div class="w-full h-full bg-[radial-gradient(circle_at_center,#ffffff20_1px,transparent_1px)] bg-[length:30px_30px]"></div>
+            <div class="w-full h-full bg-[radial-gradient(circle_at_center,#ffffff30_1px,transparent_1px)] bg-[length:40px_40px]"></div>
         </div>
+        <div class="absolute inset-0 bg-[linear-gradient(45deg,rgba(255,255,255,0.05)_0%,rgba(255,255,255,0)_100%)]"></div>
     </div>
 
+    <!-- Main Container -->
     <div class="container mx-auto px-4 h-screen flex items-center justify-center relative z-10">
-        <div class="max-w-md w-full space-y-8 bg-gray-800/95 backdrop-blur-2xl p-8 rounded-3xl shadow-xl border border-gray-700/30">
+        <div class="max-w-lg w-full space-y-8 bg-gray-800/70 backdrop-blur-xl p-10 rounded-3xl shadow-2xl border border-gray-700/20 glow-effect">
             <!-- Header Section -->
             <div class="relative text-center">
-                <div class="absolute -top-4 -left-4 w-16 h-16 bg-gradient-to-br from-[#2845AE] to-[#A517BA] rounded-full blur-2xl opacity-50 animate-pulse"></div>
-                <h2 class="text-4xl font-bold text-white bg-clip-text bg-gradient-to-r from-[#2845AE] to-[#A517BA] animate-gradient">
+                <div class="absolute -top-6 -left-6 w-20 h-20 bg-gradient-to-br from-[#2845AE] to-[#A517BA] rounded-full blur-3xl opacity-40 animate-pulse"></div>
+                <h2 class="text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-[#2845AE] to-[#A517BA] animate-gradient">
                     Sign Up
                 </h2>
-                <p class="mt-2 text-sm text-gray-300">
-                    Create your InfinityTech account
+                <p class="mt-3 text-base text-gray-300 tracking-wide">
+                    Join the InfinityTech Revolution
                 </p>
             </div>
 
-            <!-- Message Container -->
-            <div id="messageContainer" class="text-center text-sm p-3 rounded-lg hidden bg-gray-700/80 text-white shadow-inner">
-                <span id="messageText"></span>
-            </div>
+            <!-- Flash Messages -->
+            <% if (messages.error && messages.error.length > 0) { %>
+                <div class="text-center text-sm p-4 rounded-xl bg-red-900/80 text-white shadow-lg border border-red-700/50 animate-pulse">
+                    <i class="fas fa-exclamation-circle mr-2"></i><%= messages.error[0] %>
+                </div>
+            <% } else if (messages.success && messages.success.length > 0) { %>
+                <div class="text-center text-sm p-4 rounded-xl bg-green-900/80 text-white shadow-lg border border-green-700/50">
+                    <i class="fas fa-check-circle mr-2"></i><%= messages.success[0] %>
+                </div>
+            <% } %>
 
             <!-- Signup Form -->
-            <form id="signupForm" class="mt-6 space-y-6" method="POST">
+            <form id="signupForm" class="mt-8 space-y-8" method="POST" action="/signup">
                 <div class="space-y-6">
-                    <div class="relative">
-                        <label for="name" class="block text-sm font-medium text-gray-200">Full Name</label>
-                        <div class="mt-1 relative">
+                    <!-- Name Field -->
+                    <div class="relative group">
+                        <label for="name" class="block text-sm font-medium text-gray-200 transition-all duration-300 group-hover:text-[#A517BA]">Full Name</label>
+                        <div class="mt-2 relative">
                             <input id="name" name="name" type="text" 
-                                   class="input-focus appearance-none block w-full px-4 py-3 bg-gray-700/70 border border-gray-600 text-white rounded-xl placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#2845AE] focus:border-transparent hover:border-gray-500" 
+                                   class="input-focus appearance-none block w-full px-5 py-3 bg-gray-900/50 border border-gray-700 text-white rounded-xl placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#2845AE] hover:border-[#A517BA] transition-all duration-300" 
                                    placeholder="John Doe">
                             <p id="nameError" class="hidden text-red-400 text-xs mt-2"></p>
                         </div>
                     </div>
 
-                    <div class="relative">
-                        <label for="email" class="block text-sm font-medium text-gray-200">Email Address</label>
-                        <div class="mt-1 relative">
+                    <!-- Email Field -->
+                    <div class="relative group">
+                        <label for="email" class="block text-sm font-medium text-gray-200 transition-all duration-300 group-hover:text-[#A517BA]">Email Address</label>
+                        <div class="mt-2 relative">
                             <input id="email" name="email" type="email" 
-                                   class="input-focus appearance-none block w-full px-4 py-3 bg-gray-700/70 border border-gray-600 text-white rounded-xl placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#2845AE] focus:border-transparent hover:border-gray-500" 
+                                   class="input-focus appearance-none block w-full px-5 py-3 bg-gray-900/50 border border-gray-700 text-white rounded-xl placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#2845AE] hover:border-[#A517BA] transition-all duration-300" 
                                    placeholder="you@example.com">
                             <p id="emailError" class="hidden text-red-400 text-xs mt-2"></p>
                         </div>
                     </div>
 
-                    <div class="relative">
-                        <label for="phone" class="block text-sm font-medium text-gray-200">Phone Number</label>
-                        <div class="mt-1 relative">
+                    <!-- Phone Field -->
+                    <div class="relative group">
+                        <label for="phone" class="block text-sm font-medium text-gray-200 transition-all duration-300 group-hover:text-[#A517BA]">Phone Number</label>
+                        <div class="mt-2 relative">
                             <input id="phone" name="phone" type="text" 
-                                   class="input-focus appearance-none block w-full px-4 py-3 bg-gray-700/70 border border-gray-600 text-white rounded-xl placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#2845AE] focus:border-transparent hover:border-gray-500" 
+                                   class="input-focus appearance-none block w-full px-5 py-3 bg-gray-900/50 border border-gray-700 text-white rounded-xl placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#2845AE] hover:border-[#A517BA] transition-all duration-300" 
                                    placeholder="9876543210">
                             <p id="phoneError" class="hidden text-red-400 text-xs mt-2"></p>
                         </div>
                     </div>
 
-                    <div class="relative">
-                        <label for="password" class="block text-sm font-medium text-gray-200">Password</label>
-                        <div class="mt-1 relative">
+                    <!-- Password Field -->
+                    <div class="relative group">
+                        <label for="password" class="block text-sm font-medium text-gray-200 transition-all duration-300 group-hover:text-[#A517BA]">Password</label>
+                        <div class="mt-2 relative">
                             <input id="password" name="password" type="password" 
-                                   class="input-focus appearance-none block w-full px-4 py-3 bg-gray-700/70 border border-gray-600 text-white rounded-xl placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#2845AE] focus:border-transparent hover:border-gray-500" 
+                                   class="input-focus appearance-none block w-full px-5 py-3 bg-gray-900/50 border border-gray-700 text-white rounded-xl placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#2845AE] hover:border-[#A517BA] transition-all duration-300" 
                                    placeholder="••••••••">
                             <p id="passwordError" class="hidden text-red-400 text-xs mt-2"></p>
                         </div>
                     </div>
 
-                    <div class="relative">
-                        <label for="confirmPassword" class="block text-sm font-medium text-gray-200">Confirm Password</label>
-                        <div class="mt-1 relative">
+                    <!-- Confirm Password Field -->
+                    <div class="relative group">
+                        <label for="confirmPassword" class="block text-sm font-medium text-gray-200 transition-all duration-300 group-hover:text-[#A517BA]">Confirm Password</label>
+                        <div class="mt-2 relative">
                             <input id="confirmPassword" name="confirmPassword" type="password" 
-                                   class="input-focus appearance-none block w-full px-4 py-3 bg-gray-700/70 border border-gray-600 text-white rounded-xl placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#2845AE] focus:border-transparent hover:border-gray-500" 
+                                   class="input-focus appearance-none block w-full px-5 py-3 bg-gray-900/50 border border-gray-700 text-white rounded-xl placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#2845AE] hover:border-[#A517BA] transition-all duration-300" 
                                    placeholder="••••••••">
                             <p id="confirmPasswordError" class="hidden text-red-400 text-xs mt-2"></p>
                         </div>
                     </div>
                 </div>
 
+                <!-- Submit Button -->
                 <div>
                     <button type="submit" 
-                            class="btn-hover w-full flex justify-center py-3 px-4 border border-transparent text-sm font-semibold rounded-xl text-white bg-gradient-to-r from-[#2845AE] to-[#A517BA] hover:from-[#1e3690] hover:to-[#8a139e] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#2845AE] relative overflow-hidden">
-                        <span class="absolute inset-0 bg-gradient-to-r from-[#2845AE]/20 to-[#A517BA]/20 animate-gradient"></span>
+                            class="btn-hover w-full flex justify-center py-4 px-6 border border-transparent text-base font-semibold rounded-xl text-white bg-gradient-to-r from-[#2845AE] to-[#A517BA] hover:from-[#1F2A77] hover:to-[#8A139E] focus:outline-none focus:ring-4 focus:ring-[#2845AE]/50 relative overflow-hidden transition-all duration-300">
+                        <span class="absolute inset-0 bg-gradient-to-r from-[#2845AE]/30 to-[#A517BA]/30 animate-gradient"></span>
                         <span class="relative flex items-center">
-                            <i class="fas fa-user-plus mr-2"></i>
+                            <i class="fas fa-user-plus mr-3"></i>
                             Create Account
                         </span>
                     </button>
@@ -133,9 +153,9 @@
 
             <!-- Footer Link -->
             <div class="text-center">
-                <p class="text-sm text-gray-400">
+                <p class="text-sm text-gray-400 tracking-wide">
                     Already have an account? 
-                    <a href="/login" class="font-medium text-[#2845AE] hover:text-[#A517BA] transition-colors duration-300">
+                    <a href="/login" class="font-semibold text-[#2845AE] hover:text-[#A517BA] transition-colors duration-300">
                         Sign in
                     </a>
                 </p>
@@ -145,19 +165,18 @@
 
     <!-- Back to Home Button -->
     <div class="fixed top-6 left-6 z-20">
-        <a href="/" class="flex items-center text-white bg-gray-800/70 hover:bg-gray-700/70 px-4 py-2 rounded-full transition-all duration-300 shadow-md hover:shadow-lg">
+        <a href="/" class="flex items-center text-white bg-gray-900/70 hover:bg-gray-800/80 px-5 py-3 rounded-full transition-all duration-300 shadow-lg hover:shadow-xl border border-gray-700/50">
             <i class="fas fa-arrow-left mr-2"></i>
             Back to Home
         </a>
     </div>
 
+    <!-- Client-Side Validation Script -->
     <script>
-        document.getElementById('signupForm').addEventListener('submit', async function (e) {
+        document.getElementById('signupForm').addEventListener('submit', function (e) {
             e.preventDefault();
 
             document.querySelectorAll('.text-red-400').forEach(el => el.classList.add('hidden'));
-            const messageContainer = document.getElementById('messageContainer');
-            messageContainer.classList.add('hidden');
 
             const name = document.getElementById('name').value.trim();
             const email = document.getElementById('email').value.trim();
@@ -197,42 +216,8 @@
                 isValid = false;
             }
 
-            if (!isValid) return;
-
-            const formData = { name, email, phone, password, confirmPassword };
-
-            try {
-                const response = await fetch('/signup', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(formData)
-                });
-
-                const data = await response.json();
-
-                if (data.success) {
-                    await Swal.fire({
-                        icon: 'success',
-                        title: 'Success',
-                        text: data.message,
-                        timer: 1500,
-                        showConfirmButton: false
-                    });
-                    window.location.href = data.redirect;
-                } else {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Error',
-                        text: data.message
-                    });
-                }
-            } catch (error) {
-                console.error('Error:', error);
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: 'An unexpected error occurred'
-                });
+            if (isValid) {
+                this.submit();
             }
         });
     </script>

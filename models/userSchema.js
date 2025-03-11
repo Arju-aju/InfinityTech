@@ -26,7 +26,7 @@ const userSchema = new Schema({
         type: String,
         required: false
     },
-    isVerified: {  // ✅ Add this field
+    isVerified: { 
         type: Boolean,
         default: false
     },

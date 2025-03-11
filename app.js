@@ -32,65 +32,6 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Helmet configuration with updated CSP for Razorpay
-// app.use(
-//     helmet({
-//         contentSecurityPolicy: {
-//             useDefaults: true,
-//             directives: {
-//                 defaultSrc: ["'self'"],
-//                 styleSrc: [
-//                     "'self'",
-//                     "'unsafe-inline'",
-//                     'https://fonts.googleapis.com',
-//                     'https://cdn.jsdelivr.net',
-//                     'https://unpkg.com',
-//                     'https://cdn.tailwindcss.com',
-//                     'https://cdnjs.cloudflare.com',
-//                 ],
-//                 scriptSrc: [
-//                     "'self'",
-//                     "'unsafe-inline'",
-//                     "'unsafe-eval'",
-//                     'https://cdn.jsdelivr.net',
-//                     'https://unpkg.com',
-//                     'https://cdn.tailwindcss.com',
-//                     'https://code.jquery.com',
-//                     'https://cdn.jsdelivr.net/npm/sweetalert2@11',
-//                     'https://cdnjs.cloudflare.com',
-//                     'https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js',
-//                     'https://checkout.razorpay.com',
-//                 ],
-//                 frameSrc: [
-//                     "'self'",
-//                     'https://api.razorpay.com',
-//                     'https://checkout.razorpay.com',
-//                 ],
-//                 connectSrc: [
-//                     "'self'",
-//                     'https://unpkg.com',
-//                     'https://cdn.jsdelivr.net',
-//                     'https://lumberjack.razorpay.com',
-//                     'https://api.razorpay.com',
-//                     'https://checkout.razorpay.com',
-//                 ],
-//                 imgSrc: [
-//                     "'self'",
-//                     'data:',
-//                     'https://ui-avatars.com',
-//                 ],
-//                 fontSrc: [
-//                     "'self'",
-//                     'https://fonts.gstatic.com',
-//                     'data:',
-//                 ],
-//                 upgradeInsecureRequests: [],
-//             },
-//         },
-//         crossOriginEmbedderPolicy: false,
-//     })
-// );
-
 
 // Custom middleware for AJAX responses
 app.use((req, res, next) => {
