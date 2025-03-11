@@ -42,8 +42,8 @@ router.get('/products', admin.isAdmin, productController.loadProduct);
 router.get('/addProduct', admin.isAdmin, productController.loadAddProduct);
 router.post('/addProduct',admin.isAdmin,upload.array('images',5), handleMulterError,productController.addProduct);
 router.get('/editProduct/:id', admin.isAdmin, productController.loadEditProduct);
-router.post('/editProduct/:id', admin.isAdmin, upload.array('images', 5), validationMiddleware.validateProduct, productController.updateProduct);
-router.post('/deleteProductImage/:productId', admin.isAdmin, productController.deleteProductImage);
+router.post('/editProduct/:id', admin.isAdmin, upload.array('images', 6), handleMulterError, productController.updateProduct);
+router.post('/deleteProductImage/:productId', productController.deleteProductImage);
 router.post('/products/:id/toggle-list', productController.toggleListStatus);
 router.post('/softDeleteProduct/:id', productController.softDeleteProduct);
 
@@ -79,13 +79,6 @@ router.get('/return/requests',  returnController.getReturnRequests);
 router.post('/return/approve/:id', returnController.approveReturnRequest);
 router.post('/return/reject/:id', returnController.rejectReturnRequest);
 router.get('/return/order-details/:id',  returnController.getReturnRequestDetails);
-
-
-
-
-
-
-
 
 
 module.exports = router;
