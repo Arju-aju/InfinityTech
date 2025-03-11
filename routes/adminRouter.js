@@ -75,10 +75,10 @@ router.get('/deleteCoupon/:Id', admin.isAdmin, couponController.deleteCoupon);
 
 //returnRequest
 
-router.get('/return/requests',  returnController.getReturnRequests);
+router.get('/return/requests', returnController.getReturnRequests);
 router.post('/return/approve/:id', returnController.approveReturnRequest);
 router.post('/return/reject/:id', returnController.rejectReturnRequest);
-router.get('/return/order-details/:id',  returnController.getReturnRequestDetails);
+router.get('/return/order-details/:id', returnController.getReturnRequestDetails);
 
 
 module.exports = router;

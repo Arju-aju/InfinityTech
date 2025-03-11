@@ -207,8 +207,8 @@
     items: <%- JSON.stringify(cartItemsWithOffers) %>,
     totalAmount: <%= totalAmount %>,
     shippingCharge: <%= shippingCharge %>,
-    couponCode: null, // Added for coupon tracking
-    couponDiscount: 0 // Added for coupon discount tracking
+    couponCode: null,
+    couponDiscount: 0
   };
 
   const userData = {
@@ -265,8 +265,8 @@
           document.getElementById('couponDiscount').textContent = `-₹${result.discount.toFixed(2)}`;
           orderState.totalAmount = result.discountedTotal;
           orderState.shippingCharge = result.shippingCharge;
-          orderState.couponCode = result.couponCode; // Store coupon code
-          orderState.couponDiscount = result.discount; // Store discount amount
+          orderState.couponCode = result.couponCode;
+          orderState.couponDiscount = result.discount;
           document.getElementById('cartTotal').textContent = `₹${result.discountedTotal.toFixed(2)}`;
           couponInput.disabled = true;
           applyCouponBtn.disabled = true;
@@ -320,8 +320,8 @@
             addressId: orderState.selectedAddress._id,
             paymentMethod: 'cod',
             totalAmount: orderState.totalAmount,
-            couponCode: orderState.couponCode, // Include coupon code
-            couponDiscount: orderState.couponDiscount // Include coupon discount
+            couponCode: orderState.couponCode,
+            couponDiscount: orderState.couponDiscount
           })
         });
         const result = await response.json();
@@ -330,9 +330,10 @@
           Swal.fire({ icon: 'success', title: 'Order Placed!', text: 'Your order has been successfully placed.', toast: true, position: 'top-end', timer: 2000 });
           window.location.href = result.redirectUrl;
         } else {
-          throw new Error(result.message);
+          throw new Error(result.message || 'Error placing COD order');
         }
       } catch (error) {
+        console.error('Cash order error:', error);
         Swal.fire({ icon: 'error', title: 'Error', text: error.message || 'Error placing order', toast: true, position: 'top-end', timer: 3000 });
       }
     }
@@ -346,19 +347,21 @@
             addressId: orderState.selectedAddress._id,
             paymentMethod: 'wallet',
             totalAmount: orderState.totalAmount,
-            couponCode: orderState.couponCode, // Include coupon code
-            couponDiscount: orderState.couponDiscount // Include coupon discount
+            couponCode: orderState.couponCode,
+            couponDiscount: orderState.couponDiscount
           })
         });
         const result = await response.json();
+        console.log('Wallet order response:', result); // Log response for debugging
 
         if (response.ok && result.success) {
           Swal.fire({ icon: 'success', title: 'Order Placed!', text: 'Payment successful via wallet.', toast: true, position: 'top-end', timer: 2000 });
           window.location.href = result.redirectUrl;
         } else {
-          throw new Error(result.message);
+          throw new Error(result.message || 'Unknown error during wallet payment');
         }
       } catch (error) {
+        console.error('Wallet order error:', error);
         Swal.fire({ icon: 'error', title: 'Error', text: error.message || 'Error processing wallet payment', toast: true, position: 'top-end', timer: 3000 });
       }
     }
@@ -371,8 +374,8 @@
           body: JSON.stringify({
             amount: orderState.totalAmount,
             addressId: orderState.selectedAddress._id,
-            couponCode: orderState.couponCode, // Include coupon code
-            couponDiscount: orderState.couponDiscount // Include coupon discount
+            couponCode: orderState.couponCode,
+            couponDiscount: orderState.couponDiscount
           })
         });
         const order = await response.json();
@@ -397,8 +400,8 @@
                   razorpay_signature: response.razorpay_signature,
                   addressId: orderState.selectedAddress._id,
                   totalAmount: orderState.totalAmount,
-                  couponCode: orderState.couponCode, // Include coupon code
-                  couponDiscount: orderState.couponDiscount // Include coupon discount
+                  couponCode: orderState.couponCode,
+                  couponDiscount: orderState.couponDiscount
                 })
               });
               const verifyResult = await verifyResponse.json();

@@ -75,7 +75,7 @@
           </div>
           <select class="bg-gray-700 text-gray-100 px-4 py-3 rounded-lg focus:ring-2 focus:ring-purple-500 focus:outline-none">
             <option>All Status</option>
-            <option>Requested</option>
+            <option>Pending</option>
             <option>Approved</option>
             <option>Rejected</option>
           </select>
@@ -92,10 +92,10 @@
               <div class="flex justify-between items-start mb-4">
                 <div>
                   <h3 class="text-lg font-semibold text-gray-100">Request ID: <%= request._id.toString().substring(0, 8) %></h3>
-                  <p class="text-sm text-gray-400">Order ID: <%= request.orderId._id.toString().substring(0, 8) %></p>
+                  <p class="text-sm text-gray-400">Order ID: <%= request.orderId.toString().substring(0, 8) %></p>
                 </div>
                 <span class="status-pill px-3 py-1 rounded-full text-sm font-medium
-                  <%= request.returnStatus === 'Requested' ? 'bg-yellow-900 text-yellow-300' :
+                  <%= request.returnStatus === 'Pending' ? 'bg-yellow-900 text-yellow-300' :
                       request.returnStatus === 'Approved' ? 'bg-green-900 text-green-300' :
                       'bg-red-900 text-red-300' %>">
                   <%= request.returnStatus %>
@@ -105,13 +105,13 @@
               <!-- Reason -->
               <div class="mb-4">
                 <h4 class="text-sm text-gray-400 mb-1">Reason</h4>
-                <p class="text-gray-300 text-sm"><%= request.reason || 'No reason provided' %></p>
+                <p class="text-gray-300 text-sm"><%= request.reason %></p>
               </div>
 
               <!-- Comments -->
               <div class="mb-4">
                 <h4 class="text-sm text-gray-400 mb-1">Comments</h4>
-                <p class="text-gray-300 text-sm"><%= request.comments || 'No comments' %></p>
+                <p class="text-gray-300 text-sm"><%= request.comments %></p>
               </div>
 
               <!-- Products -->
@@ -122,24 +122,24 @@
                     <li class="flex justify-between items-center p-3 <%= item.valid ? 'bg-gray-800' : 'bg-red-900/20' %> rounded-lg">
                       <div class="flex items-center space-x-4">
                         <div class="flex-shrink-0">
-                          <img src="<%= item.productDetails.image || '/images/placeholder-product.jpg' %>" 
+                          <img src="<%= item.productDetails.image %>" 
                                alt="<%= item.productDetails.name %>" 
                                class="w-16 h-16 object-cover rounded-lg border border-gray-700" 
                                onerror="this.src='/images/placeholder-product.jpg'">
                         </div>
                         <div class="flex flex-col">
                           <strong class="<%= item.valid ? 'text-purple-400' : 'text-red-400' %> text-base">
-                            <%= item.productDetails.name || 'Unknown Product' %>
+                            <%= item.productDetails.name %>
                           </strong>
                           <div class="flex items-center mt-1">
                             <span class="text-gray-400">Quantity:</span>
-                            <span class="ml-2"><%= item.quantity || 0 %></span>
+                            <span class="ml-2"><%= item.quantity %></span>
                           </div>
                         </div>
                       </div>
                       <div class="text-right">
                         <span class="text-gray-300 font-medium">
-                          <%= formatPrice(item.productDetails.price || 0) %>
+                          <%= formatPrice(item.productDetails.price) %>
                         </span>
                       </div>
                     </li>
@@ -153,7 +153,7 @@
                    class="action-button flex-1 bg-purple-600 hover:bg-purple-700 text-white text-center px-4 py-2 rounded-lg">
                   <i class="fas fa-eye mr-2"></i>View Details
                 </a>
-                <% if (request.returnStatus !== 'Approved' && request.returnStatus !== 'Rejected') { %>
+                <% if (request.returnStatus === 'Pending') { %>
                   <form action="/admin/return/approve/<%= request._id %>" method="POST" class="inline">
                     <button class="action-button w-12 h-12 bg-green-600 hover:bg-green-700 text-white rounded-lg flex items-center justify-center">
                       <i class="fas fa-check"></i>
@@ -199,9 +199,9 @@
 
       // Loading animation for action buttons
       document.querySelectorAll('.action-button').forEach(button => {
-        button.dataset.originalHTML = button.innerHTML; // Store original HTML
+        button.dataset.originalHTML = button.innerHTML;
         button.addEventListener('click', function(e) {
-          if (this.tagName === 'A') return; // Skip for links
+          if (this.tagName === 'A') return;
           this.classList.add('opacity-75');
           this.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
           setTimeout(() => {

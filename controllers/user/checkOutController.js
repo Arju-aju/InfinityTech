@@ -91,22 +91,22 @@ exports.placeOrder = async (req, res) => {
         price: item.product.price,
         finalPrice,
         totalPrice: finalPrice * item.quantity,
-        status: 'Pending'
+        status: 'Ordered' // Match schema default
       };
     }));
 
     const subtotal = cartItemsWithOffers.reduce((acc, item) => acc + item.totalPrice, 0);
-    const shippingCharge = 50; // Fixed shipping charge of ₹50
+    const shippingCharge = 50;
     const orderAmount = totalAmount || (subtotal + shippingCharge - (couponDiscount || 0));
 
-    // COD restriction
     if (paymentMethod === 'cod' && orderAmount > 4000) {
       return res.status(400).json({ success: false, message: 'Cash on Delivery is not available for orders above ₹4000' });
     }
 
-    // Wallet payment logic
+    // Wallet payment logic with rollback on failure
+    let wallet;
     if (paymentMethod === 'wallet') {
-      let wallet = await Wallet.findOne({ userId: req.user._id });
+      wallet = await Wallet.findOne({ userId: req.user._id });
       if (!wallet) {
         wallet = new Wallet({ userId: req.user._id, balance: 0 });
         await wallet.save();
@@ -118,11 +118,12 @@ exports.placeOrder = async (req, res) => {
       wallet.transactions.push({
         amount: orderAmount,
         type: 'debit',
-        description: `Order payment for order ID: ${new Date().getTime()}`,
+        description: `Order payment attempt at ${new Date().toISOString()}`,
         date: new Date(),
         time: new Date()
       });
       await wallet.save();
+      console.log('Wallet updated:', wallet.balance);
     } else if (paymentMethod !== 'cod' && paymentMethod !== 'razorpay') {
       return res.status(400).json({ success: false, message: 'Invalid payment method' });
     }
@@ -135,20 +136,40 @@ exports.placeOrder = async (req, res) => {
       shippingCharge,
       paymentMethod,
       paymentStatus: paymentMethod === 'wallet' ? 'paid' : 'pending',
-      orderStatus: 'Processing',
+      status: 'Processing', // Fixed schema field name
       orderDate: new Date(),
-      couponCode: couponCode || null, // Store coupon code
-      couponDiscount: couponDiscount || 0, // Store coupon discount
-      couponApplied: couponCode ? (await Coupon.findOne({ code: couponCode }))._id : null // Reference to coupon
+      couponCode: couponCode || null,
+      couponDiscount: couponDiscount || 0,
+      couponApplied: couponCode ? (await Coupon.findOne({ code: couponCode }))?._id : null
     });
 
-    await order.save();
+    try {
+      await order.save();
+      console.log('Order saved:', order._id);
+    } catch (validationError) {
+      // Roll back wallet deduction if order save fails
+      if (paymentMethod === 'wallet' && wallet) {
+        wallet.balance += orderAmount;
+        wallet.transactions.push({
+          amount: orderAmount,
+          type: 'credit',
+          description: `Refund for failed order attempt at ${new Date().toISOString()}`,
+          date: new Date(),
+          time: new Date()
+        });
+        await wallet.save();
+        console.log('Wallet rolled back:', wallet.balance);
+      }
+      throw new Error(`Order validation failed: ${validationError.message}`);
+    }
+
     await Cart.findByIdAndDelete(cart._id);
+    console.log('Cart deleted');
 
     res.json({ success: true, orderId: order._id, redirectUrl: `/orders/${order._id}` });
   } catch (error) {
     console.error('Order placement error:', error.message, error.stack);
-    res.status(500).json({ success: false, message: 'Error placing order' });
+    res.status(500).json({ success: false, message: error.message || 'Error placing order' });
   }
 };
 
@@ -209,7 +230,7 @@ exports.applyCoupon = async (req, res) => {
       discount, 
       discountedTotal, 
       shippingCharge,
-      couponCode, // Include couponCode in response
+      couponCode,
       message: 'Coupon applied successfully' 
     });
   } catch (error) {
