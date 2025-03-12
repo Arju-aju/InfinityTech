@@ -455,12 +455,14 @@ const handleGoogleCallback = async (req, res) => {
             return res.redirect('/');
         }
 
-        console.log('Checking blocked status for:', existingUser.email);
+        // Check if the user is blocked
         if (existingUser.isBlocked) {
+            console.log('Blocked user attempted Google login:', existingUser.email);
             req.flash('error', 'Your account has been blocked. Please contact support.');
             return res.redirect('/login');
         }
 
+        // If not blocked, proceed with login
         req.session.user = {
             _id: existingUser._id,
             name: existingUser.name,

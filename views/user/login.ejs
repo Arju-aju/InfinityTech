@@ -227,7 +227,26 @@
                 }
             });
 
-            // Handle URL params for error messages
+            // Handle flash messages with SweetAlert
+            <% if (messages.error && messages.error.length > 0) { %>
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Login Failed',
+                    text: '<%= messages.error[0] %>',
+                    confirmButtonColor: '#d33',
+                    confirmButtonText: 'OK'
+                });
+            <% } else if (messages.success && messages.success.length > 0) { %>
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Success',
+                    text: '<%= messages.success[0] %>',
+                    confirmButtonColor: '#A517BA',
+                    confirmButtonText: 'OK'
+                });
+            <% } %>
+
+            // Handle URL params for error messages (optional)
             const urlParams = new URLSearchParams(window.location.search);
             if (urlParams.get('error') === 'blocked') {
                 Swal.fire({
