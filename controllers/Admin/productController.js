@@ -7,7 +7,7 @@ const path = require('path');
 const loadProduct = async (req, res) => {
     try {
         let page = Math.max(1, parseInt(req.query.page) || 1);
-        const limit = 4;
+        const limit = 10;
         const { search, category, priceRange, stock, sortBy = '-createdAt', status } = req.query;
 
         let filterQuery = {};
@@ -95,20 +95,17 @@ const addProduct = async (req, res) => {
     try {
         console.log('Request Body:', req.body);
         console.log('Request Files:', req.files);
-        console.log('Number of Images:', req.files['images'] ? req.files['images'].length : 0);
 
         if (!req.files || !req.files['images'] || req.files['images'].length === 0) {
             throw new Error('At least one product image is required');
         }
 
         const {
-            name, brand, category, price, stock, discountPercentage, description, specifications
+            name, brand, category, price, stock, description, specifications
         } = req.body;
 
-        // Extract specifications
-        const { processor, ram, storage, graphics } = typeof specifications === 'string' ? JSON.parse(specifications) : specifications || {};
+        const specs = typeof specifications === 'string' ? JSON.parse(specifications) : specifications;
 
-        // Validation object
         const validateField = (field, value, message) => {
             if (!value || value.trim() === '') throw new Error(message);
             return value.trim();
@@ -119,13 +116,12 @@ const addProduct = async (req, res) => {
             brand: validateField('brand', brand, 'Brand is required'),
             description: validateField('description', description, 'Description is required'),
             category: validateField('category', category, 'Category is required'),
-            processor: validateField('processor', processor, 'Processor is required'),
-            ram: validateField('ram', ram, 'RAM is required'),
-            storage: validateField('storage', storage, 'Storage is required'),
-            graphics: validateField('graphics', graphics, 'Graphics is required')
+            processor: validateField('processor', specs.processor, 'Processor is required'),
+            ram: validateField('ram', specs.ram, 'RAM is required'),
+            storage: validateField('storage', specs.storage, 'Storage is required'),
+            graphics: validateField('graphics', specs.graphics, 'Graphics is required')
         };
 
-        // Numeric validations
         const parsedPrice = parseFloat(price);
         if (isNaN(parsedPrice) || parsedPrice < 0) {
             throw new Error('Price must be a valid non-negative number');
@@ -136,33 +132,19 @@ const addProduct = async (req, res) => {
             throw new Error('Stock must be a valid non-negative integer');
         }
 
-        const parsedDiscount = parseFloat(discountPercentage) || 0;
-        if (parsedDiscount < 0 || parsedDiscount > 100) {
-            throw new Error('Discount percentage must be between 0 and 100');
-        }
-
-        // Check category existence
         const categoryExists = await Category.findOne({ _id: category, isDeleted: false });
         if (!categoryExists) {
             throw new Error('Selected category does not exist or is deleted');
         }
 
-        // Calculate prices
-        const discountValue = parsedPrice * (parsedDiscount / 100);
-        const salePrice = parsedPrice - discountValue;
-
-        // Prepare images
         const images = req.files['images'].map(file => `/uploads/products/${file.filename}`);
 
-        // Create new product
         const newProduct = new Product({
             name: validatedFields.name,
             brand: validatedFields.brand,
             category,
             description: validatedFields.description,
             price: parsedPrice,
-            salePrice,
-            productOffer: parsedDiscount,
             stock: parsedStock,
             specifications: {
                 processor: validatedFields.processor,
@@ -176,17 +158,17 @@ const addProduct = async (req, res) => {
         });
 
         await newProduct.save();
-        res.status(200).json({ message: 'Product added successfully', product: newProduct });
+        res.status(200).json({ success: true, message: 'Product added successfully', product: newProduct });
     } catch (error) {
         console.error('Error in addProduct:', error);
-        if (req.files && req.files['images'] && req.files['images'].length > 0) {
+        if (req.files && req.files['images']) {
             await Promise.all(
                 req.files['images'].map(file =>
                     fs.unlink(file.path).catch(err => console.error('Error deleting file:', err))
                 )
             );
         }
-        res.status(400).json({ message: error.message || 'Error adding product' });
+        res.status(400).json({ success: false, message: error.message || 'Error adding product' });
     }
 };
 
@@ -223,9 +205,12 @@ const updateProduct = async (req, res) => {
         console.log('Request Files:', req.files);
 
         const { name, brand, category, description, price, stock, specifications } = req.body;
-        const { processor, ram, storage, graphics } = typeof specifications === 'string' ? JSON.parse(specifications) : specifications || {};
+        const specs = typeof specifications === 'string' ? JSON.parse(specifications) : specifications;
 
-        const requiredFields = { name, brand, category, description, price, stock, processor, ram, storage, graphics };
+        const requiredFields = {
+            name, brand, category, description, price, stock,
+            processor: specs.processor, ram: specs.ram, storage: specs.storage, graphics: specs.graphics
+        };
         const missingFields = Object.entries(requiredFields)
             .filter(([_, value]) => !value?.trim())
             .map(([key]) => key);
@@ -255,10 +240,10 @@ const updateProduct = async (req, res) => {
             price: parsedPrice,
             stock: parsedStock,
             specifications: {
-                processor: processor.trim(),
-                ram: ram.trim(),
-                storage: storage.trim(),
-                graphics: graphics.trim()
+                processor: specs.processor.trim(),
+                ram: specs.ram.trim(),
+                storage: specs.storage.trim(),
+                graphics: specs.graphics.trim()
             }
         };
 
@@ -280,7 +265,7 @@ const updateProduct = async (req, res) => {
         return res.status(200).json({ success: true, message: 'Product updated successfully', product: updatedProduct });
     } catch (error) {
         console.error('Error in updateProduct:', error);
-        if (req.files && req.files['images'] && req.files['images'].length > 0) {
+        if (req.files && req.files['images']) {
             await Promise.all(
                 req.files['images'].map(file =>
                     fs.unlink(file.path).catch(err => console.error('Error deleting file:', err))
