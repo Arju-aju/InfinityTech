@@ -1,18 +1,59 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Orders Management</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-</head>
-<body class="bg-gray-950 text-gray-200 min-h-screen flex">
-    
-   <%- include('./partials/adminSidebar.ejs') %> 
+<%- include('./partials/adminHeader.ejs') %>
 
-    <main class="flex-1 p-6 md:ml-68">
+<style>
+    /* Override conflicting styles */
+    .products-container {
+        display: block !important;
+    }
+    .product-grid {
+        display: none !important;
+    }
+    .pagination-container {
+        @apply mt-8 flex flex-col sm:flex-row items-center justify-between gap-4;
+    }
+    .pagination-button {
+        @apply relative inline-flex items-center px-3 py-2 glass-effect text-sm text-gray-200 hover:bg-gray-700/50 transition-all duration-300;
+    }
+    .pagination-button.active {
+        @apply bg-cyan-500/20 text-cyan-400;
+    }
+    .flash-message {
+        @apply px-4 py-2 rounded-lg mt-4 text-center glass-effect;
+    }
+    .flash-success {
+        @apply bg-green-500/20 text-green-400;
+    }
+    .flash-error {
+        @apply bg-red-500/20 text-red-400;
+    }
+    tr:hover {
+        @apply bg-gray-800/30; /* Adjusted for dark theme */
+    }
+    /* Main content styling */
+    main {
+        margin-left: var(--sidebar-width, 16rem);
+        width: calc(100% - var(--sidebar-width, 16rem));
+        min-height: 100vh; /* Ensure main spans full viewport height */
+    }
+    /* Sidebar styling */
+    .sidebar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: var(--sidebar-width, 16rem);
+        z-index: 100;
+        animation: slideIn 0.5s ease-out forwards; /* Slide-in animation */
+    }
+    @keyframes slideIn {
+        from { transform: translateX(-100%); }
+        to { transform: translateX(0); }
+    }
+</style>
+
+<div class="flex min-h-screen bg-gray-900">
+    <%- include('./partials/adminSidebar.ejs') %>
+
+    <main class="flex-1 p-6">
         <div class="bg-gray-900 p-6 rounded-xl shadow-lg">
             <h1 class="text-4xl font-extrabold mb-6 text-center">Orders Management</h1>
             
@@ -67,13 +108,13 @@
                                         <% } else { %>
                                             <select class="bg-gray-700 text-white rounded-lg py-1 px-2 focus:ring-2 focus:ring-blue-500"
                                             data-order-id="<%= order._id %>" onchange="updateStatus(this)">
-                                        <option value="Pending" <%= order.status === 'Pending' ? 'selected' : '' %>>Pending</option>
-                                        <option value="Processing" <%= order.status === 'Processing' ? 'selected' : '' %>>Processing</option>
-                                        <option value="Shipped" <%= order.status === 'Shipped' ? 'selected' : '' %>>Shipped</option>
-                                        <option value="Out for Delivery" <%= order.status === 'Out for Delivery' ? 'selected' : '' %>>Out for Delivery</option>
-                                        <option value="Delivered" <%= order.status === 'Delivered' ? 'selected' : '' %>>Delivered</option>
-                                        <option value="Cancelled" <%= order.status === 'Cancelled' ? 'selected' : '' %>>Cancelled</option>
-                                    </select>
+                                                <option value="Pending" <%= order.status === 'Pending' ? 'selected' : '' %>>Pending</option>
+                                                <option value="Processing" <%= order.status === 'Processing' ? 'selected' : '' %>>Processing</option>
+                                                <option value="Shipped" <%= order.status === 'Shipped' ? 'selected' : '' %>>Shipped</option>
+                                                <option value="Out for Delivery" <%= order.status === 'Out for Delivery' ? 'selected' : '' %>>Out for Delivery</option>
+                                                <option value="Delivered" <%= order.status === 'Delivered' ? 'selected' : '' %>>Delivered</option>
+                                                <option value="Cancelled" <%= order.status === 'Cancelled' ? 'selected' : '' %>>Cancelled</option>
+                                            </select>
                                         <% } %>
                                     </td>
                                     <td class="px-6 py-4">
@@ -81,7 +122,6 @@
                                             <i class="fas fa-eye"></i> View Details
                                         </a>
                                     </td>
-                                    
                                 </tr>
                             <% }) %>
                         <% } else { %>
@@ -120,126 +160,74 @@
                         </a>
                     <% } %>
                 </div>
-
             </div>
         </div>
     </main>
 
-    <!-- Order Details Modal -->
- 
-
     <script>
-    async function updateStatus(selectElement) {
-    const orderId = selectElement.dataset.orderId;
-    const newStatus = selectElement.value;
-    const originalStatus = selectElement.querySelector('[selected]').value;
+        async function updateStatus(selectElement) {
+            const orderId = selectElement.dataset.orderId;
+            const newStatus = selectElement.value;
+            const originalStatus = selectElement.querySelector('[selected]').value;
 
-    try {
-        const response = await fetch(`/admin/orders/${orderId}/toggle-status`, {
-            method: 'PATCH',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ status: newStatus }),
-            credentials: 'include'
-        });
-
-        const data = await response.json();
-
-        if (response.ok) {
-            Swal.fire({
-                icon: 'success',
-                title: `Status updated to ${newStatus}`,
-                toast: true,
-                position: 'top-end',
-                showConfirmButton: false,
-                timer: 1500
-            });
-
-            // If status was changed to Cancelled, replace the select with a static span
-            if (newStatus === 'Cancelled') {
-                const staticStatus = document.createElement('span');
-                staticStatus.className = 'px-3 py-1 bg-red-500 text-white rounded-lg';
-                staticStatus.textContent = 'Cancelled';
-                selectElement.parentNode.replaceChild(staticStatus, selectElement);
-            }
-        } else {
-            Swal.fire({
-                icon: 'error',
-                title: 'Error',
-                text: data.message || 'Failed to update order status'
-            });
-            selectElement.value = originalStatus;  // Reset to previous value
-        }
-    } catch (error) {
-        console.error('Error updating status:', error);
-        Swal.fire({
-            icon: 'error',
-            title: 'Error',
-            text: 'An error occurred while updating the status'
-        });
-        selectElement.value = originalStatus;  // Reset to previous value
-    }
-}
-
-        // Function to open order details modal
-        async function openOrderDetails(orderId) {
             try {
-                const response = await fetch(`/admin/orders/${orderId}`);
+                const response = await fetch(`/admin/orders/${orderId}/toggle-status`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ status: newStatus }),
+                    credentials: 'include'
+                });
 
-                if (!response.ok) {
-                    throw new Error(`HTTP error! Status: ${response.status}`);
+                const data = await response.json();
+
+                if (response.ok) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: `Status updated to ${newStatus}`,
+                        toast: true,
+                        position: 'top-end',
+                        showConfirmButton: false,
+                        timer: 1500
+                    });
+
+                    // If status was changed to Cancelled, replace the select with a static span
+                    if (newStatus === 'Cancelled') {
+                        const staticStatus = document.createElement('span');
+                        staticStatus.className = 'px-3 py-1 bg-red-500 text-white rounded-lg';
+                        staticStatus.textContent = 'Cancelled';
+                        selectElement.parentNode.replaceChild(staticStatus, selectElement);
+                    }
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: data.message || 'Failed to update order status'
+                    });
+                    selectElement.value = originalStatus;  // Reset to previous value
                 }
-
-                const order = await response.json();
-
-                // Build order details dynamically
-                document.getElementById('modalContent').innerHTML = `
-                    <p><strong>Order ID:</strong> ${order._id}</p>
-                    <p><strong>Customer:</strong> ${order.user.name}</p>
-                    <p><strong>Email:</strong> ${order.user.email}</p>
-                    <p><strong>Total Amount:</strong> ₹${order.orderAmount ? order.orderAmount.toFixed(2) : '0.00'}</p>
-                    <p><strong>Status:</strong> ${order.status}</p>
-                    <p><strong>Address:</strong> ${order.deliveryAddress.address},${order.deliveryAddress.city},${order.deliveryAddress.landmark}, ${order.deliveryAddress.street}, ${order.deliveryAddress.city}, ${order.deliveryAddress.state}, ${order.deliveryAddress.pincode}, ${order.deliveryAddress.country}</p>
-
-                    <p class="mt-4"><strong>Products:</strong></p>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        ${order.products.map(product => `
-                            <div class="flex items-center space-x-4 bg-gray-800 p-3 rounded-md shadow">
-                                <img src="${product.productId.image}" alt="${product.productId.name}" class="w-16 h-16 object-cover rounded">
-                                <div>
-                                    <p class="font-semibold">${product.productId.name}</p>
-                                    <p class="text-sm text-gray-400">$${product.productId.price}</p>
-                                </div>
-                            </div>
-                        `).join('')}
-                    </div>
-                `;
-
-                document.getElementById('orderDetailsModal').classList.remove('hidden'); 
             } catch (error) {
-                console.error('Error fetching order details:', error);
+                console.error('Error updating status:', error);
                 Swal.fire({
                     icon: 'error',
                     title: 'Error',
-                    text: 'Failed to fetch order details',
+                    text: 'An error occurred while updating the status'
                 });
+                selectElement.value = originalStatus;  // Reset to previous value
             }
-        }
-
-        // Function to close order details modal
-        function closeOrderDetails() {
-            document.getElementById('orderDetailsModal').classList.add('hidden');
         }
 
         // Function to handle form submission
         document.getElementById('filterForm').addEventListener('submit', function(e) {
             e.preventDefault();
-            const formData = new URLSearchParams(new FormData(this));
-            window.location.href = `/admin/orders?${formData.toString()}`;
+            const formData = new FormData(this);
+            formData.set('page', '1'); // Reset to first page when filters change
+            const params = new URLSearchParams(formData);
+            window.location.href = `/admin/orders?${params.toString()}`;
         });
 
         // Function to reset filters
         function resetFilters() {
-            window.location.href = '/admin/orders';
+            window.location.href = '/admin/orders?page=1';
         }
 
         // Add debounce function for search input
@@ -259,49 +247,24 @@
         const searchInput = document.querySelector('input[name="search"]');
         if (searchInput) {
             searchInput.addEventListener('input', debounce(function(e) {
-                document.getElementById('filterForm').submit();
-            }, 500));
-        }
-
-        // Close modal when clicking outside
-        document.getElementById('orderDetailsModal').addEventListener('click', function(e) {
-            if (e.target === this) {
-                closeOrderDetails();
-            }
-        });
-
-        // Add escape key listener for modal
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape' && !document.getElementById('orderDetailsModal').classList.contains('hidden')) {
-                closeOrderDetails();
-            }
-        });
-    </script>
-    <script>
-        // Update form submission to reset pagination when filters change
-        document.getElementById('filterForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            const formData = new FormData(this);
-            formData.set('page', '1'); // Reset to first page when filters change
-            const params = new URLSearchParams(formData);
-            window.location.href = `/admin/orders?${params.toString()}`;
-        });
-        
-        // Update reset filters function
-        function resetFilters() {
-            window.location.href = '/admin/orders?page=1';
-        }
-        
-        // Update debounce handler for search
-        const searchInput = document.querySelector('input[name="search"]');
-        if (searchInput) {
-            searchInput.addEventListener('input', debounce(function(e) {
                 const formData = new FormData(document.getElementById('filterForm'));
                 formData.set('page', '1'); // Reset to first page when search changes
                 const params = new URLSearchParams(formData);
                 window.location.href = `/admin/orders?${params.toString()}`;
             }, 500));
         }
-        </script>
+
+        // Dynamically adjust sidebar height to match main content
+        document.addEventListener('DOMContentLoaded', () => {
+            const sidebar = document.querySelector('.sidebar');
+            const main = document.querySelector('main');
+            const updateHeight = () => {
+                const mainHeight = main.offsetHeight;
+                sidebar.style.height = `${Math.max(mainHeight, window.innerHeight)}px`;
+            };
+            updateHeight();
+            window.addEventListener('resize', updateHeight);
+        });
+    </script>
 </body>
 </html>

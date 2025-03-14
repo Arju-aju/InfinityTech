@@ -1,7 +1,7 @@
 <%- include('./partials/adminHeader.ejs') %>
 
 <style>
-    /* Override any existing grid styles */
+    /* Custom styles specific to product.ejs */
     .products-container {
         display: block !important;
     }
@@ -26,9 +26,27 @@
     .flash-error {
         @apply bg-red-500/20 text-red-400;
     }
+    main {
+        margin-left: var(--sidebar-width, 16rem);
+        width: calc(100% - var(--sidebar-width, 16rem));
+        min-height: 100vh; /* Ensure main content spans full height */
+    }
+    .sidebar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: var(--sidebar-width, 16rem);
+        z-index: 100;
+        animation: slideIn 0.5s ease-out forwards; /* Slide-in animation */
+    }
+    @keyframes slideIn {
+        from { transform: translateX(-100%); }
+        to { transform: translateX(0); }
+    }
 </style>
 
-<div class="flex h-screen bg-gray-900">
+<div class="flex min-h-screen bg-gray-900">
+    <!-- Sidebar Inclusion -->
     <%- include('./partials/adminSidebar.ejs') %>
 
     <main class="flex-1 overflow-x-hidden overflow-y-auto bg-gray-900">
@@ -251,19 +269,17 @@
                 </div>
 
                 <!-- Pagination -->
-                <div class="flex flex-col sm:flex-row items-center justify-between gap-4 mt-8">
+                <div class="pagination-container">
                     <% if (pagination.totalPages > 1) { %>
                         <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
-                            <!-- Previous page -->
                             <% if (pagination.hasPrevPage) { %>
                                 <a href="/admin/products?page=<%= pagination.currentPage - 1 %>&limit=<%= pagination.limit %>" 
-                                   class="relative inline-flex items-center px-3 py-2 rounded-l-md glass-effect text-sm text-gray-200 hover:bg-gray-700/50 transition-all duration-300">
+                                   class="pagination-button rounded-l-md">
                                     <span class="sr-only">Previous</span>
                                     <i class="fas fa-chevron-left"></i>
                                 </a>
                             <% } %>
                             
-                            <!-- Page numbers -->
                             <% 
                             let startPage = Math.max(1, pagination.currentPage - 2);
                             let endPage = Math.min(pagination.totalPages, startPage + 4);
@@ -272,41 +288,34 @@
 
                             <% if (startPage > 1) { %>
                                 <a href="/admin/products?page=1&limit=<%= pagination.limit %>" 
-                                   class="relative inline-flex items-center px-3 py-2 glass-effect text-sm text-gray-200 hover:bg-gray-700/50">
+                                   class="pagination-button">
                                     1
                                 </a>
                                 <% if (startPage > 2) { %>
-                                    <span class="relative inline-flex items-center px-3 py-2 glass-effect text-sm text-gray-400">
-                                        ...
-                                    </span>
+                                    <span class="pagination-button text-gray-400">...</span>
                                 <% } %>
                             <% } %>
                                 
                             <% for(let i = startPage; i <= endPage; i++) { %>
                                 <a href="/admin/products?page=<%= i %>&limit=<%= pagination.limit %>"
-                                   class="relative inline-flex items-center px-3 py-2 glass-effect text-sm
-                                        <%= pagination.currentPage === i ? 'bg-cyan-500/20 text-cyan-400' : 'text-gray-200 hover:bg-gray-700/50' %>
-                                        transition-all duration-300">
+                                   class="pagination-button <%= pagination.currentPage === i ? 'active' : '' %>">
                                     <%= i %>
                                 </a>
                             <% } %>
                             
                             <% if (endPage < pagination.totalPages) { %>
                                 <% if (endPage < pagination.totalPages - 1) { %>
-                                    <span class="relative inline-flex items-center px-3 py-2 glass-effect text-sm text-gray-400">
-                                        ...
-                                    </span>
+                                    <span class="pagination-button text-gray-400">...</span>
                                 <% } %>
                                 <a href="/admin/products?page=<%= pagination.totalPages %>&limit=<%= pagination.limit %>"
-                                   class="relative inline-flex items-center px-3 py-2 glass-effect text-sm text-gray-200 hover:bg-gray-700/50">
+                                   class="pagination-button">
                                     <%= pagination.totalPages %>
                                 </a>
                             <% } %>
                             
-                            <!-- Next page -->
                             <% if (pagination.hasNextPage) { %>
                                 <a href="/admin/products?page=<%= pagination.currentPage + 1 %>&limit=<%= pagination.limit %>"
-                                   class="relative inline-flex items-center px-3 py-2 rounded-r-md glass-effect text-sm text-gray-200 hover:bg-gray-700/50 transition-all duration-300">
+                                   class="pagination-button rounded-r-md">
                                     <span class="sr-only">Next</span>
                                     <i class="fas fa-chevron-right"></i>
                                 </a>
@@ -413,6 +422,18 @@
             console.error('Error:', error);
         }
     }
+
+    // Dynamically adjust sidebar height to match main content
+    document.addEventListener('DOMContentLoaded', () => {
+        const sidebar = document.querySelector('.sidebar');
+        const main = document.querySelector('main');
+        const updateHeight = () => {
+            const mainHeight = main.offsetHeight;
+            sidebar.style.height = `${Math.max(mainHeight, window.innerHeight)}px`;
+        };
+        updateHeight();
+        window.addEventListener('resize', updateHeight);
+    });
 </script>
 
 <%- include('./partials/adminFooter.ejs') %>

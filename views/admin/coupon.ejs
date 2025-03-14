@@ -1,540 +1,191 @@
-<!DOCTYPE html>
-<html lang="en" class="dark">
+<%- include('./partials/adminHeader.ejs') %>
 
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>InfinityTech - Coupons</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-  <style>
-    :root {
-      --primary-dark: #1f2937;
-      --secondary-dark: #111827;
-      --accent-blue: #3b82f6;
-      --text-primary: #e5e7eb;
-      --text-secondary: #9ca3af;
-    }
+<div class="flex min-h-screen">
+  <%- include('./partials/adminSidebar.ejs') %>
 
-    body {
-      background-color: var(--secondary-dark);
-      color: var(--text-primary);
-      font-family: 'Inter', sans-serif;
-    }
+  <main class="flex-1 p-6" style="margin-left: var(--sidebar-width, 16rem);">
+    <!-- Header Section -->
+    <header class="flex items-center justify-between mb-8 fade-in-up">
+      <h1 class="text-3xl font-bold text-cyan-400">Coupons Management</h1>
+      <a href="/admin/add-coupon" class="add-coupon-btn glass-effect bg-gradient-to-r from-green-500 to-teal-500 text-white px-4 py-2 rounded-lg hover:from-green-600 hover:to-teal-600 transition-all duration-300">
+        <i class="fas fa-plus mr-2"></i> Add New Coupon
+      </a>
+    </header>
 
-    /* Animations */
-    @keyframes fadeInUp {
-      from { opacity: 0; transform: translateY(20px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-
-    @keyframes glowPulse {
-      0% { box-shadow: 0 0 5px rgba(59, 130, 246, 0.5); }
-      50% { box-shadow: 0 0 15px rgba(59, 130, 246, 0.8); }
-      100% { box-shadow: 0 0 5px rgba(59, 130, 246, 0.5); }
-    }
-
-    .fade-in-up {
-      animation: fadeInUp 0.6s ease-out forwards;
-    }
-
-    /* Sidebar */
-    .sidebar {
-      background-color: #1f2937;
-      width: 250px;
-      height: 100vh;
-      position: fixed;
-      padding: 1.5rem;
-      transition: transform 0.3s ease;
-    }
-
-    .sidebar nav a {
-      display: flex;
-      align-items: center;
-      padding: 0.75rem 1rem;
-      border-radius: 8px;
-      color: var(--text-secondary);
-      transition: all 0.2s ease;
-    }
-
-    .sidebar nav a:hover,
-    .sidebar nav a.active {
-      background-color: var(--accent-blue);
-      color: white;
-    }
-
-    .sidebar nav a i {
-      margin-right: 0.75rem;
-    }
-
-    /* Main Content */
-    .main-content {
-      margin-left: 250px;
-      padding: 2rem;
-      min-height: 100vh;
-    }
-
-    /* Search Container */
-    .search-container {
-      background: var(--primary-dark);
-      border-radius: 12px;
-      padding: 1.5rem;
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-      transition: all 0.3s ease;
-    }
-
-    .search-container:hover {
-      box-shadow: 0 6px 24px rgba(0, 0, 0, 0.4);
-    }
-
-    .search-input {
-      flex: 1;
-      background: rgba(17, 24, 39, 0.8);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      color: var(--text-primary);
-      padding: 0.75rem 1rem;
-      border-radius: 8px;
-      transition: all 0.3s ease;
-    }
-
-    .search-input:focus {
-      border-color: var(--accent-blue);
-      outline: none;
-    }
-
-    .search-select {
-      background: rgba(17, 24, 39, 0.8);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      color: var(--text-primary);
-      padding: 0.75rem;
-      border-radius: 8px;
-    }
-
-    .search-button {
-      background: linear-gradient(135deg, #3b82f6, #2563eb);
-      color: white;
-      padding: 0.75rem 1.5rem;
-      border-radius: 8px;
-      border: none;
-      transition: all 0.3s ease;
-    }
-
-    .search-button:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
-    }
-
-    /* Table Styling */
-    .table-container {
-      background: var(--primary-dark);
-      border-radius: 12px;
-      overflow-x: auto;
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-    }
-
-    th, td {
-      padding: 1rem;
-      text-align: left;
-    }
-
-    th {
-      background: rgba(255, 255, 255, 0.05);
-      color: var(--text-secondary);
-      font-weight: 600;
-      text-transform: uppercase;
-      font-size: 0.875rem;
-    }
-
-    tr {
-      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-      transition: all 0.2s ease;
-    }
-
-    tr:hover {
-      background: rgba(59, 130, 246, 0.1);
-    }
-
-    /* Buttons */
-    .add-coupon-btn {
-      background: linear-gradient(135deg, #10b981, #059669);
-      color: white;
-      padding: 0.75rem 1.5rem;
-      border-radius: 8px;
-      border: none;
-      transition: all 0.3s ease;
-    }
-
-    .add-coupon-btn:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
-    }
-
-    /* Status Badge */
-    .status-badge {
-      padding: 0.25rem 0.75rem;
-      border-radius: 9999px;
-      font-size: 0.75rem;
-      font-weight: 500;
-    }
-
-    .status-badge.active {
-      background: rgba(16, 185, 129, 0.2);
-      color: #34d399;
-    }
-
-    .status-badge.inactive {
-      background: rgba(239, 68, 68, 0.2);
-      color: #f87171;
-    }
-
-    /* Action Icons */
-    .action-icon {
-      padding: 0.5rem;
-      border-radius: 8px;
-      transition: all 0.2s ease;
-      position: relative;
-    }
-
-    .edit-icon:hover { color: #60a5fa; background: rgba(59, 130, 246, 0.2); }
-    .view-icon:hover { color: #34d399; background: rgba(16, 185, 129, 0.2); }
-    .delete-icon:hover { color: #f87171; background: rgba(239, 68, 68, 0.2); }
-
-    /* Modal */
-    .modal-overlay {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0, 0, 0, 0.5);
-      display: none;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .modal-content {
-      background: var(--primary-dark);
-      padding: 2rem;
-      border-radius: 12px;
-      width: 90%;
-      max-width: 400px;
-      color: var(--text-primary);
-      animation: fadeInUp 0.3s ease;
-    }
-
-    .modal-buttons {
-      display: flex;
-      gap: 1rem;
-      justify-content: center;
-      margin-top: 1.5rem;
-    }
-
-    .confirm-btn, .cancel-btn {
-      padding: 0.75rem 1.5rem;
-      border-radius: 8px;
-      border: none;
-      color: white;
-      transition: all 0.3s ease;
-    }
-
-    .confirm-btn { background: #ef4444; }
-    .confirm-btn:hover { background: #dc2626; }
-    .cancel-btn { background: #6b7280; }
-    .cancel-btn:hover { background: #4b5563; }
-
-    /* Responsive */
-    @media (max-width: 768px) {
-      .sidebar {
-        transform: translateX(-100%);
-      }
-      .main-content {
-        margin-left: 0;
-      }
-      .search-container {
-        flex-direction: column;
-      }
-      .search-input, .search-select, .search-button {
-        width: 100%;
-      }
-    }
-  </style>
-</head>
-
-<body class="min-h-screen">
-  <div class="flex">
-    <!-- Sidebar -->
-    <div class="sidebar">
-      <div class="flex items-center mb-8">
-        <span class="text-2xl font-bold">InfinityTech</span>
-      </div>
-      <nav class="space-y-2">
-        <a href="/admin/dashboard" class="active"><i class="fas fa-home"></i> Dashboard</a>
-        <a href="/admin/products"><i class="fas fa-laptop"></i> Products</a>
-        <a href="/admin/categories"><i class="fas fa-tags"></i> Categories</a>
-        <a href="/admin/users"><i class="fas fa-users"></i> Customers</a>
-        <a href="/admin/orders"><i class="fas fa-shopping-cart"></i> Orders</a>
-        <a href="/admin/return/requests"><i class="fas fa-shopping-cart"></i> Return Orders</a>
-        <a href="/admin/offers"><i class="fas fa-shopping-cart"></i> Offer</a>
-        <a href="/admin/coupons"><i class="fas fa-ticket-alt"></i> Coupon</a>
-      </nav>
-    </div>
-
-    <!-- Main Content -->
-    <div class="main-content">
-      <div class="flex items-center justify-between mb-8 fade-in-up">
-        <h1 class="text-3xl font-bold text-blue-400">Coupons Management</h1>
-        <a href="/admin/add-coupon" class="add-coupon-btn"><i class="fas fa-plus mr-2"></i> Add New Coupon</a>
-      </div>
-
-      <!-- Search Section -->
-      <form action="/admin/coupon" method="GET" class="mb-8 fade-in-up">
-        <div class="search-container">
-          <input type="text" name="search" placeholder="Search coupons..." class="search-input" />
-          <select name="status" class="search-select">
+    <!-- Search Section -->
+    <section class="mb-8 fade-in-up">
+      <form action="/admin/coupon" method="GET">
+        <div class="search-container glass-effect p-4 rounded-lg shadow-lg flex items-center gap-4">
+          <input 
+            type="text" 
+            name="search" 
+            placeholder="Search coupons..." 
+            class="search-input flex-1 bg-gray-800 text-gray-200 border border-gray-700 rounded-lg px-4 py-2 focus:outline-none focus:border-cyan-500 transition-all duration-300"
+            value="<%= typeof search !== 'undefined' ? search : '' %>"
+          >
+          <select name="status" class="search-select bg-gray-800 text-gray-200 border border-gray-700 rounded-lg px-4 py-2 focus:outline-none focus:border-cyan-500 transition-all duration-300">
             <option value="">All Status</option>
-            <option value="active">Active</option>
-            <option value="inactive">Inactive</option>
+            <option value="active" <%= typeof status !== 'undefined' && status === 'active' ? 'selected' : '' %>>Active</option>
+            <option value="inactive" <%= typeof status !== 'undefined' && status === 'inactive' ? 'selected' : '' %>>Inactive</option>
           </select>
-          <button type="submit" class="search-button"><i class="fas fa-search mr-2"></i> Search</button>
+          <button type="submit" class="search-button glass-effect bg-gradient-to-r from-cyan-500 to-blue-500 text-white px-4 py-2 rounded-lg hover:from-cyan-600 hover:to-blue-600 transition-all duration-300">
+            <i class="fas fa-search mr-2"></i> Search
+          </button>
         </div>
       </form>
+    </section>
 
-      <!-- Table Section -->
-      <div class="table-container fade-in-up">
-        <table>
-          <thead>
-            <tr>
-              <th>Sl No</th>
-              <th>Name</th>
-              <th>Code</th>
-              <th>Offer Type</th>
-              <th>Value</th>
-              <th>Min Price</th>
-              <th>Created On</th>
-              <th>Expires On</th>
-              <th>Usage Limit</th>
-              <th>Per User</th>
-              <th>Status</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            <% coupons.forEach((coupon, index) => { %>
-            <tr>
-              <td><%= index + 1 %></td>
-              <td><%= coupon.name %></td>
-              <td><%= coupon.code %></td>
-              <td><%= coupon.offerType %></td>
-              <td><%= coupon.offerValue %><%= coupon.offerType === 'percentage' ? '%' : '₹' %></td>
-              <td>₹<%= coupon.minimumPrice %></td>
-              <td><%= new Date(coupon.createdOn).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) %></td>
-              <td><%= new Date(coupon.expiredOn).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) %></td>
-              <td><%= coupon.usageLimit || 'Unlimited' %></td>
-              <td><%= coupon.usagePerUserLimit %></td>
-              <td><span class="status-badge <%= coupon.isActive ? 'active' : 'inactive' %>"><%= coupon.isActive ? 'Active' : 'Inactive' %></span></td>
-              <td>
-                <div class="flex space-x-2">
-                  <a href="/admin/editCoupon/<%= coupon._id %>" class="action-icon edit-icon"><i class="fas fa-edit"></i></a>
-                  <a href="/admin/viewCoupon/<%= coupon._id %>" class="action-icon view-icon"><i class="fas fa-eye"></i></a>
-                  <a href="/admin/deleteCoupon/<%= coupon._id %>" class="action-icon delete-icon delete-btn"><i class="fas fa-trash"></i></a>
-                </div>
-              </td>
-            </tr>
-            <% }) %>
-          </tbody>
-        </table>
-      </div>
+    <!-- Coupons Table -->
+    <section class="table-container glass-effect rounded-lg shadow-lg fade-in-up">
+      <% if (coupons.length > 0) { %>
+        <div class="overflow-x-auto">
+          <table class="w-full text-gray-200">
+            <thead class="bg-gray-800">
+              <tr>
+                <th class="px-6 py-3 text-left text-sm font-semibold uppercase">Sl No</th>
+                <th class="px-6 py-3 text-left text-sm font-semibold uppercase">Name</th>
+                <th class="px-6 py-3 text-left text-sm font-semibold uppercase">Code</th>
+                <th class="px-6 py-3 text-left text-sm font-semibold uppercase">Offer Type</th>
+                <th class="px-6 py-3 text-left text-sm font-semibold uppercase">Value</th>
+                <th class="px-6 py-3 text-left text-sm font-semibold uppercase">Min Price</th>
+                <th class="px-6 py-3 text-left text-sm font-semibold uppercase">Created On</th>
+                <th class="px-6 py-3 text-left text-sm font-semibold uppercase">Expires On</th>
+                <th class="px-6 py-3 text-left text-sm font-semibold uppercase">Usage Limit</th>
+                <th class="px-6 py-3 text-left text-sm font-semibold uppercase">Per User</th>
+                <th class="px-6 py-3 text-left text-sm font-semibold uppercase">Status</th>
+                <th class="px-6 py-3 text-left text-sm font-semibold uppercase">Actions</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-700">
+              <% coupons.forEach((coupon, index) => { %>
+                <tr class="table-row hover:bg-gray-800 transition-all duration-200">
+                  <td class="px-6 py-4"><%= index + 1 %></td>
+                  <td class="px-6 py-4"><%= coupon.name %></td>
+                  <td class="px-6 py-4"><%= coupon.code %></td>
+                  <td class="px-6 py-4"><%= coupon.offerType %></td>
+                  <td class="px-6 py-4"><%= coupon.offerValue %><%= coupon.offerType === 'percentage' ? '%' : '₹' %></td>
+                  <td class="px-6 py-4">₹<%= coupon.minimumPrice %></td>
+                  <td class="px-6 py-4"><%= new Date(coupon.createdOn).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) %></td>
+                  <td class="px-6 py-4"><%= new Date(coupon.expiredOn).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) %></td>
+                  <td class="px-6 py-4"><%= coupon.usageLimit || 'Unlimited' %></td>
+                  <td class="px-6 py-4"><%= coupon.usagePerUserLimit %></td>
+                  <td class="px-6 py-4">
+                    <span class="status-badge px-2 py-1 rounded-full text-xs font-medium <%= coupon.isActive ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400' %>">
+                      <%= coupon.isActive ? 'Active' : 'Inactive' %>
+                    </span>
+                  </td>
+                  <td class="px-6 py-4">
+                    <div class="flex space-x-2">
+                      <a href="/admin/editCoupon/<%= coupon._id %>" class="action-icon text-blue-400 hover:text-blue-300 p-2 rounded-lg hover:bg-blue-500/20 transition-all duration-200">
+                        <i class="fas fa-edit"></i>
+                      </a>
+                      <a href="/admin/viewCoupon/<%= coupon._id %>" class="action-icon text-green-400 hover:text-green-300 p-2 rounded-lg hover:bg-green-500/20 transition-all duration-200">
+                        <i class="fas fa-eye"></i>
+                      </a>
+                      <a href="/admin/deleteCoupon/<%= coupon._id %>" class="action-icon delete-btn text-red-400 hover:text-red-300 p-2 rounded-lg hover:bg-red-500/20 transition-all duration-200">
+                        <i class="fas fa-trash"></i>
+                      </a>
+                    </div>
+                  </td>
+                </tr>
+              <% }) %>
+            </tbody>
+          </table>
+        </div>
+      <% } else { %>
+        <div class="flex flex-col items-center justify-center py-12 text-center">
+          <i class="fas fa-ticket-alt text-4xl text-cyan-400 mb-4"></i>
+          <h3 class="text-xl font-semibold">No Coupons Found</h3>
+          <p class="text-gray-400 mt-2">Start by adding your first coupon.</p>
+          <a href="/admin/add-coupon" class="add-coupon-btn glass-effect bg-gradient-to-r from-green-500 to-teal-500 text-white px-4 py-2 rounded-lg hover:from-green-600 hover:to-teal-600 transition-all duration-300 mt-4">
+            <i class="fas fa-plus mr-2"></i> Create Coupon
+          </a>
+        </div>
+      <% } %>
+    </section>
 
-      <!-- Modal -->
-      <div id="confirmModal" class="modal-overlay">
-        <div class="modal-content">
-          <h2 class="text-xl font-semibold">Are you sure?</h2>
-          <p class="text-gray-400 mt-2">This action cannot be undone.</p>
-          <div class="modal-buttons">
-            <button onclick="confirmDelete()" class="confirm-btn">Yes, Delete</button>
-            <button onclick="closeModal()" class="cancel-btn">Cancel</button>
-          </div>
+    <!-- Delete Confirmation Modal -->
+    <div id="confirmModal" class="modal-overlay fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center">
+      <div class="modal-content glass-effect bg-gray-900 p-6 rounded-lg max-w-md w-full">
+        <h2 class="text-xl font-semibold text-white">Are you sure?</h2>
+        <p class="text-gray-400 mt-2">This action cannot be undone.</p>
+        <div class="modal-buttons flex gap-4 justify-center mt-6">
+          <button onclick="confirmDelete()" class="confirm-btn bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition-all duration-300">Yes, Delete</button>
+          <button onclick="closeModal()" class="cancel-btn bg-gray-700 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition-all duration-300">Cancel</button>
         </div>
       </div>
-
-      <!-- Empty State -->
-      <% if (coupons.length === 0) { %>
-      <div class="flex flex-col items-center justify-center py-12 text-center fade-in-up">
-        <i class="fas fa-ticket-alt text-4xl text-blue-400 mb-4"></i>
-        <h3 class="text-xl font-semibold">No Coupons Found</h3>
-        <p class="text-gray-400 mt-2">Start by adding your first coupon.</p>
-        <a href="/admin/add-coupon" class="add-coupon-btn mt-4"><i class="fas fa-plus mr-2"></i> Create Coupon</a>
-      </div>
-      <% } %>
     </div>
-  </div>
+  </main>
+</div>
 
-  <script>
-   
- 
-  // Enhanced Animations and Interactions
+<script>
   document.addEventListener('DOMContentLoaded', () => {
-    // Smooth scroll behavior
-    document.documentElement.style.scrollBehavior = 'smooth';
-
     // Initialize animations
     const animateElements = () => {
       const elements = document.querySelectorAll('.fade-in-up');
       elements.forEach((element, index) => {
         element.style.animationDelay = `${index * 0.1}s`;
         element.style.opacity = '1';
+        element.classList.add('animate-[fadeInUp_0.6s_ease-out_forwards]');
       });
     };
     animateElements();
 
-    // Enhanced table row interactions
+    // Dynamic sidebar height adjustment
+    const sidebar = document.querySelector('.sidebar');
+    const main = document.querySelector('main');
+    const updateHeight = () => {
+      const mainHeight = main.offsetHeight;
+      sidebar.style.height = `${Math.max(mainHeight, window.innerHeight)}px`;
+    };
+    updateHeight();
+    window.addEventListener('resize', updateHeight);
+
+    // Delete confirmation modal
+    let deleteUrl = '';
+    const deleteButtons = document.querySelectorAll('.delete-btn');
+    deleteButtons.forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        deleteUrl = btn.href;
+        document.getElementById('confirmModal').style.display = 'flex';
+      });
+    });
+
+    window.confirmDelete = () => {
+      window.location.href = deleteUrl;
+    };
+
+    window.closeModal = () => {
+      document.getElementById('confirmModal').style.display = 'none';
+    };
+
+    // Table row hover effects
     const tableRows = document.querySelectorAll('.table-row');
     tableRows.forEach(row => {
-      row.addEventListener('mouseenter', () => {
-        row.style.transform = 'translateX(4px)';
-        const cells = row.querySelectorAll('td');
-        cells.forEach(cell => {
-          cell.style.transition = 'all 0.3s ease';
-        });
-      });
-
-      row.addEventListener('mouseleave', () => {
-        row.style.transform = 'translateX(0)';
-      });
+      row.addEventListener('mouseenter', () => row.style.transform = 'translateX(4px)');
+      row.addEventListener('mouseleave', () => row.style.transform = 'translateX(0)');
     });
 
-    // Button click effects
+    // Button interactions
     const buttons = document.querySelectorAll('button, .add-coupon-btn');
     buttons.forEach(button => {
-      button.addEventListener('mousedown', () => {
-        button.style.transform = 'scale(0.98)';
-      });
-
-      button.addEventListener('mouseup', () => {
-        button.style.transform = '';
-      });
-
-      // Add hover glow effect
-      button.addEventListener('mouseenter', () => {
-        button.style.animation = 'glowPulse 2s infinite';
-      });
-
-      button.addEventListener('mouseleave', () => {
-        button.style.animation = '';
-      });
+      button.addEventListener('mousedown', () => button.style.transform = 'scale(0.98)');
+      button.addEventListener('mouseup', () => button.style.transform = 'scale(1)');
+      button.addEventListener('mouseenter', () => button.classList.add('shadow-lg'));
+      button.addEventListener('mouseleave', () => button.classList.remove('shadow-lg'));
     });
 
-    // Enhanced search input interaction
+    // Search input focus effect
     const searchInput = document.querySelector('.search-input');
     if (searchInput) {
+      const searchContainer = document.querySelector('.search-container');
       searchInput.addEventListener('focus', () => {
-        const searchContainer = document.querySelector('.search-container');
-        searchContainer.style.transform = 'scale(1.01)';
-        searchContainer.style.boxShadow = '0 8px 28px rgba(0, 0, 0, 0.5)';
+        searchContainer.classList.add('scale-100', 'shadow-xl');
       });
-
       searchInput.addEventListener('blur', () => {
-        const searchContainer = document.querySelector('.search-container');
-        searchContainer.style.transform = '';
-        searchContainer.style.boxShadow = '';
-      });
-    }
-
-    // Status badge animation
-    const statusBadges = document.querySelectorAll('.status-badge');
-    statusBadges.forEach(badge => {
-      badge.addEventListener('mouseenter', () => {
-        badge.style.transform = 'scale(1.1)';
-      });
-
-      badge.addEventListener('mouseleave', () => {
-        badge.style.transform = '';
+        searchContainer.classList.remove('scale-100', 'shadow-xl');
       });
     });
-
-    // Action icons tooltip positioning
-    const actionIcons = document.querySelectorAll('.action-icon');
-    actionIcons.forEach(icon => {
-      icon.addEventListener('mouseenter', (e) => {
-        const tooltip = icon.querySelector('.tooltip');
-        if (tooltip) {
-          // Ensure tooltip stays within viewport
-          const iconRect = icon.getBoundingClientRect();
-          const tooltipRect = tooltip.getBoundingClientRect();
-          const offset = (tooltipRect.width - iconRect.width) / 2;
-
-          if (iconRect.left - offset < 0) {
-            tooltip.style.left = '0';
-            tooltip.style.transform = 'translateX(0) translateY(-8px)';
-          } else if (iconRect.right + offset > window.innerWidth) {
-            tooltip.style.left = 'auto';
-            tooltip.style.right = '0';
-            tooltip.style.transform = 'translateX(0) translateY(-8px)';
-          }
-        }
-      });
-    });
-
-    // Enhanced table header shadows
-    const tableHeader = document.querySelector('thead');
-    if (tableHeader) {
-      const tableContainer = document.querySelector('.table-container');
-      tableContainer.addEventListener('scroll', () => {
-        if (tableContainer.scrollTop > 0) {
-          tableHeader.style.boxShadow = '0 4px 6px rgba(0, 0, 0, 0.1)';
-        } else {
-          tableHeader.style.boxShadow = 'none';
-        }
-      });
-    }
   });
-
-  // Handle theme toggle
-  const themeToggle = document.getElementById('themeToggle');
-  if (themeToggle) {
-    themeToggle.addEventListener('click', () => {
-      document.documentElement.classList.toggle('dark');
-      const isDark = document.documentElement.classList.contains('dark');
-      localStorage.setItem('theme', isDark ? 'dark' : 'light');
-    });
-  }
-
-  // Handle loading state
-  window.addEventListener('load', () => {
-    document.body.classList.add('loaded');
-  });
-
-  document.addEventListener('DOMContentLoaded', () => {
-      const deleteButtons = document.querySelectorAll('.delete-btn');
-      let deleteUrl = '';
-
-      deleteButtons.forEach(btn => {
-        btn.addEventListener('click', (e) => {
-          e.preventDefault();
-          deleteUrl = btn.href;
-          document.getElementById('confirmModal').style.display = 'flex';
-        });
-      });
-
-      window.confirmDelete = () => {
-        window.location.href = deleteUrl;
-      };
-
-      window.closeModal = () => {
-        document.getElementById('confirmModal').style.display = 'none';
-      };
-    });
 </script>
-
-</body>
-</html>
-
-    
