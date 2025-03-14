@@ -1,6 +1,37 @@
 <%- include('./partials/adminHeader.ejs') %>
 
-<div class="flex min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-violet-900">
+<style>
+    /* Override conflicting styles */
+    .products-container {
+        display: block !important;
+    }
+    .product-grid {
+        display: none !important;
+    }
+    .pagination-container {
+        @apply mt-8 flex flex-col sm:flex-row items-center justify-between gap-4;
+    }
+    .pagination-button {
+        @apply relative inline-flex items-center px-3 py-2 glass-effect text-sm text-[var(--text-secondary)] hover:bg-white/10 transition-all duration-300;
+    }
+    .pagination-button.active {
+        @apply bg-[var(--accent-blue)]/20 text-[var(--accent-blue)];
+    }
+    .flash-message {
+        @apply px-4 py-2 rounded-lg mt-4 text-center glass-effect;
+    }
+    .flash-success {
+        @apply bg-green-500/20 text-green-400;
+    }
+    .flash-error {
+        @apply bg-red-500/20 text-red-400;
+    }
+    tr:hover {
+        @apply bg-white/10;
+    }
+</style>
+
+<div class="flex min-h-screen">
     <%- include('./partials/adminSidebar.ejs') %>
     <div class="flex-1 p-4 lg:p-8">
         <!-- Flash Messages -->

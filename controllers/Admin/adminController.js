@@ -2,7 +2,7 @@ const User = require('../../models/userSchema');
 const Order = require('../../models/orderSchema');
 const Product = require('../../models/productSchema');
 const LaptopCategory = require('../../models/categorySchema');
-const Coupon = require('../../models/coupounSchema'); // Fixed typo from 'coupounSchema'
+const Coupon = require('../../models/coupounSchema'); 
 const Return = require('../../models/returnSchema');
 const bcrypt = require('bcrypt');
 const { jsPDF } = require('jspdf');
@@ -63,11 +63,14 @@ const login = async (req, res) => {
     }
 };
 
-// New function to apply a coupon to an order (hypothetical)
 const applyCouponToOrder = async (req, res) => {
     try {
         const { orderId, couponCode } = req.body;
-        const userId = req.session.user?.id; // Assuming user session exists
+        const adminId = req.session.admin?.id; // Assuming admin session exists
+
+        if (!adminId) {
+            return res.status(401).json({ success: false, message: "Unauthorized" });
+        }
 
         const coupon = await Coupon.findOne({ code: couponCode });
         if (!coupon || !coupon.isActive || coupon.expiredOn < new Date()) {
@@ -79,13 +82,8 @@ const applyCouponToOrder = async (req, res) => {
         }
 
         const order = await Order.findById(orderId);
-        if (!order || order.orderAmount < coupon.minimumPrice) {
+        if (!order || order.status !== "Delivered" || order.orderAmount < coupon.minimumPrice) {
             return res.status(400).json({ success: false, message: "Order not eligible for this coupon" });
-        }
-
-        const userUsage = coupon.users.find(u => u.userId.toString() === userId);
-        if (userUsage && userUsage.usageCount >= coupon.usagePerUserLimit) {
-            return res.status(400).json({ success: false, message: "User usage limit reached" });
         }
 
         const discount = coupon.offerType === "percentage"
@@ -97,11 +95,6 @@ const applyCouponToOrder = async (req, res) => {
         await order.save();
 
         coupon.couponUsed += 1;
-        if (userUsage) {
-            userUsage.usageCount += 1;
-        } else {
-            coupon.users.push({ userId, usageCount: 1 });
-        }
         await coupon.save();
 
         res.json({ success: true, message: "Coupon applied successfully", discount });
@@ -124,11 +117,16 @@ const loadDashboard = async (req, res) => {
             { $group: { _id: null, total: { $sum: "$orderAmount" } } }
         ]);
 
+        // Default to daily sales for the last 30 days
+        const today = new Date();
+        const thirtyDaysAgo = new Date(today);
+        thirtyDaysAgo.setDate(today.getDate() - 30);
+
         const initialSales = await Order.aggregate([
-            { $match: { status: "Delivered" } },
+            { $match: { status: "Delivered", orderDate: { $gte: thirtyDaysAgo, $lte: today } } },
             {
                 $group: {
-                    _id: { $month: "$orderDate" },
+                    _id: { $dateToString: { format: "%Y-%m-%d", date: "$orderDate" } },
                     orders: { $sum: 1 },
                     sales: { $sum: "$orderAmount" },
                     totalItems: { $sum: { $sum: "$products.quantity" } },
@@ -161,16 +159,8 @@ const loadDashboard = async (req, res) => {
             }
         ]);
 
-        console.log("Initial Sales Data:", JSON.stringify(initialSales, null, 2));
-        console.log("Coupon Stats from Backend:", JSON.stringify(couponStats, null, 2));
-
         const returnStats = await Return.aggregate([
-            {
-                $group: {
-                    _id: "$status",
-                    count: { $sum: 1 }
-                }
-            }
+            { $group: { _id: "$status", count: { $sum: 1 } } }
         ]);
 
         res.render('adminDashboard', {
@@ -209,116 +199,81 @@ const logout = async (req, res) => {
 
 const getSalesReport = async (req, res) => {
     try {
-        const { startDate, endDate, timeFrame } = req.query;
-
-        const start = startDate ? new Date(startDate) : new Date(0);
-        const end = endDate ? new Date(endDate) : new Date();
-        end.setHours(23, 59, 59, 999);
-
-        let dateFormat;
-        switch (timeFrame || 'monthly') {
-            case 'weekly':
-                dateFormat = { $week: "$orderDate" };
-                break;
-            case 'monthly':
-                dateFormat = { $month: "$orderDate" };
-                break;
-            case 'yearly':
-                dateFormat = { $year: "$orderDate" };
-                break;
-            default:
-                dateFormat = { $dateToString: { format: "%Y-%m-%d", date: "$orderDate" } };
-        }
-
-        const salesData = await Order.aggregate([
-            {
-                $match: {
-                    orderDate: { $gte: start, $lte: end },
-                    status: "Delivered"
-                }
-            },
-            {
-                $group: {
-                    _id: dateFormat,
-                    orders: { $sum: 1 },
-                    sales: { $sum: "$orderAmount" },
-                    totalItems: { $sum: { $sum: "$products.quantity" } },
-                    totalCouponsUsed: { $sum: { $cond: [{ $ne: ["$couponApplied", null] }, 1, 0] } },
-                    couponDeductions: { $sum: "$offerApplied" },
-                    totalDiscounts: { $sum: "$offerApplied" },
-                    netRevenue: { $sum: { $subtract: ["$orderAmount", "$offerApplied"] } }
-                }
-            },
-            {
-                $project: {
-                    date: "$_id",
-                    orders: 1,
-                    sales: 1,
-                    avgOrderValue: { $divide: ["$sales", "$orders"] },
-                    totalItems: 1,
-                    totalCouponsUsed: 1,
-                    couponDeductions: 1,
-                    totalDiscounts: 1,
-                    netRevenue: 1,
-                    _id: 0
-                }
-            },
-            { $sort: { date: 1 } }
-        ]);
-
-        const paymentMethodStats = await Order.aggregate([
-            {
-                $match: {
-                    orderDate: { $gte: start, $lte: end },
-                    status: "Delivered"
-                }
-            },
-            {
-                $group: {
-                    _id: "$paymentMethod",
-                    count: { $sum: 1 }
-                }
-            }
-        ]);
-
-        const summary = salesData.reduce(
-            (acc, curr) => ({
-                totalSales: acc.totalSales + curr.sales,
-                totalOrders: acc.totalOrders + curr.orders,
-                totalItems: acc.totalItems + curr.totalItems,
-                totalCouponsUsed: acc.totalCouponsUsed + curr.totalCouponsUsed,
-                couponDeductions: acc.couponDeductions + curr.couponDeductions,
-                totalDiscounts: acc.totalDiscounts + curr.totalDiscounts,
-                netRevenue: acc.netRevenue + curr.netRevenue,
-                avgOrderValue: (acc.totalSales + curr.sales) / (acc.totalOrders + curr.orders) || 0
-            }),
-            {
-                totalSales: 0,
-                totalOrders: 0,
-                totalItems: 0,
-                totalCouponsUsed: 0,
-                couponDeductions: 0,
-                totalDiscounts: 0,
-                netRevenue: 0
-            }
-        );
-
-        res.json({
-            success: true,
-            data: {
-                salesData,
-                summary,
-                paymentMethodStats
-            }
-        });
+      const { startDate, endDate, timeFrame = 'daily' } = req.query;
+      const start = startDate ? new Date(startDate) : new Date(new Date().setDate(new Date().getDate() - 30));
+      const end = endDate ? new Date(endDate) : new Date();
+      end.setHours(23, 59, 59, 999);
+  
+      let dateFormat;
+      switch (timeFrame) {
+        case 'daily':
+          dateFormat = { $dateToString: { format: "%Y-%m-%d", date: "$orderDate" } };
+          break;
+        case 'weekly':
+          dateFormat = { $week: "$orderDate" };
+          break;
+        case 'monthly':
+          dateFormat = { $month: "$orderDate" };
+          break;
+        case 'yearly':
+          dateFormat = { $year: "$orderDate" };
+          break;
+        default:
+          dateFormat = { $dateToString: { format: "%Y-%m-%d", date: "$orderDate" } };
+      }
+  
+      const salesData = await Order.aggregate([
+        { $match: { orderDate: { $gte: start, $lte: end }, status: "Delivered" } },
+        {
+          $group: {
+            _id: dateFormat,
+            orders: { $sum: 1 },
+            sales: { $sum: "$orderAmount" },
+            totalItems: { $sum: { $sum: "$products.quantity" } },
+            totalCouponsUsed: { $sum: { $cond: [{ $ne: ["$couponApplied", null] }, 1, 0] } },
+            couponDeductions: { $sum: "$offerApplied" }
+          }
+        },
+        {
+          $project: {
+            date: "$_id",
+            orders: 1,
+            sales: 1,
+            totalItems: 1,
+            totalCouponsUsed: 1,
+            couponDeductions: 1,
+            _id: 0
+          }
+        },
+        { $sort: { date: 1 } }
+      ]);
+  
+      const paymentMethodStats = await Order.aggregate([
+        { $match: { orderDate: { $gte: start, $lte: end }, status: "Delivered" } },
+        { $group: { _id: "$paymentMethod", count: { $sum: 1 } } }
+      ]);
+  
+      const summary = salesData.reduce(
+        (acc, curr) => ({
+          totalSales: acc.totalSales + curr.sales,
+          totalOrders: acc.totalOrders + curr.orders,
+          totalItems: acc.totalItems + curr.totalItems,
+          totalCouponsUsed: acc.totalCouponsUsed + curr.totalCouponsUsed,
+          couponDeductions: acc.couponDeductions + curr.couponDeductions,
+          avgOrderValue: (acc.totalSales + curr.sales) / (acc.totalOrders + curr.orders) || 0
+        }),
+        { totalSales: 0, totalOrders: 0, totalItems: 0, totalCouponsUsed: 0, couponDeductions: 0, avgOrderValue: 0 }
+      );
+  
+      res.json({
+        success: true,
+        data: { salesData, summary, paymentMethodStats, timeFrame }
+      });
     } catch (error) {
-        console.error("Error fetching sales report:", error);
-        res.status(500).json({
-            success: false,
-            message: "Error fetching sales report"
-        });
+      console.error("Error fetching sales report:", error);
+      res.status(500).json({ success: false, message: "Error fetching sales report" });
     }
-};
+  };
 
 const getTopSellers = async (req, res) => {
     try {
@@ -440,5 +395,5 @@ module.exports = {
     logout,
     getSalesReport,
     getTopSellers,
-    applyCouponToOrder // Export the new function
+    applyCouponToOrder
 };

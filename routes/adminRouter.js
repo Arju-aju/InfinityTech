@@ -40,12 +40,13 @@ router.put('/toggleCategoryStatus/:id', admin.isAdmin ,   categoryController.tog
 // Product Management 
 router.get('/products', admin.isAdmin, productController.loadProduct);
 router.get('/addProduct', admin.isAdmin, productController.loadAddProduct);
-router.post('/addProduct',admin.isAdmin,upload.array('images',5), handleMulterError,productController.addProduct);
+router.post('/addProduct', admin.isAdmin, upload, handleMulterError, productController.addProduct);
 router.get('/editProduct/:id', admin.isAdmin, productController.loadEditProduct);
-router.post('/editProduct/:id', admin.isAdmin, upload.array('images', 6), handleMulterError, productController.updateProduct);
+router.post('/editProduct/:id', admin.isAdmin, upload, handleMulterError, productController.updateProduct);
 router.post('/deleteProductImage/:productId', productController.deleteProductImage);
-router.post('/products/:id/toggle-list', productController.toggleListStatus);
-router.post('/softDeleteProduct/:id', productController.softDeleteProduct);
+router.post('/products/:id/toggle-list', admin.isAdmin, productController.toggleListStatus);
+router.post('/products/:id/toggle-featured', admin.isAdmin, productController.toggleFeaturedStatus);
+router.post('/softDeleteProduct/:id', admin.isAdmin, productController.softDeleteProduct);
 
 
 //Order Management

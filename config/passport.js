@@ -8,13 +8,13 @@ passport.use(
         {
             clientID: process.env.GOOGLE_CLIENT_ID,
             clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-            callbackURL: 'https://infinitytech.space/auth/google/callback', 
+            callbackURL: 'https://infinitytech.space/auth/google/callback',
         },
         async (accessToken, refreshToken, profile, done) => {
             try {
-                console.log('Google Profile:', profile); // Debug log
+                console.log('Google Profile:', profile);
                 if (!profile.id || !profile.emails?.[0]?.value) {
-                    throw new Error('Google profile is missing required fields (ID or email)');
+                    return done(new Error('Google profile missing required fields'), null);
                 }
 
                 const email = profile.emails[0].value;
@@ -24,14 +24,24 @@ passport.use(
                 let user = await User.findOne({ email });
 
                 if (user) {
+                    // Check blocked status first
+                    if (user.isBlocked) {
+                        console.log('Blocked user attempted login:', email);
+                        return done(null, false, { 
+                            message: 'Your account has been blocked. Please contact support.' 
+                        });
+                    }
+
+                    // Update Google ID if not present
                     if (!user.googleId) {
                         user.googleId = googleId;
                         await user.save();
-                        console.log('Updated user with Google ID:', user);
+                        console.log('Linked Google ID to existing user:', user);
                     }
                     return done(null, user);
                 }
 
+                // Create new user
                 user = new User({
                     name: displayName,
                     email: email,
@@ -41,10 +51,11 @@ passport.use(
                 });
 
                 await user.save();
-                console.log('New Google user created:', user);
+                console.log('Created new Google user:', user);
                 return done(null, user);
+
             } catch (error) {
-                console.error('Error in Google strategy:', error.message, error.stack);
+                console.error('Google auth error:', error);
                 return done(error, null);
             }
         }
@@ -52,22 +63,28 @@ passport.use(
 );
 
 passport.serializeUser((user, done) => {
-    console.log('Serializing user:', user._id); // Debug log
+    console.log('Serializing user:', user._id);
     done(null, user._id.toString());
 });
 
 passport.deserializeUser(async (id, done) => {
     try {
-        console.log('Deserializing user ID:', id); // Debug log
         const user = await User.findById(id);
         if (!user) {
             console.log('User not found for ID:', id);
             return done(null, false);
         }
+        // Additional check for blocked status during deserialization
+        if (user.isBlocked) {
+            console.log('Blocked user detected during deserialize:', user.email);
+            return done(null, false, { 
+                message: 'Your account has been blocked. Please contact support.' 
+            });
+        }
         console.log('Deserialized user:', user);
         return done(null, user);
     } catch (error) {
-        console.error('Error deserializing user:', error.message, error.stack);
+        console.error('Deserialize error:', error);
         return done(error, null);
     }
 });

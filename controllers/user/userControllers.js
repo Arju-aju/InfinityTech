@@ -422,58 +422,41 @@ const loadContactPage = async (req, res) => {
 
 // Handle Google Callback
 const handleGoogleCallback = async (req, res) => {
-    console.log('Entered handleGoogleCallback');
     try {
-        console.log('req.user from Passport:', req.user);
+        // Check if authentication failed due to blocked status
         if (!req.user) {
-            throw new Error('Passport failed to provide user data');
-        }
-
-        const user = req.user;
-        console.log('Looking up user with email:', user.email);
-        const existingUser = await User.findOne({ email: user.email });
-        console.log('Existing user:', existingUser);
-
-        if (!existingUser) {
-            const newUser = new User({
-                name: user.name,
-                email: user.email,
-                googleId: user.googleId,
-                isVerified: true,
-                isBlocked: false,
-            });
-            console.log('Saving new user:', newUser);
-            await newUser.save();
-            req.session.user = {
-                _id: newUser._id,
-                name: newUser.name,
-                email: newUser.email,
-                isVerified: true,
-            };
-            console.log('Session after new user:', req.session);
-            req.flash('success', `Welcome ${newUser.name}!`);
-            return res.redirect('/');
-        }
-
-        // Check if the user is blocked
-        if (existingUser.isBlocked) {
-            console.log('Blocked user attempted Google login:', existingUser.email);
-            req.flash('error', 'Your account has been blocked. Please contact support.');
+            console.log('Google auth failed - possible blocked user');
+            req.flash('error', 'Authentication failed: Your account may be blocked. Please contact support.');
             return res.redirect('/login');
         }
 
-        // If not blocked, proceed with login
+        // Additional verification of blocked status
+        const user = await User.findById(req.user._id);
+        if (!user || user.isBlocked) {
+            console.log(`Blocked user detected in callback: ${req.user?.email}`);
+            req.logout((err) => {
+                if (err) {
+                    console.error('Logout error:', err);
+                }
+                req.flash('error', 'Your account has been blocked. Please contact support.');
+                res.redirect('/login');
+            });
+            return;
+        }
+
+        // Successful authentication
         req.session.user = {
-            _id: existingUser._id,
-            name: existingUser.name,
-            email: existingUser.email,
-            isVerified: existingUser.isVerified,
+            _id: user._id,
+            name: user.name,
+            email: user.email,
+            isVerified: user.isVerified
         };
-        console.log('Session after existing user:', req.session);
-        req.flash('success', `Welcome back ${existingUser.name}!`);
+
+        req.flash('success', `Welcome back, ${user.name}!`);
         return res.redirect('/');
+
     } catch (error) {
-        console.error('Google callback error:', error.message, error.stack);
+        console.error('Google callback error:', error);
         req.flash('error', 'Authentication failed. Please try again.');
         return res.redirect('/login');
     }

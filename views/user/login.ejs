@@ -184,50 +184,15 @@
         </a>
     </div>
 
-    <!-- Client-Side Validation Script -->
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const form = document.getElementById('login-form');
-
+    
             form.addEventListener('submit', function(e) {
-                e.preventDefault();
-
-                // Clear previous error messages
-                document.querySelectorAll('.text-red-400').forEach(el => el.classList.add('hidden'));
-
-                const email = document.getElementById('email').value.trim();
-                const password = document.getElementById('password').value;
-
-                let isValid = true;
-
-                // Email validation
-                if (!email) {
-                    document.getElementById('emailError').textContent = 'Email is required';
-                    document.getElementById('emailError').classList.remove('hidden');
-                    isValid = false;
-                } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-                    document.getElementById('emailError').textContent = 'Please enter a valid email address';
-                    document.getElementById('emailError').classList.remove('hidden');
-                    isValid = false;
-                }
-
-                // Password validation
-                if (!password) {
-                    document.getElementById('passwordError').textContent = 'Password is required';
-                    document.getElementById('passwordError').classList.remove('hidden');
-                    isValid = false;
-                } else if (password.length < 6) {
-                    document.getElementById('passwordError').textContent = 'Password must be at least 6 characters';
-                    document.getElementById('passwordError').classList.remove('hidden');
-                    isValid = false;
-                }
-
-                if (isValid) {
-                    this.submit(); // Submit the form if validation passes
-                }
+                // ... existing form validation code ...
             });
-
-            // Handle flash messages with SweetAlert
+    
+            // Enhanced flash message handling
             <% if (messages.error && messages.error.length > 0) { %>
                 Swal.fire({
                     icon: 'error',
@@ -245,23 +210,33 @@
                     confirmButtonText: 'OK'
                 });
             <% } %>
-
-            // Handle URL params for error messages (optional)
+    
+            // Enhanced URL params handling
             const urlParams = new URLSearchParams(window.location.search);
-            if (urlParams.get('error') === 'blocked') {
+            const error = urlParams.get('error');
+            
+            if (error === 'blocked') {
                 Swal.fire({
                     icon: 'error',
-                    title: 'Access Denied',
+                    title: 'Account Blocked',
                     text: 'Your account has been blocked. Please contact support.',
                     confirmButtonColor: '#d33',
                     confirmButtonText: 'OK'
                 });
-            } else if (urlParams.get('error') === 'session_expired') {
+            } else if (error === 'session_expired') {
                 Swal.fire({
                     icon: 'warning',
                     title: 'Session Expired',
                     text: 'Please log in again.',
                     confirmButtonColor: '#A517BA',
+                    confirmButtonText: 'OK'
+                });
+            } else if (error) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Authentication Error',
+                    text: 'Login failed. Please try again.',
+                    confirmButtonColor: '#d33',
                     confirmButtonText: 'OK'
                 });
             }

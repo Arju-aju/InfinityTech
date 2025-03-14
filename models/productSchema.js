@@ -69,7 +69,11 @@ const productSchema = new Schema({
     }],
     isListed: {
         type: Boolean,
-        default: true // Field to mark product as featured
+        default: true // Indicates if product is available/listed for sale
+    },
+    isFeatured: {
+        type: Boolean,
+        default: false // Indicates if product should be featured on homepage
     },
     isDeleted: {
         type: Boolean,
@@ -78,8 +82,6 @@ const productSchema = new Schema({
 }, {
     timestamps: true
 });
-
-
 
 // Ensure virtuals are included in JSON output
 productSchema.set('toJSON', { virtuals: true });

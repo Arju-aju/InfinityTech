@@ -5,14 +5,14 @@ const User = require("../models/userSchema");
 
 exports.isAuthenticated = (req, res, next) => {
     if (req.session.user) {
-        return res.redirect("/"); // Redirect logged-in users away from login/signup
+        return res.redirect("/");
     }
     next();
 };
 
 exports.isNotAuthenticated = (req, res, next) => {
     if (!req.session.user) {
-        return res.redirect('/login'); // Prevent non-logged-in users from accessing protected routes
+        return res.redirect('/login'); 
     }
     next();
 };
