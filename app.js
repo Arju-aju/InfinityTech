@@ -57,7 +57,11 @@ app.use(
         secret: process.env.SESSION_SECRET || 'default-secret',
         resave: false,
         saveUninitialized: false,
-        cookie: { maxAge: 1000 * 60 * 60 * 24, httpOnly: true, secure: process.env.NODE_ENV === 'production' },
+        cookie: { 
+            maxAge: 1000 * 60 * 60 * 24, 
+            httpOnly: true, 
+            secure: process.env.NODE_ENV === 'production' 
+        },
     })
 );
 
@@ -89,18 +93,17 @@ app.use(
                 defaultSrc: ["'self'"],
                 scriptSrc: [
                     "'self'",
-                    "'unsafe-inline'",
+                    "'unsafe-inline'", // Allows inline <script> blocks
                     "'unsafe-eval'",
                     "https://cdn.jsdelivr.net",
                     "https://unpkg.com",
                     "https://cdn.tailwindcss.com",
                     "https://code.jquery.com",
-                    "https://cdn.jsdelivr.net/npm/sweetalert2@11",
                     "https://cdnjs.cloudflare.com",
-                    "https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js",
                     "https://checkout.razorpay.com",
                     "https://api.razorpay.com"
                 ],
+                scriptSrcAttr: ["'self'"], // Restricts inline event handlers to enforce event listeners
                 styleSrc: [
                     "'self'",
                     "'unsafe-inline'",
@@ -126,9 +129,9 @@ app.use(
                 imgSrc: ["'self'", "data:", "https:", "blob:"],
                 fontSrc: [
                     "'self'",
-                    "https:",
-                    "data:",
-                    "https://fonts.gstatic.com"
+                    "https://cdnjs.cloudflare.com",
+                    "https://fonts.gstatic.com",
+                    "data:"
                 ],
                 mediaSrc: ["'self'", "https:", "blob:"],
                 objectSrc: ["'none'"],
@@ -139,7 +142,7 @@ app.use(
         crossOriginEmbedderPolicy: false,
         crossOriginResourcePolicy: { policy: "cross-origin" },
         dnsPrefetchControl: false,
-        frameguard: false, // Required for Razorpay iframe
+        frameguard: false,
         hsts: {
             maxAge: 15552000,
             includeSubDomains: true,

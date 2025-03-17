@@ -29,13 +29,17 @@ const storage = multer.diskStorage({
     }
 });
 
+// Flexible Multer configuration to handle both multiple 'images' and single 'newImage'
 const uploadConfig = multer({
     storage: storage,
     fileFilter: fileFilter,
     limits: {
         fileSize: 5 * 1024 * 1024 // 5MB limit per file
     }
-}).fields([{ name: 'images', maxCount: 5 }]);
+}).fields([
+    { name: 'images', maxCount: 5 }, // For addProduct and updateProduct
+    { name: 'newImage', maxCount: 1 } // For replaceProductImage
+]);
 
 const handleMulterError = (err, req, res, next) => {
     if (err instanceof multer.MulterError) {

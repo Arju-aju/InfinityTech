@@ -94,15 +94,12 @@ const loadAddProduct = async (req, res) => {
 // Add New Product
 const addProduct = async (req, res) => {
     try {
-        console.log('Request Body:', req.body);
-        console.log('Request Files:', req.files);
-
         if (!req.files || !req.files['images'] || req.files['images'].length === 0) {
             throw new Error('At least one product image is required');
         }
 
         const {
-            name, brand, category, price, discountPercentage, stock, description, processor, ram, storage, graphics
+            name, brand, category, price, productOffer, stock, description, processor, ram, storage, graphics
         } = req.body;
 
         const validateField = (field, value, message) => {
@@ -131,9 +128,9 @@ const addProduct = async (req, res) => {
             throw new Error('Stock must be a valid non-negative integer');
         }
 
-        const discount = parseInt(discountPercentage);
+        const discount = parseInt(productOffer || 0);
         if (isNaN(discount) || discount < 0 || discount > 100) {
-            throw new Error('Discount must be a valid non-negative integer between 0 and 100');
+            throw new Error('Discount must be a valid number between 0 and 100');
         }
 
         const categoryExists = await Category.findOne({ _id: category, isDeleted: false });
@@ -206,32 +203,41 @@ const updateProduct = async (req, res) => {
             return res.status(404).json({ success: false, message: 'Product not found' });
         }
 
-        console.log('Request Body:', req.body);
-        console.log('Request Files:', req.files);
-
-        const { name, brand, category, description, discount, price, stock, processor, ram, storage, graphics } = req.body;
+        const { name, brand, category, description, productOffer, price, stock, processor, ram, storage, graphics } = req.body;
 
         const requiredFields = {
-            name, brand, category, description, discount, price, stock, processor, ram, storage, graphics
+            name: 'Product name',
+            brand: 'Brand',
+            category: 'Category',
+            description: 'Description',
+            price: 'Price',
+            stock: 'Stock',
+            processor: 'Processor',
+            ram: 'RAM',
+            storage: 'Storage',
+            graphics: 'Graphics'
         };
+
         const missingFields = Object.entries(requiredFields)
-            .filter(([_, value]) => !value?.trim())
-            .map(([key]) => key);
+            .filter(([key]) => !req.body[key]?.trim())
+            .map(([_, label]) => label);
         if (missingFields.length > 0) {
             return res.status(400).json({ success: false, message: `Missing required fields: ${missingFields.join(', ')}` });
         }
 
         const parsedPrice = parseFloat(price);
-        const parsedStock = parseInt(stock);
-        const discountPercentage = parseInt(discount);
-        if (isNaN(discountPercentage) || discountPercentage < 0 || discountPercentage > 100) {
-            return res.status(400).json({ success: false, message: 'Discount must be a valid non-negative integer between 0 and 100' });
-        }
         if (isNaN(parsedPrice) || parsedPrice < 0) {
             return res.status(400).json({ success: false, message: 'Price must be a valid non-negative number' });
         }
+
+        const parsedStock = parseInt(stock);
         if (isNaN(parsedStock) || parsedStock < 0) {
             return res.status(400).json({ success: false, message: 'Stock must be a valid non-negative integer' });
+        }
+
+        const discountPercentage = parseInt(productOffer || 0);
+        if (isNaN(discountPercentage) || discountPercentage < 0 || discountPercentage > 100) {
+            return res.status(400).json({ success: false, message: 'Discount must be a valid number between 0 and 100' });
         }
 
         const categoryExists = await Category.findOne({ _id: category, isDeleted: false });
@@ -256,17 +262,9 @@ const updateProduct = async (req, res) => {
         };
 
         if (req.files && req.files['images'] && req.files['images'].length > 0) {
-            await Promise.all(
-                product.images.map(async (image) => {
-                    try {
-                        const imagePath = path.join(__dirname, '../../uploads/products', path.basename(image));
-                        await fs.unlink(imagePath);
-                    } catch (err) {
-                        console.error('Error deleting old image:', err);
-                    }
-                })
-            );
-            updateData.images = req.files['images'].map(file => `/uploads/products/${file.filename}`);
+            updateData.images = [...product.images, ...req.files['images'].map(file => `/uploads/products/${file.filename}`)];
+        } else {
+            updateData.images = product.images;
         }
 
         const updatedProduct = await Product.findByIdAndUpdate(productId, updateData, { runValidators: true, new: true });
@@ -281,6 +279,47 @@ const updateProduct = async (req, res) => {
             );
         }
         return res.status(500).json({ success: false, message: error.message || 'Error updating product' });
+    }
+};
+
+// Replace Product Image
+const replaceProductImage = async (req, res) => {
+    try {
+        const { productId } = req.params;
+        const { imageIndex } = req.body;
+
+        if (!productId || imageIndex === undefined) {
+            return res.status(400).json({ success: false, message: 'Missing required parameters: productId and imageIndex' });
+        }
+
+        const product = await Product.findById(productId);
+        if (!product) return res.status(404).json({ success: false, message: 'Product not found' });
+        if (!product.images[imageIndex]) return res.status(400).json({ success: false, message: 'Image index not found in product' });
+        if (!req.files || !req.files['newImage'] || req.files['newImage'].length === 0) {
+            return res.status(400).json({ success: false, message: 'A new image is required to replace the deleted one' });
+        }
+
+        const oldImagePath = product.images[imageIndex];
+        const newImage = req.files['newImage'][0];
+        const newImagePath = `/uploads/products/${newImage.filename}`;
+
+        const absoluteOldPath = path.join(__dirname, '../../uploads/products', path.basename(oldImagePath));
+        await fs.unlink(absoluteOldPath).catch(err => console.error(`Warning: Could not delete file ${absoluteOldPath}:`, err));
+
+        product.images[imageIndex] = newImagePath;
+        await product.save();
+
+        return res.status(200).json({ 
+            success: true,
+            message: 'Image replaced successfully', 
+            newImageUrl: newImagePath 
+        });
+    } catch (error) {
+        console.error('Error in replaceProductImage:', error);
+        if (req.files && req.files['newImage']) {
+            await fs.unlink(req.files['newImage'][0].path).catch(err => console.error('Error deleting file:', err));
+        }
+        return res.status(500).json({ success: false, message: error.message || 'Server error while replacing image' });
     }
 };
 
@@ -332,41 +371,13 @@ const softDeleteProduct = async (req, res) => {
     }
 };
 
-// Delete Product Image
-const deleteProductImage = async (req, res) => {
-    try {
-        const { productId } = req.params;
-        const { imagePath } = req.body;
-
-        if (!productId || !imagePath) {
-            return res.status(400).json({ success: false, message: 'Missing required parameters: productId and imagePath' });
-        }
-
-        const product = await Product.findById(productId);
-        if (!product) return res.status(400).json({ success: false, message: 'Product not found' });
-        if (!product.images.includes(imagePath)) return res.status(400).json({ success: false, message: 'Image not found in product' });
-        if (product.images.length <= 1) return res.status(400).json({ success: false, message: 'Cannot delete the last image. Please add a new image first.' });
-
-        product.images = product.images.filter(img => img !== imagePath);
-        await product.save();
-
-        const absolutePath = path.join(__dirname, '../../uploads/products', path.basename(imagePath));
-        await fs.unlink(absolutePath).catch(err => console.error(`Warning: Could not delete file ${absolutePath}:`, err));
-
-        return res.status(200).json({ success: true, message: 'Image deleted successfully' });
-    } catch (error) {
-        console.error('Error in deleteProductImage:', error);
-        return res.status(500).json({ success: false, message: 'Server error while deleting image' });
-    }
-};
-
 module.exports = {
     loadProduct,
     loadAddProduct,
     addProduct,
     loadEditProduct,
     updateProduct,
-    deleteProductImage,
+    replaceProductImage,
     toggleListStatus,
     toggleFeaturedStatus,
     softDeleteProduct

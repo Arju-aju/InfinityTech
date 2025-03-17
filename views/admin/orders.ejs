@@ -8,44 +8,59 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-
     <style>
+        /* Existing CSS remains unchanged */
+        body {
+            background: linear-gradient(to bottom right, #1e1e2f, #2a2438) !important;
+        }
+
         :root {
             --sidebar-width: 16rem;
-            --primary-bg: #1e1e2f; /* Dark blue-gray */
-            --secondary-bg: #2a2438; /* Deep purple-gray */
-            --content-bg: #2d2d44; /* Lighter dark blue for content */
-            --accent-start: #d4af37; /* Rich Gold */
-            --accent-end: #f9e076;   /* Light Yellow */
-            --text-color: #e5e7eb; /* Light gray for text */
+            --primary-bg: #1e1e2f;
+            --secondary-bg: #2a2438;
+            --content-bg: #2d2d44;
+            --accent-start: #d4af37;
+            --accent-end: #f9e076;
+            --text-color: #e5e7eb;
         }
 
-        /* Gradient Background */
         .gradient-bg {
-            @apply bg-gradient-to-br from-[var(--primary-bg)] to-[var(--secondary-bg)] !important;
+            background: linear-gradient(to bottom right, var(--primary-bg), var(--secondary-bg)) !important;
         }
 
-        /* Glass Effect */
         .glass-effect-dark {
-            @apply bg-[var(--content-bg)]/80 backdrop-blur-md border border-white/10;
+            background: rgba(45, 45, 68, 0.8);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
 
-        /* Golden Yellow Gradient for Buttons */
         .golden-button {
-            @apply bg-gradient-to-r from-[var(--accent-start)] to-[var(--accent-end)] text-white px-4 py-2 rounded-lg shadow-lg hover:scale-105 transition-all duration-300;
+            background: linear-gradient(to right, var(--accent-start), var(--accent-end));
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
         }
 
-        /* Typography and Base Styles */
+        .golden-button:hover {
+            transform: scale(1.05);
+        }
+
         body {
-            @apply font-sans text-[var(--text-color)] min-h-screen m-0 p-0 bg-[var(--primary-bg)] !important;
+            font-family: sans-serif;
+            color: var(--text-color);
+            min-height: 100vh;
+            margin: 0;
+            padding: 0;
         }
 
-        /* Custom Animations */
         @keyframes gradientAnimation {
             0% { background-position: 0% 0%; }
             50% { background-position: 100% 100%; }
             100% { background-position: 0% 0%; }
         }
+
         .animate-gradient {
             background-size: 200% 200%;
             animation: gradientAnimation 15s ease infinite;
@@ -55,33 +70,45 @@
             from { opacity: 0; transform: translateY(30px); }
             to { opacity: 1; transform: translateY(0); }
         }
+
         .animate-fade-in-up {
             animation: fadeInUp 0.8s ease-out forwards;
         }
+
         .animation-delay-200 { animation-delay: 0.2s; }
         .animation-delay-400 { animation-delay: 0.4s; }
 
-        /* Table Styles */
         tr:hover {
-            @apply bg-[var(--content-bg)]/50;
+            background: rgba(45, 45, 68, 0.5);
         }
 
-        /* Pagination Styles */
         .pagination-button {
-            @apply inline-flex items-center px-4 py-2 glass-effect-dark text-sm text-[var(--text-color)] hover:bg-[var(--secondary-bg)] transition-all duration-300;
-        }
-        .pagination-button.active {
-            @apply bg-[var(--accent-start)]/80 text-white;
+            display: inline-flex;
+            align-items: center;
+            padding: 0.5rem 1rem;
+            background: rgba(45, 45, 68, 0.8);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            font-size: 0.875rem;
+            color: var(--text-color);
+            transition: background 0.3s ease;
         }
 
-        /* Main content styling */
+        .pagination-button:hover {
+            background: var(--secondary-bg);
+        }
+
+        .pagination-button.active {
+            background: rgba(212, 175, 55, 0.8);
+            color: white;
+        }
+
         main {
             margin-left: var(--sidebar-width);
             width: calc(100% - var(--sidebar-width));
             min-height: 100vh;
         }
 
-        /* Sidebar styling */
         .sidebar {
             position: fixed;
             top: 0;
@@ -90,6 +117,7 @@
             z-index: 100;
             animation: slideIn 0.5s ease-out forwards;
         }
+
         @keyframes slideIn {
             from { transform: translateX(-100%); }
             to { transform: translateX(0); }
@@ -97,7 +125,7 @@
     </style>
 </head>
 
-<body class="gradient-bg animate-gradient" style="background: linear-gradient(to bottom right, #1e1e2f, #2a2438) !important;">
+<body class="gradient-bg animate-gradient">
     <!-- Sidebar -->
     <div class="sidebar fixed top-0 left-0 h-full w-64 md:w-[var(--sidebar-width)] bg-[var(--primary-bg)] z-50 transition-transform duration-300 md:translate-x-0 -translate-x-full shadow-lg">
         <div class="flex flex-col h-full text-[var(--text-color)]">
@@ -129,7 +157,22 @@
 
     <main class="flex-1 p-6">
         <div class="glass-effect-dark p-6 rounded-xl shadow-lg animate-fade-in-up">
-            <h1 class="text-4xl font-extrabold bg-gradient-to-r from-[#d4af37] to-[#f9e076] bg-clip-text text-transparent tracking-tight text-center">Orders Management</h1>
+            <!-- Breadcrumbs -->
+            <nav class="mb-6" aria-label="Breadcrumb">
+                <ol class="flex items-center space-x-2 text-sm text-gray-400">
+                    <li>
+                        <a href="/admin/dashboard" class="hover:text-[var(--accent-start)] transition-colors">
+                            <i class="fas fa-home mr-1"></i>Dashboard
+                        </a>
+                    </li>
+                    <li><i class="fas fa-chevron-right text-xs"></i></li>
+                    <li class="text-[var(--text-color)]">Orders Management</li>
+                </ol>
+            </nav>
+
+            <h1 class="text-4xl font-extrabold bg-gradient-to-r from-[#d4af37] to-[#f9e076] bg-clip-text text-transparent tracking-tight text-center mb-6">
+                Orders Management
+            </h1>
             
             <form id="filterForm" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 glass-effect-dark p-4 rounded-lg shadow animate-fade-in-up animation-delay-200">
                 <input type="text" name="search" placeholder="Search by Order ID or Customer"
@@ -141,6 +184,7 @@
                     <option value="Pending" <%= filters?.status === 'Pending' ? 'selected' : '' %>>Pending</option>
                     <option value="Processing" <%= filters?.status === 'Processing' ? 'selected' : '' %>>Processing</option>
                     <option value="Shipped" <%= filters?.status === 'Shipped' ? 'selected' : '' %>>Shipped</option>
+                    <option value="Out for Delivery" <%= filters?.status === 'Out for Delivery' ? 'selected' : '' %>>Out for Delivery</option>
                     <option value="Delivered" <%= filters?.status === 'Delivered' ? 'selected' : '' %>>Delivered</option>
                     <option value="Cancelled" <%= filters?.status === 'Cancelled' ? 'selected' : '' %>>Cancelled</option>
                 </select>
@@ -154,7 +198,7 @@
                 
                 <div class="flex space-x-2">
                     <button type="submit" class="golden-button">Apply Filters</button>
-                    <button type="button" onclick="resetFilters()" class="bg-[var(--secondary-bg)] hover:bg-[var(--content-bg)] text-[var(--text-color)] px-4 py-2 rounded-lg transition-all duration-300">Reset</button>
+                    <button type="button" id="resetFilters" class="bg-[var(--secondary-bg)] hover:bg-[var(--content-bg)] text-[var(--text-color)] px-4 py-2 rounded-lg transition-all duration-300">Reset</button>
                 </div>
             </form>
             
@@ -177,11 +221,13 @@
                                     <td class="px-6 py-4"><%= order.user.name %></td>
                                     <td class="px-6 py-4">₹<%= order.orderAmount.toFixed(2) %></td>
                                     <td class="px-6 py-4">
-                                        <% if (order.status === 'Cancelled') { %>
-                                            <span class="px-3 py-1 bg-red-500/20 text-red-300 border border-red-500/20 rounded-lg">Cancelled</span>
+                                        <% if (['Cancelled', 'Delivered'].includes(order.status)) { %>
+                                            <span class="<%= order.status === 'Cancelled' ? 'px-3 py-1 bg-red-500/20 text-red-300 border border-red-500/20 rounded-lg' : 'px-3 py-1 bg-green-500/20 text-green-300 border border-green-500/20 rounded-lg' %>">
+                                                <%= order.status %>
+                                            </span>
                                         <% } else { %>
-                                            <select class="bg-[var(--content-bg)] text-[var(--text-color)] rounded-lg py-1 px-2 focus:ring-2 focus:ring-[var(--accent-start)] border border-white/10"
-                                            data-order-id="<%= order._id %>" onchange="updateStatus(this)">
+                                            <select class="bg-[var(--content-bg)] text-[var(--text-color)] rounded-lg py-1 px-2 focus:ring-2 focus:ring-[var(--accent-start)] border border-white/10 status-select"
+                                                data-order-id="<%= order._ipioId %>">
                                                 <option value="Pending" <%= order.status === 'Pending' ? 'selected' : '' %>>Pending</option>
                                                 <option value="Processing" <%= order.status === 'Processing' ? 'selected' : '' %>>Processing</option>
                                                 <option value="Shipped" <%= order.status === 'Shipped' ? 'selected' : '' %>>Shipped</option>
@@ -200,64 +246,85 @@
                             <% }) %>
                         <% } else { %>
                             <tr>
-                                <td colspan="5" class="px-6 py-8 text-center text-gray-400">No orders found.</td>
+                                <td colspan="5" class="px-6 py-4 text-center text-gray-400">No orders found.</td>
                             </tr>
                         <% } %>
                     </tbody>
                 </table>
 
-                <div class="text-center text-white-400 mb-4">
-                    Showing page <%= pagination.currentPage %> of <%= pagination.totalPages %>
-                </div>
+                <!-- Enhanced Pagination -->
+                <% if (pagination.totalPages > 0) { %>
+                    <div class="mt-8">
+                        <div class="flex flex-col items-center gap-4">
+                            <!-- Pagination Info -->
+                            <div class="text-sm text-gray-400">
+                                Showing <%= (pagination.currentPage - 1) * 10 + 1 %> - 
+                                <%= Math.min(pagination.currentPage * 10, pagination.totalOrders) %> 
+                                of <%= pagination.totalOrders %> orders
+                            </div>
 
-                <div class="mt-6 flex justify-center items-center space-x-4">
-                    <% if (pagination.hasPrevPage) { %>
-                        <a href="?<%= new URLSearchParams({...filters, page: pagination.currentPage - 1}).toString() %>"
-                           class="pagination-button">
-                            Previous
-                        </a>
-                    <% } %>
-                
-                    <div class="flex items-center text-white-400 space-x-2">
-                        <% for(let i = 1; i <= pagination.totalPages; i++) { %>
-                            <a href="?<%= new URLSearchParams({...filters, page: i}).toString() %>"
-                               class="pagination-button <%= pagination.currentPage === i ? 'active' : '' %>">
-                                <%= i %>
-                            </a>
-                        <% } %>
+                            <!-- Pagination Controls -->
+                            <div class="flex items-center gap-2 flex-wrap justify-center">
+                                <!-- First Page -->
+                                <% if (pagination.currentPage > 1) { %>
+                                    <a href="?<%= new URLSearchParams({...filters, page: 1}).toString() %>"
+                                       class="pagination-button">
+                                        <i class="fas fa-angle-double-left mr-2"></i>First
+                                    </a>
+                                <% } %>
+
+                                <!-- Previous Page -->
+                                <% if (pagination.hasPrevPage) { %>
+                                    <a href="?<%= new URLSearchParams({...filters, page: pagination.currentPage - 1}).toString() %>"
+                                       class="pagination-button">
+                                        <i class="fas fa-angle-left mr-2"></i>Previous
+                                    </a>
+                                <% } %>
+
+                                <!-- Page Numbers -->
+                                <% 
+                                    const maxVisiblePages = 5;
+                                    let startPage = Math.max(1, pagination.currentPage - Math.floor(maxVisiblePages / 2));
+                                    let endPage = Math.min(pagination.totalPages, startPage + maxVisiblePages - 1);
+                                    if (endPage - startPage + 1 < maxVisiblePages) {
+                                        startPage = Math.max(1, endPage - maxVisiblePages + 1);
+                                    }
+                                %>
+                                <% for(let i = startPage; i <= endPage; i++) { %>
+                                    <a href="?<%= new URLSearchParams({...filters, page: i}).toString() %>"
+                                       class="pagination-button <%= pagination.currentPage === i ? 'active' : '' %>">
+                                        <%= i %>
+                                    </a>
+                                <% } %>
+
+                                <!-- Next Page -->
+                                <% if (pagination.hasNextPage) { %>
+                                    <a href="?<%= new URLSearchParams({...filters, page: pagination.currentPage + 1}).toString() %>"
+                                       class="pagination-button">
+                                        Next<i class="fas fa-angle-right ml-2"></i>
+                                    </a>
+                                <% } %>
+
+                                <!-- Last Page -->
+                                <% if (pagination.currentPage < pagination.totalPages) { %>
+                                    <a href="?<%= new URLSearchParams({...filters, page: pagination.totalPages}).toString() %>"
+                                       class="pagination-button">
+                                        Last<i class="fas fa-angle-double-right ml-2"></i>
+                                    </a>
+                                <% } %>
+                            </div>
+                        </div>
                     </div>
-                
-                    <% if (pagination.hasNextPage) { %>
-                        <a href="?<%= new URLSearchParams({...filters, page: pagination.currentPage + 1}).toString() %>"
-                           class="pagination-button text-white">
-                            Next
-                        </a>
-                    <% } %>
-                </div>
+                <% } %>
             </div>
         </div>
     </main>
 
     <script>
-        // Sidebar Toggle for Mobile
-        const sidebar = document.querySelector('.sidebar');
-        const sidebarToggle = document.getElementById('sidebarToggle');
-        if (sidebarToggle) {
-            sidebarToggle.addEventListener('click', () => sidebar.classList.toggle('-translate-x-full'));
-        }
-
-        // Close sidebar on outside click (mobile)
-        document.addEventListener('click', (e) => {
-            if (window.innerWidth < 768 && !sidebar.contains(e.target) && !sidebarToggle?.contains(e.target)) {
-                sidebar.classList.add('-translate-x-full');
-            }
-        });
-
-        // Update Order Status
         async function updateStatus(selectElement) {
             const orderId = selectElement.dataset.orderId;
             const newStatus = selectElement.value;
-            const originalStatus = selectElement.querySelector('[selected]').value;
+            const originalStatus = selectElement.querySelector('[selected]')?.value || selectElement.options[selectElement.selectedIndex].text;
 
             try {
                 const response = await fetch(`/admin/orders/${orderId}/toggle-status`, {
@@ -268,6 +335,7 @@
                 });
 
                 const data = await response.json();
+                console.log('Server response:', data);
 
                 if (response.ok) {
                     Swal.fire({
@@ -282,11 +350,12 @@
                         confirmButtonColor: '#d4af37'
                     });
 
-                    // If status changed to Cancelled, replace select with static span
-                    if (newStatus === 'Cancelled') {
+                    if (['Cancelled', 'Delivered'].includes(newStatus)) {
                         const staticStatus = document.createElement('span');
-                        staticStatus.className = 'px-3 py-1 bg-red-500/20 text-red-300 border border-red-500/20 rounded-lg';
-                        staticStatus.textContent = 'Cancelled';
+                        staticStatus.className = newStatus === 'Cancelled' 
+                            ? 'px-3 py-1 bg-red-500/20 text-red-300 border border-red-500/20 rounded-lg'
+                            : 'px-3 py-1 bg-green-500/20 text-green-300 border border-green-500/20 rounded-lg';
+                        staticStatus.textContent = newStatus;
                         selectElement.parentNode.replaceChild(staticStatus, selectElement);
                     }
                 } else {
@@ -298,7 +367,7 @@
                         color: '#e5e7eb',
                         confirmButtonColor: '#d4af37'
                     });
-                    selectElement.value = originalStatus;  // Reset to previous value
+                    selectElement.value = originalStatus;
                 }
             } catch (error) {
                 console.error('Error updating status:', error);
@@ -310,51 +379,62 @@
                     color: '#e5e7eb',
                     confirmButtonColor: '#d4af37'
                 });
-                selectElement.value = originalStatus;  // Reset to previous value
+                selectElement.value = originalStatus;
             }
         }
 
-        // Form Submission
-        document.getElementById('filterForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            const formData = new FormData(this);
-            formData.set('page', '1'); // Reset to first page when filters change
-            const params = new URLSearchParams(formData);
-            window.location.href = `/admin/orders?${params.toString()}`;
-        });
-
-        // Reset Filters
-        function resetFilters() {
-            window.location.href = '/admin/orders?page=1';
-        }
-
-        // Debounce Function for Search Input
-        function debounce(func, wait) {
-            let timeout;
-            return function executedFunction(...args) {
-                const later = () => {
-                    clearTimeout(timeout);
-                    func(...args);
-                };
-                clearTimeout(timeout);
-                timeout = setTimeout(later, wait);
-            };
-        }
-
-        // Search Input with Debounce
-        const searchInput = document.querySelector('input[name="search"]');
-        if (searchInput) {
-            searchInput.addEventListener('input', debounce(function(e) {
-                const formData = new FormData(document.getElementById('filterForm'));
-                formData.set('page', '1'); // Reset to first page when search changes
-                const params = new URLSearchParams(formData);
-                window.location.href = `/admin/orders?${params.toString()}`;
-            }, 500));
-        }
-
-        // Adjust Sidebar Height
         document.addEventListener('DOMContentLoaded', () => {
             const sidebar = document.querySelector('.sidebar');
+            const sidebarToggle = document.getElementById('sidebarToggle');
+            if (sidebarToggle) {
+                sidebarToggle.addEventListener('click', () => sidebar.classList.toggle('-translate-x-full'));
+            }
+
+            document.addEventListener('click', (e) => {
+                if (window.innerWidth < 768 && !sidebar.contains(e.target) && !sidebarToggle?.contains(e.target)) {
+                    sidebar.classList.add('-translate-x-full');
+                }
+            });
+
+            const statusSelects = document.querySelectorAll('.status-select');
+            statusSelects.forEach(select => {
+                select.addEventListener('change', () => updateStatus(select));
+            });
+
+            document.getElementById('filterForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                const formData = new FormData(this);
+                formData.set('page', '1');
+                const params = new URLSearchParams(formData);
+                window.location.href = `/admin/orders?${params.toString()}`;
+            });
+
+            document.getElementById('resetFilters').addEventListener('click', () => {
+                window.location.href = '/admin/orders?page=1';
+            });
+
+            function debounce(func, wait) {
+                let timeout;
+                return function executedFunction(...args) {
+                    const later = () => {
+                        clearTimeout(timeout);
+                        func(...args);
+                    };
+                    clearTimeout(timeout);
+                    timeout = setTimeout(later, wait);
+                };
+            }
+
+            const searchInput = document.querySelector('input[name="search"]');
+            if (searchInput) {
+                searchInput.addEventListener('input', debounce(function(e) {
+                    const formData = new FormData(document.getElementById('filterForm'));
+                    formData.set('page', '1');
+                    const params = new URLSearchParams(formData);
+                    window.location.href = `/admin/orders?${params.toString()}`;
+                }, 500));
+            }
+
             const main = document.querySelector('main');
             const updateHeight = () => {
                 const mainHeight = main.offsetHeight;
@@ -363,7 +443,6 @@
             updateHeight();
             window.addEventListener('resize', updateHeight);
 
-            // Animate Elements
             const animateElements = () => {
                 const elements = document.querySelectorAll('.animate-fade-in-up');
                 elements.forEach((element, index) => {
