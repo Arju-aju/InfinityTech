@@ -1,93 +1,171 @@
-<%- include('./partials/adminHeader.ejs') %>
+<!-- products.ejs -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>InfinityTech Admin - Products Management</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 
-<style>
-    /* Custom styles specific to product.ejs */
-    .products-container {
-        display: block !important;
-    }
-    .product-grid {
-        display: none !important;
-    }
-    .pagination-container {
-        @apply mt-8 flex flex-col sm:flex-row items-center justify-between gap-4;
-    }
-    .pagination-button {
-        @apply relative inline-flex items-center px-3 py-2 glass-effect text-sm text-gray-200 hover:bg-gray-700/50 transition-all duration-300;
-    }
-    .pagination-button.active {
-        @apply bg-cyan-500/20 text-cyan-400;
-    }
-    .flash-message {
-        @apply px-4 py-2 rounded-lg mt-4 text-center;
-    }
-    .flash-success {
-        @apply bg-green-500/20 text-green-400;
-    }
-    .flash-error {
-        @apply bg-red-500/20 text-red-400;
-    }
-    main {
-        margin-left: var(--sidebar-width, 16rem);
-        width: calc(100% - var(--sidebar-width, 16rem));
-        min-height: 100vh; /* Ensure main content spans full height */
-    }
-    .sidebar {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: var(--sidebar-width, 16rem);
-        z-index: 100;
-        animation: slideIn 0.5s ease-out forwards; /* Slide-in animation */
-    }
-    @keyframes slideIn {
-        from { transform: translateX(-100%); }
-        to { transform: translateX(0); }
-    }
-</style>
+    <style>
+        :root {
+            --sidebar-width: 16rem;
+            --primary-bg: #1e1e2f; /* Dark blue-gray */
+            --secondary-bg: #2a2438; /* Deep purple-gray */
+            --content-bg: #2d2d44; /* Lighter dark blue for content */
+            --accent-start: #d4af37; /* Rich Gold */
+            --accent-end: #f9e076;   /* Light Yellow */
+            --text-color: #e5e7eb; /* Light gray for text */
+        }
 
-<div class="flex min-h-screen bg-gray-900">
-    <!-- Sidebar Inclusion -->
-    <%- include('./partials/adminSidebar.ejs') %>
+        /* Gradient Background */
+        .gradient-bg {
+            @apply bg-gradient-to-br from-[var(--primary-bg)] to-[var(--secondary-bg)] !important;
+        }
 
-    <main class="flex-1 overflow-x-hidden overflow-y-auto bg-gray-900">
+        /* Glass Effect */
+        .glass-effect-dark {
+            @apply bg-[var(--content-bg)]/80 backdrop-blur-md border border-white/10;
+        }
+
+        /* Golden Yellow Gradient for Buttons */
+        .golden-button {
+            @apply bg-gradient-to-r from-[var(--accent-start)] to-[var(--accent-end)] text-white px-4 py-2 rounded-lg shadow-lg hover:scale-105 transition-all duration-300;
+        }
+
+        /* Typography and Base Styles */
+        body {
+            @apply font-sans text-[var(--text-color)] min-h-screen m-0 p-0 bg-[var(--primary-bg)] !important;
+        }
+
+        /* Custom Animations */
+        @keyframes gradientAnimation {
+            0% { background-position: 0% 0%; }
+            50% { background-position: 100% 100%; }
+            100% { background-position: 0% 0%; }
+        }
+        .animate-gradient {
+            background-size: 200% 200%;
+            animation: gradientAnimation 15s ease infinite;
+        }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in-up {
+            animation: fadeInUp 0.8s ease-out forwards;
+        }
+        .animation-delay-200 { animation-delay: 0.2s; }
+        .animation-delay-400 { animation-delay: 0.4s; }
+
+        /* Table Styles */
+        tr:hover {
+            @apply bg-[var(--content-bg)]/50;
+        }
+
+        /* Pagination Styles */
+        .pagination-button {
+            @apply inline-flex items-center px-3 py-2 glass-effect-dark text-sm text-[var(--text-color)] hover:bg-[var(--secondary-bg)] transition-all duration-300;
+        }
+        .pagination-button.active {
+            @apply bg-[var(--accent-start)]/80 text-white;
+        }
+
+        /* Main content styling */
+        main {
+            margin-left: var(--sidebar-width);
+            width: calc(100% - var(--sidebar-width));
+            min-height: 100vh;
+        }
+
+        /* Sidebar styling */
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: var(--sidebar-width);
+            z-index: 100;
+            animation: slideIn 0.5s ease-out forwards;
+        }
+        @keyframes slideIn {
+            from { transform: translateX(-100%); }
+            to { transform: translateX(0); }
+        }
+    </style>
+</head>
+
+<body class="gradient-bg animate-gradient" style="background: linear-gradient(to bottom right, #1e1e2f, #2a2438) !important;">
+    <!-- Sidebar -->
+    <div class="sidebar fixed top-0 left-0 h-full w-64 md:w-[var(--sidebar-width)] bg-[var(--primary-bg)] z-50 transition-transform duration-300 md:translate-x-0 -translate-x-full shadow-lg">
+        <div class="flex flex-col h-full text-[var(--text-color)]">
+            <div class="flex items-center justify-start p-6 border-b border-white/10">
+                <span class="text-3xl font-extrabold bg-gradient-to-r from-[#d4af37] to-[#f9e076] bg-clip-text text-transparent tracking-tight ">InfinityTech</span>
+            </div>
+            
+            <nav class="flex-1 space-y-2 p-4 overflow-y-auto">
+                <% const navItems = [
+                    { href: '/admin/dashboard', icon: 'fa-home', label: 'Dashboard', active: (typeof path !== 'undefined' && path === '/admin/dashboard') },
+                    { href: '/admin/products', icon: 'fa-box', label: 'Products', active: (typeof path !== 'undefined' && path.includes('/admin/product')) },
+                    { href: '/admin/categories', icon: 'fa-tags', label: 'Categories', active: (typeof path !== 'undefined' && path.includes('/admin/categor')) },
+                    { href: '/admin/users', icon: 'fa-users', label: 'Customers', active: (typeof path !== 'undefined' && path === '/admin/users') },
+                    { href: '/admin/orders', icon: 'fa-shopping-bag', label: 'Orders', active: (typeof path !== 'undefined' && path === '/admin/orders') },
+                    { href: '/admin/return/requests', icon: 'fa-undo', label: 'Return Orders', active: (typeof path !== 'undefined' && path === '/admin/return/requests') },
+                    { href: '/admin/offers', icon: 'fa-percentage', label: 'Offer', active: (typeof path !== 'undefined' && path === '/admin/offers') },
+                    { href: '/admin/coupons', icon: 'fa-ticket-alt', label: 'Coupon', active: (typeof path !== 'undefined' && path === '/admin/coupons') },
+                    { href: '/admin/logout', icon: 'fa-sign-out-alt', label: 'Logout', active: (typeof path !== 'undefined' && path === '/admin/logout') }
+                ]; %>
+                <% navItems.forEach(item => { %>
+                    <a href="<%= item.href %>" class="flex items-center py-2.5 px-4 rounded transition duration-300 group <%= item.active ? 'golden-button text-white scale-105' : 'text-[var(--text-color)] hover:bg-[var(--secondary-bg)] hover:text-white hover:scale-105' %>">
+                        <i class="fas <%= item.icon %> w-6 transition-transform duration-300 group-hover:rotate-12"></i>
+                        <span class="ml-3"><%= item.label %></span>
+                    </a>
+                <% }); %>
+            </nav>
+        </div>
+    </div>
+
+    <main class="flex-1 overflow-x-hidden overflow-y-auto">
         <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
             <!-- Flash Messages -->
             <% if (success_msg && success_msg.length > 0) { %>
-                <div class="flash-message flash-success">
+                <div class="glass-effect-dark px-4 py-2 rounded-lg mt-4 text-center bg-green-500/20 text-green-400 animate-fade-in-up">
                     <%= success_msg %>
                 </div>
             <% } %>
             <% if (error_msg && error_msg.length > 0) { %>
-                <div class="flash-message flash-error">
+                <div class="glass-effect-dark px-4 py-2 rounded-lg mt-4 text-center bg-red-500/20 text-red-400 animate-fade-in-up">
                     <%= error_msg %>
                 </div>
             <% } %>
 
             <!-- Breadcrumbs -->
-            <nav class="mb-6">
-                <ol class="flex items-center space-x-2 text-sm text-gray-300">
+            <nav class="mb-6 animate-fade-in-up">
+                <ol class="flex items-center space-x-2 text-sm text-[var(--text-color)]">
                     <li class="flex items-center">
-                        <a href="/admin/dashboard" class="hover:text-cyan-400 transition-colors">Dashboard</a>
+                        <a href="/admin/dashboard" class="hover:text-[var(--accent-start)] transition-colors">Dashboard</a>
                         <span class="mx-2">/</span>
                     </li>
                     <li>
-                        <span class="text-cyan-400">Products</span>
+                        <span class="text-[var(--accent-start)]">Products</span>
                     </li>
                 </ol>
             </nav>
 
             <!-- Header -->
-            <div class="flex justify-between items-center mb-6">
-                <h3 class="text-white text-3xl font-medium">Products Management</h3>
+            <div class="flex justify-between items-center mb-6 animate-fade-in-up animation-delay-200">
+                <h3 class="text-4xl font-extrabold bg-gradient-to-r from-[#d4af37] to-[#f9e076] bg-clip-text text-transparent tracking-tight text-center">Products Management</h3>
                 <a href="/admin/addProduct" 
-                   class="inline-flex items-center px-4 py-2 bg-cyan-500 hover:bg-cyan-600 text-white rounded-lg transition-colors duration-300">
+                   class="golden-button inline-flex items-center">
                     <i class="fas fa-plus mr-2"></i>
                     Add Product
                 </a>
             </div>
 
             <!-- Search and Filters -->
-            <div class="mb-6 space-y-4">
+            <div class="mb-6 space-y-4 animate-fade-in-up animation-delay-400">
                 <form id="filterForm" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4" method="GET">
                     <!-- Search Bar -->
                     <div class="col-span-full md:col-span-2">
@@ -96,7 +174,7 @@
                                    name="search" 
                                    value="<%= filters.search %>"
                                    placeholder="Search products..." 
-                                   class="w-full px-4 py-2 pl-10 bg-gray-800/50 border border-gray-700 rounded-lg text-gray-200 placeholder-gray-400 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/50">
+                                   class="w-full px-4 py-2 pl-10 bg-[var(--content-bg)] border border-white/10 rounded-lg text-[var(--text-color)] placeholder-gray-400 focus:border-[var(--accent-start)] focus:ring-2 focus:ring-[var(--accent-start)]/50">
                             <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
                         </div>
                     </div>
@@ -104,7 +182,7 @@
                     <!-- Category Filter -->
                     <div>
                         <select name="category" 
-                                class="w-full px-4 py-2 bg-gray-800/50 border border-gray-700 rounded-lg text-gray-200 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/50">
+                                class="w-full px-4 py-2 bg-[var(--content-bg)] border border-white/10 rounded-lg text-[var(--text-color)] focus:border-[var(--accent-start)] focus:ring-2 focus:ring-[var(--accent-start)]/50">
                             <option value="">All Categories</option>
                             <% categories.forEach(category => { %>
                                 <option value="<%= category._id %>" 
@@ -118,7 +196,7 @@
                     <!-- Price Range Filter -->
                     <div>
                         <select name="priceRange" 
-                                class="w-full px-4 py-2 bg-gray-800/50 border border-gray-700 rounded-lg text-gray-200 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/50">
+                                class="w-full px-4 py-2 bg-[var(--content-bg)] border border-white/10 rounded-lg text-[var(--text-color)] focus:border-[var(--accent-start)] focus:ring-2 focus:ring-[var(--accent-start)]/50">
                             <option value="">All Prices</option>
                             <option value="0-1000" <%= filters.priceRange === '0-1000' ? 'selected' : '' %>>Under ₹1,000</option>
                             <option value="1000-5000" <%= filters.priceRange === '1000-5000' ? 'selected' : '' %>>₹1,000 - ₹5,000</option>
@@ -131,7 +209,7 @@
                     <!-- Stock Filter -->
                     <div>
                         <select name="stock" 
-                                class="w-full px-4 py-2 bg-gray-800/50 border border-gray-700 rounded-lg text-gray-200 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/50">
+                                class="w-full px-4 py-2 bg-[var(--content-bg)] border border-white/10 rounded-lg text-[var(--text-color)] focus:border-[var(--accent-start)] focus:ring-2 focus:ring-[var(--accent-start)]/50">
                             <option value="">All Stock Levels</option>
                             <option value="out" <%= filters.stock === 'out' ? 'selected' : '' %>>Out of Stock</option>
                             <option value="low" <%= filters.stock === 'low' ? 'selected' : '' %>>Low Stock</option>
@@ -142,7 +220,7 @@
                     <!-- Status Filter -->
                     <div>
                         <select name="status" 
-                                class="w-full px-4 py-2 bg-gray-800/50 border border-gray-700 rounded-lg text-gray-200 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/50">
+                                class="w-full px-4 py-2 bg-[var(--content-bg)] border border-white/10 rounded-lg text-[var(--text-color)] focus:border-[var(--accent-start)] focus:ring-2 focus:ring-[var(--accent-start)]/50">
                             <option value="">All Status</option>
                             <option value="active" <%= filters.status === 'active' ? 'selected' : '' %>>Active</option>
                             <option value="inactive" <%= filters.status === 'inactive' ? 'selected' : '' %>>Inactive</option>
@@ -154,7 +232,7 @@
                     <!-- Sort By -->
                     <div>
                         <select name="sortBy" 
-                                class="w-full px-4 py-2 bg-gray-800/50 border border-gray-700 rounded-lg text-gray-200 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/50">
+                                class="w-full px-4 py-2 bg-[var(--content-bg)] border border-white/10 rounded-lg text-[var(--text-color)] focus:border-[var(--accent-start)] focus:ring-2 focus:ring-[var(--accent-start)]/50">
                             <option value="-createdAt" <%= filters.sortBy === '-createdAt' ? 'selected' : '' %>>Newest First</option>
                             <option value="createdAt" <%= filters.sortBy === 'createdAt' ? 'selected' : '' %>>Oldest First</option>
                             <option value="-price" <%= filters.sortBy === '-price' ? 'selected' : '' %>>Price: High to Low</option>
@@ -168,11 +246,11 @@
                     <div class="col-span-full flex justify-end space-x-4">
                         <button type="reset" 
                                 onclick="window.location='/admin/products'"
-                                class="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors">
+                                class="px-4 py-2 bg-[var(--secondary-bg)] hover:bg-[var(--content-bg)] text-[var(--text-color)] rounded-lg transition-colors">
                             Reset Filters
                         </button>
                         <button type="submit"
-                                class="px-4 py-2 bg-cyan-600 hover:bg-cyan-500 text-white rounded-lg transition-colors">
+                                class="golden-button">
                             Apply Filters
                         </button>
                     </div>
@@ -180,25 +258,25 @@
             </div>
 
             <!-- Products Table Container -->
-            <div class="products-container">
-                <div class="glass-effect rounded-xl overflow-hidden shadow-xl border border-gray-800">
+            <div class="products-container animate-fade-in-up animation-delay-400">
+                <div class="glass-effect-dark rounded-xl overflow-hidden shadow-xl">
                     <div class="overflow-x-auto">
-                        <table class="min-w-full divide-y divide-gray-700">
+                        <table class="min-w-full divide-y divide-white/10">
                             <thead>
-                                <tr class="bg-gray-800/50">
-                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Product</th>
-                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Category</th>
-                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Stock</th>
-                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Price</th>
-                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Discount</th>
-                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Status</th>
-                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Listing Status</th>
-                                    <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-300 uppercase tracking-wider">Actions</th>
+                                <tr class="bg-[var(--secondary-bg)]">
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-[var(--text-color)] uppercase tracking-wider">Product</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-[var(--text-color)] uppercase tracking-wider">Category</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-[var(--text-color)] uppercase tracking-wider">Stock</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-[var(--text-color)] uppercase tracking-wider">Price</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-[var(--text-color)] uppercase tracking-wider">Discount</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-[var(--text-color)] uppercase tracking-wider">Status</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-[var(--text-color)] uppercase tracking-wider">Listing Status</th>
+                                    <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-[var(--text-color)] uppercase tracking-wider">Actions</th>
                                 </tr>
                             </thead>
-                            <tbody class="divide-y divide-gray-700 bg-gray-900">
+                            <tbody class="divide-y divide-white/10 bg-[var(--content-bg)]/80">
                                 <% products.forEach(product => { %>
-                                    <tr class="hover:bg-gray-800/30 transition-colors">
+                                    <tr class="hover:bg-[var(--content-bg)]/50 transition-colors">
                                         <td class="px-6 py-4 whitespace-nowrap">
                                             <div class="flex items-center">
                                                 <div class="flex-shrink-0 h-10 w-10">
@@ -207,28 +285,28 @@
                                                          alt="<%= product.name %>">
                                                 </div>
                                                 <div class="ml-4">
-                                                    <div class="text-sm font-medium text-white"><%= product.name %></div>
+                                                    <div class="text-sm font-medium text-[var(--text-color)]"><%= product.name %></div>
                                                     <div class="text-sm text-gray-400"><%= product.brand %></div>
                                                 </div>
                                             </div>
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap">
-                                            <div class="text-sm text-gray-300">
+                                            <div class="text-sm text-[var(--text-color)]">
                                                 <%= product.category ? product.category.name : 'Uncategorized' %>
                                             </div>
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap">
                                             <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full 
-                                                <%= product.stock < 6 ? 'bg-red-500/20 text-red-400' : 'bg-green-500/20 text-green-400' %>">
+                                                <%= product.stock < 6 ? 'bg-red-500/20 text-red-400 border border-red-500/20' : 'bg-green-500/20 text-green-400 border border-green-500/20' %>">
                                                 <%= product.stock %> units
                                             </span>
                                         </td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-white">
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-[var(--text-color)]">
                                             ₹<%= product.price.toFixed(2) %>
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap">
                                             <% if (product.productOffer) { %>
-                                                <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-500/20 text-red-400">
+                                                <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-500/20 text-red-400 border border-red-500/20">
                                                     <%= product.productOffer %>% OFF
                                                 </span>
                                             <% } else { %>
@@ -248,7 +326,7 @@
                                         <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                             <div class="flex justify-end space-x-3">
                                                 <a href="/admin/editProduct/<%= product._id %>" 
-                                                   class="text-cyan-400 hover:text-cyan-300 transition-colors duration-300">
+                                                   class="text-[var(--accent-start)] hover:text-[var(--accent-end)] transition-colors duration-300">
                                                     <i class="fas fa-edit"></i>
                                                 </a>
                                                 <button onclick="toggleListStatus('<%= product._id %>')"
@@ -269,7 +347,7 @@
                 </div>
 
                 <!-- Pagination -->
-                <div class="pagination-container">
+                <div class="pagination-container mt-8 flex flex-col sm:flex-row items-center justify-between gap-4 animate-fade-in-up animation-delay-400">
                     <% if (pagination.totalPages > 1) { %>
                         <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
                             <% if (pagination.hasPrevPage) { %>
@@ -326,114 +404,239 @@
             </div>
         </div>
     </main>
-</div>
 
-<!-- Delete Confirmation Modal -->
-<div id="deleteModal" class="fixed inset-0 z-50 hidden">
-    <div class="absolute inset-0 bg-black/50 backdrop-blur-sm"></div>
-    <div class="relative min-h-screen flex items-center justify-center p-4">
-        <div class="bg-gray-900 rounded-xl p-6 max-w-sm w-full border border-gray-800">
-            <h3 class="text-xl font-semibold text-white mb-4">Confirm Delete</h3>
-            <p class="text-gray-300 mb-6">Are you sure you want to delete this product? This action cannot be undone.</p>
-            <div class="flex justify-end space-x-4">
-                <button onclick="closeDeleteModal()" 
-                        class="px-4 py-2 text-gray-300 hover:text-white transition-colors">
-                    Cancel
-                </button>
-                <button id="confirmDeleteBtn"
-                        class="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors">
-                    Delete
-                </button>
+    <!-- Delete Confirmation Modal -->
+    <div id="deleteModal" class="fixed inset-0 z-50 hidden">
+        <div class="absolute inset-0 bg-black/50 backdrop-blur-sm"></div>
+        <div class="relative min-h-screen flex items-center justify-center p-4">
+            <div class="glass-effect-dark rounded-xl p-6 max-w-sm w-full">
+                <h3 class="text-xl font-semibold text-[var(--text-color)] mb-4">Confirm Delete</h3>
+                <p class="text-gray-300 mb-6">Are you sure you want to delete this product? This action cannot be undone.</p>
+                <div class="flex justify-end space-x-4">
+                    <button onclick="closeDeleteModal()" 
+                            class="px-4 py-2 text-[var(--text-color)] hover:text-white transition-colors">
+                        Cancel
+                    </button>
+                    <button id="confirmDeleteBtn"
+                            class="golden-button">
+                        Delete
+                    </button>
+                </div>
             </div>
         </div>
     </div>
-</div>
 
-<script>
-    function confirmDelete(productId) {
-        const modal = document.getElementById('deleteModal');
-        const confirmBtn = document.getElementById('confirmDeleteBtn');
-        
-        modal.classList.remove('hidden');
-        confirmBtn.onclick = async () => {
-            try {
-                const response = await fetch(`/admin/deleteProduct/${productId}`, {
-                    method: 'DELETE'
-                });
-                
-                if (response.ok) {
-                    window.location.href = '/admin/products';
-                } else {
-                    console.error('Failed to delete product');
-                    closeDeleteModal();
-                    alert('Failed to delete product');
-                }
-            } catch (error) {
-                console.error('Error:', error);
-                closeDeleteModal();
-                alert('An error occurred. Please try again.');
-            }
-        };
-    }
-
-    function closeDeleteModal() {
-        const modal = document.getElementById('deleteModal');
-        modal.classList.add('hidden');
-    }
-
-    async function softDeleteProduct(productId) {
-        try {
-            const response = await fetch(`/admin/softDeleteProduct/${productId}`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                }
-            });
-            
-            const data = await response.json();
-            
-            if (data.success) {
-                window.location.reload();
-            } else {
-                console.error('Failed to soft delete product:', data.message);
-                alert('Failed to update product status. Please try again.');
-            }
-        } catch (error) {
-            console.error('Error:', error);
-            alert('An error occurred. Please try again.');
-        }
-    }
-
-    async function toggleListStatus(productId) {
-        try {
-            const response = await fetch(`/admin/products/${productId}/toggle-list`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                }
-            });
-            
-            if (response.ok) {
-                window.location.reload();
-            } else {
-                console.error('Failed to toggle product status');
-            }
-        } catch (error) {
-            console.error('Error:', error);
-        }
-    }
-
-    // Dynamically adjust sidebar height to match main content
-    document.addEventListener('DOMContentLoaded', () => {
+    <script>
+        // Sidebar Toggle for Mobile
         const sidebar = document.querySelector('.sidebar');
-        const main = document.querySelector('main');
-        const updateHeight = () => {
-            const mainHeight = main.offsetHeight;
-            sidebar.style.height = `${Math.max(mainHeight, window.innerHeight)}px`;
-        };
-        updateHeight();
-        window.addEventListener('resize', updateHeight);
-    });
-</script>
+        const sidebarToggle = document.getElementById('sidebarToggle');
+        if (sidebarToggle) {
+            sidebarToggle.addEventListener('click', () => sidebar.classList.toggle('-translate-x-full'));
+        }
 
-<%- include('./partials/adminFooter.ejs') %>
+        // Close sidebar on outside click (mobile)
+        document.addEventListener('click', (e) => {
+            if (window.innerWidth < 768 && !sidebar.contains(e.target) && !sidebarToggle?.contains(e.target)) {
+                sidebar.classList.add('-translate-x-full');
+            }
+        });
+
+        // Confirm Delete
+        function confirmDelete(productId) {
+            const modal = document.getElementById('deleteModal');
+            const confirmBtn = document.getElementById('confirmDeleteBtn');
+            
+            modal.classList.remove('hidden');
+            confirmBtn.onclick = async () => {
+                try {
+                    const response = await fetch(`/admin/deleteProduct/${productId}`, {
+                        method: 'DELETE'
+                    });
+                    
+                    if (response.ok) {
+                        Swal.fire({
+                            title: 'Deleted!',
+                            text: 'Product has been deleted.',
+                            icon: 'success',
+                            background: '#1e1e2f',
+                            color: '#e5e7eb',
+                            confirmButtonColor: '#d4af37',
+                            timer: 1500
+                        }).then(() => {
+                            window.location.href = '/admin/products';
+                        });
+                    } else {
+                        console.error('Failed to delete product');
+                        closeDeleteModal();
+                        Swal.fire({
+                            title: 'Error!',
+                            text: 'Failed to delete product',
+                            icon: 'error',
+                            background: '#1e1e2f',
+                            color: '#e5e7eb',
+                            confirmButtonColor: '#d4af37'
+                        });
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    closeDeleteModal();
+                    Swal.fire({
+                        title: 'Error!',
+                        text: 'An error occurred. Please try again.',
+                        icon: 'error',
+                        background: '#1e1e2f',
+                        color: '#e5e7eb',
+                        confirmButtonColor: '#d4af37'
+                    });
+                }
+            };
+        }
+
+        function closeDeleteModal() {
+            const modal = document.getElementById('deleteModal');
+            modal.classList.add('hidden');
+        }
+
+        // Soft Delete Product
+        async function softDeleteProduct(productId) {
+            const result = await Swal.fire({
+                title: 'Are you sure?',
+                text: 'This will soft delete the product!',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d4af37',
+                cancelButtonColor: '#ef4444',
+                confirmButtonText: 'Yes, delete it!',
+                background: '#1e1e2f',
+                color: '#e5e7eb'
+            });
+
+            if (result.isConfirmed) {
+                try {
+                    const response = await fetch(`/admin/softDeleteProduct/${productId}`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        }
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        Swal.fire({
+                            title: 'Deleted!',
+                            text: 'Product has been soft deleted.',
+                            icon: 'success',
+                            background: '#1e1e2f',
+                            color: '#e5e7eb',
+                            confirmButtonColor: '#d4af37',
+                            timer: 1500
+                        }).then(() => {
+                            window.location.reload();
+                        });
+                    } else {
+                        Swal.fire({
+                            title: 'Error!',
+                            text: data.message || 'Failed to update product status',
+                            icon: 'error',
+                            background: '#1e1e2f',
+                            color: '#e5e7eb',
+                            confirmButtonColor: '#d4af37'
+                        });
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    Swal.fire({
+                        title: 'Error!',
+                        text: 'An error occurred. Please try again.',
+                        icon: 'error',
+                        background: '#1e1e2f',
+                        color: '#e5e7eb',
+                        confirmButtonColor: '#d4af37'
+                    });
+                }
+            }
+        }
+
+        // Toggle List Status
+        async function toggleListStatus(productId) {
+            const result = await Swal.fire({
+                title: 'Are you sure?',
+                text: 'This will toggle the listing status of the product!',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d4af37',
+                cancelButtonColor: '#ef4444',
+                confirmButtonText: 'Yes, toggle it!',
+                background: '#1e1e2f',
+                color: '#e5e7eb'
+            });
+
+            if (result.isConfirmed) {
+                try {
+                    const response = await fetch(`/admin/products/${productId}/toggle-list`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        }
+                    });
+                    
+                    if (response.ok) {
+                        Swal.fire({
+                            title: 'Success!',
+                            text: 'Listing status updated.',
+                            icon: 'success',
+                            background: '#1e1e2f',
+                            color: '#e5e7eb',
+                            confirmButtonColor: '#d4af37',
+                            timer: 1500
+                        }).then(() => {
+                            window.location.reload();
+                        });
+                    } else {
+                        Swal.fire({
+                            title: 'Error!',
+                            text: 'Failed to toggle product status',
+                            icon: 'error',
+                            background: '#1e1e2f',
+                            color: '#e5e7eb',
+                            confirmButtonColor: '#d4af37'
+                        });
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    Swal.fire({
+                        title: 'Error!',
+                        text: 'An error occurred. Please try again.',
+                        icon: 'error',
+                        background: '#1e1e2f',
+                        color: '#e5e7eb',
+                        confirmButtonColor: '#d4af37'
+                    });
+                }
+            }
+        }
+
+        // Adjust Sidebar Height and Animations
+        document.addEventListener('DOMContentLoaded', () => {
+            const sidebar = document.querySelector('.sidebar');
+            const main = document.querySelector('main');
+            const updateHeight = () => {
+                const mainHeight = main.offsetHeight;
+                sidebar.style.height = `${Math.max(mainHeight, window.innerHeight)}px`;
+            };
+            updateHeight();
+            window.addEventListener('resize', updateHeight);
+
+            // Animate Elements
+            const animateElements = () => {
+                const elements = document.querySelectorAll('.animate-fade-in-up');
+                elements.forEach((element, index) => {
+                    element.style.animationDelay = `${index * 0.2}s`;
+                });
+            };
+            animateElements();
+        });
+    </script>
+</body>
+</html>

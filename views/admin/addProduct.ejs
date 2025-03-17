@@ -1,7 +1,8 @@
 <%- include('./partials/adminHeader.ejs') %>
+
 <style>
     .glass-effect {
-        @apply bg-gray-800 bg-opacity-30 backdrop-blur-md border border-gray-700;
+        @apply bg-[var(--content-bg)]/80 backdrop-blur-md border border-white/10;
     }
     .fade-in {
         animation: fadeIn 0.5s ease-in;
@@ -43,46 +44,57 @@
     }
 </style>
 
-<div class="flex h-screen bg-gray-900">
+<div class="flex min-h-screen gradient-bg animate-gradient">
     <%- include('./partials/adminSidebar.ejs') %>
 
-    <div class="flex-1 overflow-x-hidden overflow-y-auto bg-gray-900">
+    <div class="flex-1 overflow-x-hidden overflow-y-auto" style="margin-left: var(--sidebar-width, 16rem);">
         <div class="container mx-auto px-6 py-8">
-            <div class="flex justify-between items-center mb-8 fade-in">
-                <h3 class="text-3xl font-semibold text-white">Add New Product</h3>
-                <a href="/admin/products" class="px-4 py-2 glass-effect text-white hover:bg-cyan-500 rounded-lg transition-all duration-300 transform hover:scale-105">
-                    <i class="fas fa-arrow-left mr-2"></i>Back to Products
+            <!-- Header Section -->
+            <div class="flex justify-between items-center mb-8 animate-fade-in-up">
+                <h3 class="text-3xl font-extrabold bg-gradient-to-r from-[#d4af37] to-[#f9e076] bg-clip-text text-transparent tracking-tight">Add New Product</h3>
+                <a href="/admin/products" 
+                   class="inline-flex items-center px-4 py-2 rounded-lg bg-gradient-to-r from-[#d4af37] to-[#f9e076] text-white transition-all duration-300 transform hover:scale-105 group glass-effect">
+                    <svg class="w-5 h-5 mr-2 transition-transform duration-300 group-hover:rotate-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 17l-5-5m0 0l5-5m-5 5h12"></path>
+                    </svg>
+                    Back to Products
                 </a>
             </div>
 
+            <!-- Message Section -->
             <% if (message) { %>
-                <div class="mb-6 p-4 rounded-lg glass-effect fade-in <%= messageType === 'success' ? 'text-green-300 border-green-500' : 'text-red-300 border-red-500' %>">
+                <div class="mb-6 p-4 rounded-lg glass-effect fade-in <%= messageType === 'success' ? 'text-green-300 border-green-500/50' : 'text-red-300 border-red-500/50' %>">
                     <%= message %>
                 </div>
             <% } %>
 
-            <div class="glass-effect rounded-2xl p-8 max-w-4xl mx-auto fade-in">
+            <!-- Form Section -->
+            <div class="glass-effect rounded-2xl p-8 max-w-4xl mx-auto animate-fade-in-up animation-delay-200">
                 <form id="addProductForm" action="/admin/addProduct" method="POST" enctype="multipart/form-data" class="space-y-6">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div class="space-y-6">
                             <div>
-                                <label for="name" class="block text-sm font-medium text-gray-300 mb-2">Product Name*</label>
-                                <input type="text" id="name" name="name" required class="w-full px-4 py-3 rounded-lg bg-gray-800 border border-gray-700 text-white focus:border-cyan-500 transition-all duration-200">
+                                <label for="name" class="block text-sm font-medium text-[var(--text-color)] mb-2">Product Name*</label>
+                                <input type="text" id="name" name="name" required 
+                                       class="w-full px-4 py-3 rounded-lg bg-[var(--content-bg)] border border-white/10 text-[var(--text-color)] placeholder-gray-500 focus:border-[#d4af37] focus:ring-2 focus:ring-[#d4af37]/20 transition-all duration-300 hover:bg-[var(--secondary-bg)]">
                                 <p id="nameError" class="error-text">Product name is required</p>
                             </div>
                             <div>
-                                <label for="brand" class="block text-sm font-medium text-gray-300 mb-2">Brand*</label>
-                                <input type="text" id="brand" name="brand" required class="w-full px-4 py-3 rounded-lg bg-gray-800 border border-gray-700 text-white focus:border-cyan-500 transition-all duration-200">
+                                <label for="brand" class="block text-sm font-medium text-[var(--text-color)] mb-2">Brand*</label>
+                                <input type="text" id="brand" name="brand" required 
+                                       class="w-full px-4 py-3 rounded-lg bg-[var(--content-bg)] border border-white/10 text-[var(--text-color)] placeholder-gray-500 focus:border-[#d4af37] focus:ring-2 focus:ring-[#d4af37]/20 transition-all duration-300 hover:bg-[var(--secondary-bg)]">
                                 <p id="brandError" class="error-text">Brand is required</p>
                             </div>
                             <div>
-                                <label for="description" class="block text-sm font-medium text-gray-300 mb-2">Description*</label>
-                                <textarea id="description" name="description" required rows="4" class="w-full px-4 py-3 rounded-lg bg-gray-800 border border-gray-700 text-white focus:border-cyan-500 transition-all duration-200"></textarea>
+                                <label for="description" class="block text-sm font-medium text-[var(--text-color)] mb-2">Description*</label>
+                                <textarea id="description" name="description" required rows="4" 
+                                          class="w-full px-4 py-3 rounded-lg bg-[var(--content-bg)] border border-white/10 text-[var(--text-color)] placeholder-gray-500 focus:border-[#d4af37] focus:ring-2 focus:ring-[#d4af37]/20 transition-all duration-300 hover:bg-[var(--secondary-bg)]"></textarea>
                                 <p id="descriptionError" class="error-text">Description is required</p>
                             </div>
                             <div>
-                                <label for="category" class="block text-sm font-medium text-gray-300 mb-2">Category*</label>
-                                <select id="category" name="category" required class="w-full px-4 py-3 rounded-lg bg-gray-800 border border-gray-700 text-white focus:border-cyan-500 transition-all duration-200">
+                                <label for="category" class="block text-sm font-medium text-[var(--text-color)] mb-2">Category*</label>
+                                <select id="category" name="category" required 
+                                        class="w-full px-4 py-3 rounded-lg bg-[var(--content-bg)] border border-white/10 text-[var(--text-color)] focus:border-[#d4af37] focus:ring-2 focus:ring-[#d4af37]/20 transition-all duration-300 hover:bg-[var(--secondary-bg)]">
                                     <option value="">Select a category</option>
                                     <% categories.forEach(category => { %>
                                         <option value="<%= category._id %>"><%= category.name %></option>
@@ -92,65 +104,73 @@
                             </div>
                             <div class="grid grid-cols-2 gap-4">
                                 <div>
-                                    <label for="price" class="block text-sm font-medium text-gray-300 mb-2">Price (₹)*</label>
-                                    <input type="number" id="price" name="price" required min="0" step="0.01" class="w-full px-4 py-3 rounded-lg bg-gray-800 border border-gray-700 text-white focus:border-cyan-500 transition-all duration-200">
+                                    <label for="price" class="block text-sm font-medium text-[var(--text-color)] mb-2">Price (₹)*</label>
+                                    <input type="number" id="price" name="price" required min="0" step="0.01" 
+                                           class="w-full px-4 py-3 rounded-lg bg-[var(--content-bg)] border border-white/10 text-[var(--text-color)] placeholder-gray-500 focus:border-[#d4af37] focus:ring-2 focus:ring-[#d4af37]/20 transition-all duration-300 hover:bg-[var(--secondary-bg)]">
                                     <p id="priceError" class="error-text">Price must be a positive number</p>
                                 </div>
                                 <div>
-                                    <label for="discountPercentage" class="block text-sm font-medium text-gray-300 mb-2">Discount (%)</label>
-                                    <input type="number" id="discountPercentage" name="discountPercentage" min="0" max="100" step="0.1" class="w-full px-4 py-3 rounded-lg bg-gray-800 border border-gray-700 text-white focus:border-cyan-500 transition-all duration-200">
+                                    <label for="discountPercentage" class="block text-sm font-medium text-[var(--text-color)] mb-2">Discount (%)</label>
+                                    <input type="number" id="discountPercentage" name="discountPercentage" min="0" max="100" step="0.1" 
+                                           class="w-full px-4 py-3 rounded-lg bg-[var(--content-bg)] border border-white/10 text-[var(--text-color)] placeholder-gray-500 focus:border-[#d4af37] focus:ring-2 focus:ring-[#d4af37]/20 transition-all duration-300 hover:bg-[var(--secondary-bg)]">
                                     <p id="discountError" class="error-text">Discount must be between 0 and 100</p>
                                 </div>
                             </div>
                             <div>
-                                <label for="stock" class="block text-sm font-medium text-gray-300 mb-2">Stock Quantity*</label>
-                                <input type="number" id="stock" name="stock" required min="0" class="w-full px-4 py-3 rounded-lg bg-gray-800 border border-gray-700 text-white focus:border-cyan-500 transition-all duration-200">
+                                <label for="stock" class="block text-sm font-medium text-[var(--text-color)] mb-2">Stock Quantity*</label>
+                                <input type="number" id="stock" name="stock" required min="0" 
+                                       class="w-full px-4 py-3 rounded-lg bg-[var(--content-bg)] border border-white/10 text-[var(--text-color)] placeholder-gray-500 focus:border-[#d4af37] focus:ring-2 focus:ring-[#d4af37]/20 transition-all duration-300 hover:bg-[var(--secondary-bg)]">
                                 <p id="stockError" class="error-text">Stock must be a positive integer</p>
                             </div>
                         </div>
                         <div class="space-y-6">
                             <div class="glass-effect p-6 rounded-lg">
-                                <h3 class="text-lg font-medium text-gray-300 mb-4">Specifications</h3>
+                                <h3 class="text-lg font-medium text-[var(--text-color)] mb-4">Specifications</h3>
                                 <div class="space-y-4">
                                     <div>
-                                        <label for="processor" class="block text-sm font-medium text-gray-300 mb-2">Processor*</label>
-                                        <input type="text" id="processor" name="specifications[processor]" required class="w-full px-4 py-3 rounded-lg bg-gray-800 border border-gray-700 text-white focus:border-cyan-500 transition-all duration-200">
+                                        <label for="processor" class="block text-sm font-medium text-[var(--text-color)] mb-2">Processor*</label>
+                                        <input type="text" id="processor" name="specifications[processor]" required 
+                                               class="w-full px-4 py-3 rounded-lg bg-[var(--content-bg)] border border-white/10 text-[var(--text-color)] placeholder-gray-500 focus:border-[#d4af37] focus:ring-2 focus:ring-[#d4af37]/20 transition-all duration-300 hover:bg-[var(--secondary-bg)]">
                                         <p id="processorError" class="error-text">Processor is required</p>
                                     </div>
                                     <div>
-                                        <label for="ram" class="block text-sm font-medium text-gray-300 mb-2">RAM*</label>
-                                        <input type="text" id="ram" name="specifications[ram]" required class="w-full px-4 py-3 rounded-lg bg-gray-800 border border-gray-700 text-white focus:border-cyan-500 transition-all duration-200">
+                                        <label for="ram" class="block text-sm font-medium text-[var(--text-color)] mb-2">RAM*</label>
+                                        <input type="text" id="ram" name="specifications[ram]" required 
+                                               class="w-full px-4 py-3 rounded-lg bg-[var(--content-bg)] border border-white/10 text-[var(--text-color)] placeholder-gray-500 focus:border-[#d4af37] focus:ring-2 focus:ring-[#d4af37]/20 transition-all duration-300 hover:bg-[var(--secondary-bg)]">
                                         <p id="ramError" class="error-text">RAM is required</p>
                                     </div>
                                     <div>
-                                        <label for="storage" class="block text-sm font-medium text-gray-300 mb-2">Storage*</label>
-                                        <input type="text" id="storage" name="specifications[storage]" required class="w-full px-4 py-3 rounded-lg bg-gray-800 border border-gray-700 text-white focus:border-cyan-500 transition-all duration-200">
+                                        <label for="storage" class="block text-sm font-medium text-[var(--text-color)] mb-2">Storage*</label>
+                                        <input type="text" id="storage" name="specifications[storage]" required 
+                                               class="w-full px-4 py-3 rounded-lg bg-[var(--content-bg)] border border-white/10 text-[var(--text-color)] placeholder-gray-500 focus:border-[#d4af37] focus:ring-2 focus:ring-[#d4af37]/20 transition-all duration-300 hover:bg-[var(--secondary-bg)]">
                                         <p id="storageError" class="error-text">Storage is required</p>
                                     </div>
                                     <div>
-                                        <label for="graphics" class="block text-sm font-medium text-gray-300 mb-2">Graphics*</label>
-                                        <input type="text" id="graphics" name="specifications[graphics]" required class="w-full px-4 py-3 rounded-lg bg-gray-800 border border-gray-700 text-white focus:border-cyan-500 transition-all duration-200">
+                                        <label for="graphics" class="block text-sm font-medium text-[var(--text-color)] mb-2">Graphics*</label>
+                                        <input type="text" id="graphics" name="specifications[graphics]" required 
+                                               class="w-full px-4 py-3 rounded-lg bg-[var(--content-bg)] border border-white/10 text-[var(--text-color)] placeholder-gray-500 focus:border-[#d4af37] focus:ring-2 focus:ring-[#d4af37]/20 transition-all duration-300 hover:bg-[var(--secondary-bg)]">
                                         <p id="graphicsError" class="error-text">Graphics is required</p>
                                     </div>
                                 </div>
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-gray-300 mb-2">Product Images* (Max 5 images)</label>
-                                <input type="file" id="images" name="images" multiple accept="image/*" class="w-full px-4 py-3 rounded-lg bg-gray-800 border border-gray-700 text-white focus:border-cyan-500 transition-all duration-200">
+                                <label class="block text-sm font-medium text-[var(--text-color)] mb-2">Product Images* (Max 5 images)</label>
+                                <input type="file" id="images" name="images" multiple accept="image/*" 
+                                       class="w-full px-4 py-3 rounded-lg bg-[var(--content-bg)] border border-white/10 text-[var(--text-color)] focus:border-[#d4af37] focus:ring-2 focus:ring-[#d4af37]/20 transition-all duration-300 hover:bg-[var(--secondary-bg)]">
                                 <div id="imagePreviewContainer" class="mt-4 grid grid-cols-2 sm:grid-cols-3 gap-4"></div>
                                 <p id="imageError" class="error-text">Please upload 1-5 images</p>
                             </div>
                             <div class="glass-effect p-4 rounded-lg">
-                                <p class="text-gray-300 text-sm mb-2">Price Summary:</p>
-                                <div class="flex justify-between text-white">
+                                <p class="text-[var(--text-color)] text-sm mb-2">Price Summary:</p>
+                                <div class="flex justify-between text-[var(--text-color)]">
                                     <span>Original Price:</span>
                                     <span id="originalPrice">₹0.00</span>
                                 </div>
-                                <div class="flex justify-between text-white mt-1">
+                                <div class="flex justify-between text-[var(--text-color)] mt-1">
                                     <span>Discount:</span>
                                     <span id="discountAmount">₹0.00</span>
                                 </div>
-                                <div class="flex justify-between text-white mt-1 font-medium">
+                                <div class="flex justify-between text-[var(--text-color)] mt-1 font-medium">
                                     <span>Final Price:</span>
                                     <span id="finalPrice">₹0.00</span>
                                 </div>
@@ -158,8 +178,12 @@
                         </div>
                     </div>
                     <div class="flex justify-end">
-                        <button type="submit" id="submitBtn" class="px-6 py-3 bg-cyan-600 hover:bg-cyan-500 text-white rounded-lg transition-all duration-300 transform hover:scale-105 disabled:bg-gray-600" disabled>
-                            <i class="fas fa-plus mr-2"></i>Add Product
+                        <button type="submit" id="submitBtn" 
+                                class="inline-flex items-center px-6 py-3 rounded-lg bg-gradient-to-r from-[#d4af37] to-[#f9e076] text-white font-medium transition-all duration-300 transform hover:scale-105 group disabled:bg-gray-600 disabled:cursor-not-allowed">
+                            <svg class="w-5 h-5 mr-2 transition-transform duration-300 group-hover:rotate-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                            </svg>
+                            Add Product
                         </button>
                     </div>
                 </form>
@@ -243,6 +267,9 @@ function updateImagePreview() {
             icon: 'error',
             title: 'Too Many Files',
             text: 'Maximum of 5 images allowed.',
+            background: 'var(--primary-bg)',
+            color: 'var(--text-color)',
+            confirmButtonColor: '#d4af37'
         });
         validateForm();
         return;
@@ -313,12 +340,15 @@ form.addEventListener('submit', async (e) => {
             icon: 'error',
             title: 'Validation Error',
             text: 'Please fill all required fields correctly.',
+            background: 'var(--primary-bg)',
+            color: 'var(--text-color)',
+            confirmButtonColor: '#d4af37'
         });
         return;
     }
 
     submitBtn.disabled = true;
-    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Saving...';
+    submitBtn.innerHTML = '<svg class="w-5 h-5 mr-2 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>Saving...';
 
     try {
         const formData = new FormData(form);
@@ -334,6 +364,9 @@ form.addEventListener('submit', async (e) => {
                 icon: 'success',
                 title: 'Success',
                 text: 'Product added successfully!',
+                background: 'var(--primary-bg)',
+                color: 'var(--text-color)',
+                confirmButtonColor: '#d4af37',
                 showConfirmButton: false,
                 timer: 1500
             }).then(() => {
@@ -346,10 +379,13 @@ form.addEventListener('submit', async (e) => {
         Swal.fire({
             icon: 'error',
             title: 'Error',
-            text: error.message, 
+            text: error.message,
+            background: 'var(--primary-bg)',
+            color: 'var(--text-color)',
+            confirmButtonColor: '#d4af37'
         });
         submitBtn.disabled = false;
-        submitBtn.innerHTML = '<i class="fas fa-plus mr-2"></i>Add Product';
+        submitBtn.innerHTML = '<svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>Add Product';
     }
 });
 

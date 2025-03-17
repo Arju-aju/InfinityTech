@@ -8,7 +8,8 @@ passport.use(
         {
             clientID: process.env.GOOGLE_CLIENT_ID,
             clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-            callbackURL: 'https://infinitytech.space/auth/google/callback',
+            // callbackURL: 'https://infinitytech.space/auth/google/callback',
+            callbackURL: 'http://localhost:3000/auth/google/callback',
         },
         async (accessToken, refreshToken, profile, done) => {
             try {
@@ -81,7 +82,6 @@ passport.deserializeUser(async (id, done) => {
                 message: 'Your account has been blocked. Please contact support.' 
             });
         }
-        console.log('Deserialized user:', user);
         return done(null, user);
     } catch (error) {
         console.error('Deserialize error:', error);

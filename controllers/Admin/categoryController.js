@@ -26,6 +26,7 @@ const categoryInfo = async (req, res) => {
             .limit(perPage);
 
         res.render('admin/categories', { 
+            path:req.path,
             categories, 
             currentPage,
             totalPages: Math.ceil(totalCategories / perPage),

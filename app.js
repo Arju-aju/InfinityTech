@@ -2,6 +2,7 @@ const express = require('express');
 const path = require('path');
 const session = require('express-session');
 const dotenv = require('dotenv').config();
+const morgan = require('morgan');
 const db = require('./config/db');
 const userRouter = require('./routes/userRouter');
 const adminRouter = require('./routes/adminRouter');
@@ -16,6 +17,12 @@ db();
 const port = process.env.PORT || 3000;
 const app = express();
 
+// Morgan logging middleware
+app.use(morgan('dev'));
+app.use(morgan('combined', {
+    stream: require('fs').createWriteStream(path.join(__dirname, 'access.log'), { flags: 'a' })
+}));
+
 // View engine setup
 app.set('view engine', 'ejs');
 app.set('views', [
@@ -28,10 +35,12 @@ app.set('views', [
 app.use(express.static(path.join(__dirname, 'public')));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
+// Serve manifest.json if you have one
+app.use('/manifest.json', express.static(path.join(__dirname, 'public', 'manifest.json')));
+
 // Body parsing middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-
 
 // Custom middleware for AJAX responses
 app.use((req, res, next) => {
@@ -56,15 +65,6 @@ app.use(
 app.use(passport.initialize());
 app.use(passport.session());
 
-// Debug session and user
-if (process.env.NODE_ENV !== 'production') {
-    app.use((req, res, next) => {
-        console.log('Session:', req.session);
-        console.log('User:', req.user);
-        next();
-    });
-}
-
 // Flash messages
 app.use(flash());
 
@@ -80,6 +80,76 @@ app.use((req, res, next) => {
 
 // Multer error handler
 app.use(handleMulterError);
+
+// Helmet CSP configuration
+app.use(
+    helmet({
+        contentSecurityPolicy: {
+            directives: {
+                defaultSrc: ["'self'"],
+                scriptSrc: [
+                    "'self'",
+                    "'unsafe-inline'",
+                    "'unsafe-eval'",
+                    "https://cdn.jsdelivr.net",
+                    "https://unpkg.com",
+                    "https://cdn.tailwindcss.com",
+                    "https://code.jquery.com",
+                    "https://cdn.jsdelivr.net/npm/sweetalert2@11",
+                    "https://cdnjs.cloudflare.com",
+                    "https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js",
+                    "https://checkout.razorpay.com",
+                    "https://api.razorpay.com"
+                ],
+                styleSrc: [
+                    "'self'",
+                    "'unsafe-inline'",
+                    "https://cdn.jsdelivr.net",
+                    "https://cdn.tailwindcss.com",
+                    "https://cdnjs.cloudflare.com",
+                    "https://unpkg.com",
+                    "https://fonts.googleapis.com"
+                ],
+                connectSrc: [
+                    "'self'",
+                    "https://unpkg.com",
+                    "https://cdn.jsdelivr.net",
+                    "https://lumberjack.razorpay.com",
+                    "https://api.razorpay.com",
+                    "https://checkout.razorpay.com"
+                ],
+                frameSrc: [
+                    "'self'",
+                    "https://api.razorpay.com",
+                    "https://checkout.razorpay.com"
+                ],
+                imgSrc: ["'self'", "data:", "https:", "blob:"],
+                fontSrc: [
+                    "'self'",
+                    "https:",
+                    "data:",
+                    "https://fonts.gstatic.com"
+                ],
+                mediaSrc: ["'self'", "https:", "blob:"],
+                objectSrc: ["'none'"],
+                formAction: ["'self'"],
+                upgradeInsecureRequests: []
+            }
+        },
+        crossOriginEmbedderPolicy: false,
+        crossOriginResourcePolicy: { policy: "cross-origin" },
+        dnsPrefetchControl: false,
+        frameguard: false, // Required for Razorpay iframe
+        hsts: {
+            maxAge: 15552000,
+            includeSubDomains: true,
+            preload: true
+        },
+        referrerPolicy: { policy: "strict-origin-when-cross-origin" },
+        xssFilter: true,
+        noSniff: true
+    })
+);
 
 // Routes
 app.use('/', userRouter);

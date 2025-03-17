@@ -78,6 +78,7 @@ exports.getOrders = async (req, res) => {
         }));
 
         res.render('admin/orders', {
+            path:req.path,
             orders: processedOrders,
             filters: { search, status, startDate, endDate, minAmount, maxAmount },
             pagination: {

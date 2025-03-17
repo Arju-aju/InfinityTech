@@ -12,10 +12,10 @@
         @apply mt-8 flex flex-col sm:flex-row items-center justify-between gap-4;
     }
     .pagination-button {
-        @apply relative inline-flex items-center px-3 py-2 glass-effect text-sm text-gray-200 hover:bg-gray-700/50 transition-all duration-300;
+        @apply relative inline-flex items-center px-3 py-2 glass-effect text-sm text-[var(--text-color)] hover:bg-[var(--secondary-bg)] transition-all duration-300;
     }
     .pagination-button.active {
-        @apply bg-cyan-500/20 text-cyan-400;
+        @apply bg-[#d4af37]/20 text-[#d4af37];
     }
     .flash-message {
         @apply px-4 py-2 rounded-lg mt-4 text-center glass-effect;
@@ -27,41 +27,23 @@
         @apply bg-red-500/20 text-red-400;
     }
     tr:hover {
-        @apply bg-gray-800/30; /* Adjusted to match dark theme */
-    }
-    /* Main content styling */
-    main {
-        margin-left: var(--sidebar-width, 16rem);
-        width: calc(100% - var(--sidebar-width, 16rem));
-        min-height: 100vh; /* Ensure main spans full viewport height */
-    }
-    /* Sidebar styling */
-    .sidebar {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: var(--sidebar-width, 16rem);
-        z-index: 100;
-        animation: slideIn 0.5s ease-out forwards; /* Slide-in animation */
-    }
-    @keyframes slideIn {
-        from { transform: translateX(-100%); }
-        to { transform: translateX(0); }
+        @apply bg-[var(--secondary-bg)];
     }
 </style>
 
-<div class="flex min-h-screen bg-gray-900">
+<div class="flex min-h-screen gradient-bg animate-gradient">
     <%- include('./partials/adminSidebar.ejs') %>
 
     <!-- Main Content -->
-    <main class="flex-1 overflow-x-hidden overflow-y-auto" role="main">
-        <div class="container mx-auto px-6 py-8">
-            <div class="flex justify-between items-center mb-8">
-                <h1 class="text-3xl font-semibold text-white tracking-tight" aria-label="Categories Management">Categories</h1>
+    <main class="flex-1 overflow-x-hidden overflow-y-auto p-6" style="margin-left: var(--sidebar-width, 16rem);" role="main">
+        <div class="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
+            <!-- Header Section -->
+            <div class="flex justify-between items-center mb-8 animate-fade-in-up">
+                <h1 class="text-3xl font-extrabold bg-gradient-to-r from-[#d4af37] to-[#f9e076] bg-clip-text text-transparent tracking-tight" aria-label="Categories Management">Categories</h1>
                 <a href="/admin/addCategory" 
-                   class="inline-flex items-center px-4 py-2 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white font-medium transition-all duration-200 transform hover:scale-105"
+                   class="inline-flex items-center px-4 py-2 rounded-lg bg-gradient-to-r from-[#d4af37] to-[#f9e076] text-white font-medium transition-all duration-300 transform hover:scale-105 group"
                    aria-label="Add New Category">
-                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <svg class="w-5 h-5 mr-2 transition-transform duration-300 group-hover:rotate-12" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
                     </svg>
                     Add New Category
@@ -69,47 +51,50 @@
             </div>
 
             <!-- Search & Filter Form -->
-            <form method="GET" action="/admin/categories" class="flex space-x-3 mb-4">
-                <input type="text" name="search" placeholder="Search by name..."
+            <form method="GET" action="/admin/categories" class="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-3 mb-6 animate-fade-in-up animation-delay-200">
+                <input type="text" name="search" placeholder="Search by name..." 
                        value="<%= search %>"
-                       class="px-4 py-2 rounded-lg bg-gray-800 border border-gray-700 text-white placeholder-gray-400 focus:ring-cyan-500/50 transition-all duration-200">
+                       class="flex-1 px-4 py-3 rounded-lg bg-[var(--content-bg)] border border-white/10 text-[var(--text-color)] placeholder-gray-500 focus:border-[#d4af37] focus:ring-2 focus:ring-[#d4af37]/20 transition-all duration-300">
                 
-                <select name="status" class="px-4 py-2 rounded-lg bg-gray-800 border border-gray-700 text-white focus:ring-cyan-500/50 transition-all duration-200">
+                <select name="status" 
+                        class="px-4 py-3 rounded-lg bg-[var(--content-bg)] border border-white/10 text-[var(--text-color)] focus:border-[#d4af37] focus:ring-2 focus:ring-[#d4af37]/20 transition-all duration-300">
                     <option value="">All</option>
                     <option value="true" <%= status === "true" ? "selected" : "" %>>Active</option>
                     <option value="false" <%= status === "false" ? "selected" : "" %>>Inactive</option>
                 </select>
         
-                <select name="sort" class="px-4 py-2 rounded-lg bg-gray-800 border border-gray-700 text-white focus:ring-cyan-500/50 transition-all duration-200">
+                <select name="sort" 
+                        class="px-4 py-3 rounded-lg bg-[var(--content-bg)] border border-white/10 text-[var(--text-color)] focus:border-[#d4af37] focus:ring-2 focus:ring-[#d4af37]/20 transition-all duration-300">
                     <option value="date" <%= sort === "date" ? "selected" : "" %>>Newest First</option>
                     <option value="name" <%= sort === "name" ? "selected" : "" %>>Alphabetical</option>
                 </select>
         
-                <button type="submit" class="px-4 py-2 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white transition-all duration-200">
+                <button type="submit" 
+                        class="px-4 py-3 rounded-lg bg-gradient-to-r from-[#d4af37] to-[#f9e076] text-white transition-all duration-300 hover:scale-105">
                     Filter
                 </button>
             </form>
 
             <!-- Categories Table -->
-            <section class="glass-effect rounded-2xl p-6 shadow-2xl border border-gray-800">
+            <section class="glass-effect-dark rounded-xl p-6 shadow-xl border border-white/10 animate-fade-in-up animation-delay-400">
                 <div class="overflow-x-auto">
                     <table class="w-full" aria-label="Categories List">
                         <thead>
-                            <tr class="border-b border-gray-700">
-                                <th class="px-6 py-4 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Category Name</th>
-                                <th class="px-6 py-4 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Description</th>
-                                <th class="px-6 py-4 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Status</th>
-                                <th class="px-6 py-4 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Actions</th>
+                            <tr class="border-b border-white/10">
+                                <th class="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Category Name</th>
+                                <th class="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Description</th>
+                                <th class="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Status</th>
+                                <th class="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Actions</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-gray-700">
+                        <tbody class="divide-y divide-white/10">
                             <% if (categories && categories.length) { %>
                                 <% categories.forEach(category => { %>
                                 <tr class="transition-colors" data-category-id="<%= category._id %>">
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300 font-medium">
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-[var(--text-color)] font-medium">
                                         <%= category.name %>
                                     </td>
-                                    <td class="px-6 py-4 text-sm text-gray-300">
+                                    <td class="px-6 py-4 text-sm text-[var(--text-color)]">
                                         <%= category.description %>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap">
@@ -122,7 +107,7 @@
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
                                         <button onclick="editCategory('<%= category._id %>')" 
-                                                class="inline-flex items-center px-3 py-1.5 rounded-lg bg-gray-800 text-gray-300 hover:bg-gray-700 hover:text-white transition-all duration-200 transform hover:scale-105"
+                                                class="inline-flex items-center px-3 py-1.5 rounded-lg bg-[var(--content-bg)] text-[var(--text-color)] hover:bg-[var(--secondary-bg)] hover:text-white transition-all duration-300 transform hover:scale-105"
                                                 aria-label="Edit Category">
                                             <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
@@ -131,7 +116,7 @@
                                         </button>
                                         <button id="toggle-<%= category._id %>"
                                                 onclick="toggleCategory('<%= category._id %>')" 
-                                                class="inline-flex items-center px-3 py-1.5 rounded-lg <%= category.isActive ? 'bg-red-600 hover:bg-red-500' : 'bg-cyan-600 hover:bg-cyan-500' %> text-white transition-all duration-200 transform hover:scale-105"
+                                                class="inline-flex items-center px-3 py-1.5 rounded-lg <%= category.isActive ? 'bg-red-600 hover:bg-red-500' : 'bg-[#d4af37] hover:bg-[#f9e076]' %> text-white transition-all duration-300 transform hover:scale-105"
                                                 aria-label="<%= category.isActive ? 'Deactivate Category' : 'Activate Category' %>">
                                             <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
@@ -145,24 +130,25 @@
                                 <% }); %>
                             <% } else { %>
                                 <tr>
-                                    <td colspan="4" class="text-center text-gray-300 py-4">No categories found</td>
+                                    <td colspan="4" class="text-center text-[var(--text-color)] py-4">No categories found</td>
                                 </tr>
                             <% } %>
                         </tbody>
                     </table>
 
-                    <div class="flex justify-between items-center mt-4">
-                        <p class="text-gray-300">Page <%= currentPage %> of <%= totalPages %></p>
+                    <!-- Pagination -->
+                    <div class="flex justify-between items-center mt-6 text-[var(--text-color)]">
+                        <p>Page <%= currentPage %> of <%= totalPages %></p>
                         <div class="space-x-2">
                             <% if (currentPage > 1) { %>
                                 <a href="?page=<%= currentPage - 1 %>&search=<%= search %>&status=<%= status %>&sort=<%= sort %>" 
-                                   class="px-3 py-2 bg-gray-800 hover:bg-gray-700 text-white rounded-lg transition-all">
+                                   class="px-3 py-2 bg-[var(--content-bg)] hover:bg-[var(--secondary-bg)] text-[var(--text-color)] rounded-lg transition-all duration-300">
                                     Previous
                                 </a>
                             <% } %>
                             <% if (currentPage < totalPages) { %>
                                 <a href="?page=<%= currentPage + 1 %>&search=<%= search %>&status=<%= status %>&sort=<%= sort %>" 
-                                   class="px-3 py-2 bg-gray-800 hover:bg-gray-700 text-white rounded-lg transition-all">
+                                   class="px-3 py-2 bg-[var(--content-bg)] hover:bg-[var(--secondary-bg)] text-[var(--text-color)] rounded-lg transition-all duration-300">
                                     Next
                                 </a>
                             <% } %>
@@ -176,9 +162,9 @@
 
 <!-- Edit Category Modal -->
 <div id="editModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden items-center justify-center z-50" role="dialog" aria-modal="true">
-    <div class="bg-gray-900 rounded-2xl p-8 max-w-lg w-full mx-4 shadow-2xl border border-gray-800">
+    <div class="glass-effect-dark rounded-xl p-8 max-w-lg w-full mx-4 shadow-xl border border-white/10">
         <div class="flex justify-between items-center mb-6">
-            <h2 class="text-xl font-semibold text-white" id="editModalTitle">Edit Category</h2>
+            <h2 class="text-xl font-bold text-[var(--text-color)]" id="editModalTitle">Edit Category</h2>
             <button onclick="closeEditModal()" 
                     class="text-gray-400 hover:text-white transition-colors" 
                     aria-label="Close Edit Modal">
@@ -190,26 +176,26 @@
         <form id="editForm" class="space-y-6" novalidate>
             <input type="hidden" id="categoryId" name="categoryId">
             <div>
-                <label for="editName" class="block text-sm font-medium text-gray-300 mb-2">Category Name</label>
+                <label for="editName" class="block text-sm font-medium text-[var(--text-color)] mb-2">Category Name</label>
                 <input type="text" id="editName" name="name"   
-                    class="w-full px-4 py-3 rounded-lg bg-gray-800 border border-gray-700 text-white placeholder-gray-400 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/50 transition-all duration-200"
-                    aria-required="true" minlength="2" maxlength="100">
+                       class="w-full px-4 py-3 rounded-lg bg-[var(--content-bg)] border border-white/10 text-[var(--text-color)] placeholder-gray-500 focus:border-[#d4af37] focus:ring-2 focus:ring-[#d4af37]/20 transition-all duration-300"
+                       aria-required="true" minlength="2" maxlength="100">
             </div>
             <div>
-                <label for="editDescription" class="block text-sm font-medium text-gray-300 mb-2">Description</label>
+                <label for="editDescription" class="block text-sm font-medium text-[var(--text-color)] mb-2">Description</label>
                 <textarea id="editDescription" name="description" rows="3" 
-                    class="w-full px-4 py-3 rounded-lg bg-gray-800 border border-gray-700 text-white placeholder-gray-400 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/50 transition-all duration-200"
-                    aria-required="true" maxlength="500"></textarea>
+                          class="w-full px-4 py-3 rounded-lg bg-[var(--content-bg)] border border-white/10 text-[var(--text-color)] placeholder-gray-500 focus:border-[#d4af37] focus:ring-2 focus:ring-[#d4af37]/20 transition-all duration-300"
+                          aria-required="true" maxlength="500"></textarea>
             </div>
             <div class="flex justify-end space-x-3 pt-4">
                 <button type="button" onclick="closeEditModal()" 
-                    class="px-4 py-2 rounded-lg bg-gray-800 text-gray-300 hover:bg-gray-700 hover:text-white transition-all duration-200"
-                    aria-label="Cancel Edit">
+                        class="px-4 py-2 rounded-lg bg-[var(--content-bg)] text-[var(--text-color)] hover:bg-[var(--secondary-bg)] hover:text-white transition-all duration-300"
+                        aria-label="Cancel Edit">
                     Cancel
                 </button>
                 <button type="submit" 
-                    class="px-4 py-2 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white transition-all duration-200"
-                    aria-label="Save Category Changes">
+                        class="px-4 py-2 rounded-lg bg-gradient-to-r from-[#d4af37] to-[#f9e076] text-white transition-all duration-300 hover:scale-105"
+                        aria-label="Save Category Changes">
                     Save Changes
                 </button>
             </div>
@@ -248,9 +234,9 @@
                     icon: 'error',
                     title: 'Error!',
                     text: error.message,
-                    background: '#1f2937',
-                    color: '#fff',
-                    confirmButtonColor: '#0891b2'
+                    background: 'var(--primary-bg)',
+                    color: 'var(--text-color)',
+                    confirmButtonColor: '#d4af37'
                 });
             });
     }
@@ -277,9 +263,11 @@
                     icon: 'success',
                     title: 'Success!',
                     text: data.message,
-                    background: '#1f2937',
-                    color: '#fff',
-                    confirmButtonColor: '#0891b2'
+                    background: 'var(--primary-bg)',
+                    color: 'var(--text-color)',
+                    confirmButtonColor: '#d4af37',
+                    timer: 1500,
+                    showConfirmButton: false
                 }).then(() => {
                     window.location.reload();
                 });
@@ -292,9 +280,9 @@
                 icon: 'error',
                 title: 'Error!',
                 text: error.message,
-                background: '#1f2937',
-                color: '#fff',
-                confirmButtonColor: '#0891b2'
+                background: 'var(--primary-bg)',
+                color: 'var(--text-color)',
+                confirmButtonColor: '#d4af37'
             });
         });
     });
@@ -316,12 +304,12 @@
             text: `Do you want to ${newStatus} this category?`,
             icon: 'warning',
             showCancelButton: true,
-            confirmButtonColor: '#0891b2',
+            confirmButtonColor: '#d4af37',
             cancelButtonColor: '#dc2626',
             confirmButtonText: 'Yes',
             cancelButtonText: 'No',
-            background: '#1f2937',
-            color: '#fff'
+            background: 'var(--primary-bg)',
+            color: 'var(--text-color)'
         }).then((result) => {
             if (result.isConfirmed) {
                 fetch(`/admin/toggleCategoryStatus/${categoryId}`, {
@@ -344,9 +332,9 @@
                             icon: 'success',
                             title: 'Success!',
                             text: data.message,
-                            background: '#1f2937',
-                            color: '#fff',
-                            confirmButtonColor: '#0891b2',
+                            background: 'var(--primary-bg)',
+                            color: 'var(--text-color)',
+                            confirmButtonColor: '#d4af37',
                             timer: 1500,
                             showConfirmButton: false
                         }).then(() => {
@@ -362,26 +350,15 @@
                         icon: 'error',
                         title: 'Error!',
                         text: error.message || 'An error occurred while toggling the category status',
-                        background: '#1f2937',
-                        color: '#fff',
-                        confirmButtonColor: '#0891b2'
+                        background: 'var(--primary-bg)',
+                        color: 'var(--text-color)',
+                        confirmButtonColor: '#d4af37'
                     });
                 });
             }
         });
     }
 
-    // Dynamically adjust sidebar height to match main content
-    document.addEventListener('DOMContentLoaded', () => {
-        const sidebar = document.querySelector('.sidebar');
-        const main = document.querySelector('main');
-        const updateHeight = () => {
-            const mainHeight = main.offsetHeight;
-            sidebar.style.height = `${Math.max(mainHeight, window.innerHeight)}px`;
-        };
-        updateHeight();
-        window.addEventListener('resize', updateHeight);
-    });
 </script>
 
 <%- include('./partials/adminFooter.ejs') %>
