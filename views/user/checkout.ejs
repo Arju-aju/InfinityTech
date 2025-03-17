@@ -3,14 +3,6 @@
 <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 
-<!-- Add CSP meta tag (remove if CSP is set in server config) -->
-<meta http-equiv="Content-Security-Policy" content="
-  default-src 'self';
-  script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://unpkg.com https://cdn.tailwindcss.com https://code.jquery.com https://cdn.jsdelivr.net/npm/sweetalert2@11 https://cdnjs.cloudflare.com https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js https://checkout.razorpay.com;
-  frame-src 'self' https://api.razorpay.com;
-  connect-src 'self' https://unpkg.com https://cdn.jsdelivr.net https://lumberjack.razorpay.com;
-">
-
 <main class="container mx-auto px-4 py-8 mt-16 bg-gradient-to-br from-gray-50 to-blue-50 min-h-screen">
   <!-- Flash notifications -->
   <% if (locals.message && message.content) { %>
@@ -352,7 +344,6 @@
           })
         });
         const result = await response.json();
-        console.log('Wallet order response:', result); // Log response for debugging
 
         if (response.ok && result.success) {
           Swal.fire({ icon: 'success', title: 'Order Placed!', text: 'Payment successful via wallet.', toast: true, position: 'top-end', timer: 2000 });
@@ -368,21 +359,31 @@
 
     async function handleRazorpayOrder() {
       try {
+        console.log('Client-side orderState before request:', JSON.stringify(orderState, null, 2));
         const response = await fetch('/checkout/create-razorpay-order', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            amount: orderState.totalAmount,
             addressId: orderState.selectedAddress._id,
             couponCode: orderState.couponCode,
-            couponDiscount: orderState.couponDiscount
-          })
+            couponDiscount: orderState.couponDiscount,
+          }),
         });
         const order = await response.json();
 
         if (!response.ok || !order.success) {
+          console.error('Razorpay order creation failed:', order);
           throw new Error(order.message || 'Failed to create payment order');
         }
+
+        // Sync client-side total with server response
+        orderState.totalAmount = order.amount / 100;
+        document.getElementById('cartTotal').textContent = `₹${orderState.totalAmount.toFixed(2)}`;
+        console.log('Razorpay options:', {
+          key: order.key,
+          amount: order.amount,
+          order_id: order.orderId,
+        });
 
         const options = {
           key: order.key,
@@ -401,49 +402,66 @@
                   addressId: orderState.selectedAddress._id,
                   totalAmount: orderState.totalAmount,
                   couponCode: orderState.couponCode,
-                  couponDiscount: orderState.couponDiscount
-                })
+                  couponDiscount: orderState.couponDiscount,
+                }),
               });
               const verifyResult = await verifyResponse.json();
 
               if (verifyResponse.ok && verifyResult.success) {
-                Swal.fire({ icon: 'success', title: 'Payment Successful!', text: 'Your order has been placed.', toast: true, position: 'top-end', timer: 2000 });
+                Swal.fire({
+                  icon: 'success',
+                  title: 'Payment Successful!',
+                  text: 'Your order has been placed.',
+                  toast: true,
+                  position: 'top-end',
+                  timer: 2000,
+                });
                 window.location.href = `/orders/${verifyResult.orderId}`;
               } else {
                 throw new Error(verifyResult.message || 'Payment verification failed');
               }
             } catch (error) {
-              Swal.fire({ icon: 'error', title: 'Error', text: error.message || 'Error verifying payment', toast: true, position: 'top-end', timer: 3000 });
+              console.error('Payment verification error:', error);
+              Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: error.message || 'Error verifying payment',
+                toast: true,
+                position: 'top-end',
+                timer: 3000,
+              });
             }
           },
           prefill: {
             name: userData.name,
             email: userData.email,
-            contact: userData.phone
+            contact: userData.phone,
           },
-          theme: { color: '#3b82f6' }
+          theme: { color: '#3b82f6' },
         };
 
         const rzp = new Razorpay(options);
         rzp.on('payment.failed', (response) => {
+          console.error('Payment failed:', JSON.stringify(response.error, null, 2));
           Swal.fire({
             icon: 'error',
             title: 'Payment Failed',
             text: response.error.description || 'Payment failed. Please try again.',
             toast: true,
             position: 'top-end',
-            timer: 3000
+            timer: 3000,
           });
         });
         rzp.open();
       } catch (error) {
+        console.error('Razorpay order error:', error);
         Swal.fire({
           icon: 'error',
           title: 'Error',
           text: error.message || 'Error processing payment',
           toast: true,
           position: 'top-end',
-          timer: 3000
+          timer: 3000,
         });
       }
     }

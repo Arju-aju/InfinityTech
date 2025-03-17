@@ -1,34 +1,37 @@
 <%- include('./partials/adminHeader.ejs') %>
 
-<div class="flex min-h-screen">
+<div class="flex min-h-screen gradient-bg animate-gradient">
   <%- include('./partials/adminSidebar.ejs') %>
 
   <main class="flex-1 p-6" style="margin-left: var(--sidebar-width, 16rem);">
     <!-- Header Section -->
-    <header class="flex items-center justify-between mb-8 fade-in-up">
-      <h1 class="text-3xl font-bold text-cyan-400">Coupons Management</h1>
-      <a href="/admin/add-coupon" class="add-coupon-btn glass-effect bg-gradient-to-r from-green-500 to-teal-500 text-white px-4 py-2 rounded-lg hover:from-green-600 hover:to-teal-600 transition-all duration-300">
-        <i class="fas fa-plus mr-2"></i> Add New Coupon
+    <header class="flex items-center justify-between mb-8 animate-fade-in-up">
+      <h1 class="text-3xl font-extrabold bg-gradient-to-r from-[#d4af37] to-[#f9e076] bg-clip-text text-transparent tracking-tight">Coupons Management</h1>
+      <a href="/admin/add-coupon" 
+         class="add-coupon-btn glass-effect bg-gradient-to-r from-[#d4af37] to-[#f9e076] text-white px-4 py-2 rounded-lg hover:scale-105 transition-all duration-300 group">
+        <i class="fas fa-plus mr-2 transition-transform duration-300 group-hover:scale-110"></i> Add New Coupon
       </a>
     </header>
 
     <!-- Search Section -->
-    <section class="mb-8 fade-in-up">
+    <section class="mb-8 animate-fade-in-up animation-delay-200">
       <form action="/admin/coupon" method="GET">
-        <div class="search-container glass-effect p-4 rounded-lg shadow-lg flex items-center gap-4">
+        <div class="search-container glass-effect-dark p-4 rounded-xl shadow-lg flex flex-col sm:flex-row items-center gap-4">
           <input 
             type="text" 
             name="search" 
             placeholder="Search coupons..." 
-            class="search-input flex-1 bg-gray-800 text-gray-200 border border-gray-700 rounded-lg px-4 py-2 focus:outline-none focus:border-cyan-500 transition-all duration-300"
+            class="search-input flex-1 bg-[var(--content-bg)] text-[var(--text-color)] border border-white/10 rounded-lg px-4 py-2 focus:border-[#d4af37] focus:ring-2 focus:ring-[#d4af37]/20 transition-all duration-300"
             value="<%= typeof search !== 'undefined' ? search : '' %>"
           >
-          <select name="status" class="search-select bg-gray-800 text-gray-200 border border-gray-700 rounded-lg px-4 py-2 focus:outline-none focus:border-cyan-500 transition-all duration-300">
+          <select name="status" 
+                  class="search-select bg-[var(--content-bg)] text-[var(--text-color)] border border-white/10 rounded-lg px-4 py-2 focus:border-[#d4af37] focus:ring-2 focus:ring-[#d4af37]/20 transition-all duration-300">
             <option value="">All Status</option>
             <option value="active" <%= typeof status !== 'undefined' && status === 'active' ? 'selected' : '' %>>Active</option>
             <option value="inactive" <%= typeof status !== 'undefined' && status === 'inactive' ? 'selected' : '' %>>Inactive</option>
           </select>
-          <button type="submit" class="search-button glass-effect bg-gradient-to-r from-cyan-500 to-blue-500 text-white px-4 py-2 rounded-lg hover:from-cyan-600 hover:to-blue-600 transition-all duration-300">
+          <button type="submit" 
+                  class="search-button glass-effect bg-gradient-to-r from-[#d4af37] to-[#f9e076] text-white px-4 py-2 rounded-lg hover:scale-105 transition-all duration-300">
             <i class="fas fa-search mr-2"></i> Search
           </button>
         </div>
@@ -36,29 +39,29 @@
     </section>
 
     <!-- Coupons Table -->
-    <section class="table-container glass-effect rounded-lg shadow-lg fade-in-up">
+    <section class="table-container glass-effect-dark rounded-xl shadow-xl animate-fade-in-up animation-delay-400">
       <% if (coupons.length > 0) { %>
         <div class="overflow-x-auto">
-          <table class="w-full text-gray-200">
-            <thead class="bg-gray-800">
+          <table class="w-full text-[var(--text-color)]">
+            <thead class="bg-[var(--content-bg)] border-b border-white/10">
               <tr>
-                <th class="px-6 py-3 text-left text-sm font-semibold uppercase">Sl No</th>
-                <th class="px-6 py-3 text-left text-sm font-semibold uppercase">Name</th>
-                <th class="px-6 py-3 text-left text-sm font-semibold uppercase">Code</th>
-                <th class="px-6 py-3 text-left text-sm font-semibold uppercase">Offer Type</th>
-                <th class="px-6 py-3 text-left text-sm font-semibold uppercase">Value</th>
-                <th class="px-6 py-3 text-left text-sm font-semibold uppercase">Min Price</th>
-                <th class="px-6 py-3 text-left text-sm font-semibold uppercase">Created On</th>
-                <th class="px-6 py-3 text-left text-sm font-semibold uppercase">Expires On</th>
-                <th class="px-6 py-3 text-left text-sm font-semibold uppercase">Usage Limit</th>
-                <th class="px-6 py-3 text-left text-sm font-semibold uppercase">Per User</th>
-                <th class="px-6 py-3 text-left text-sm font-semibold uppercase">Status</th>
-                <th class="px-6 py-3 text-left text-sm font-semibold uppercase">Actions</th>
+                <th class="px-6 py-3 text-left text-sm font-semibold text-gray-400 uppercase">Sl No</th>
+                <th class="px-6 py-3 text-left text-sm font-semibold text-gray-400 uppercase">Name</th>
+                <th class="px-6 py-3 text-left text-sm font-semibold text-gray-400 uppercase">Code</th>
+                <th class="px-6 py-3 text-left text-sm font-semibold text-gray-400 uppercase">Offer Type</th>
+                <th class="px-6 py-3 text-left text-sm font-semibold text-gray-400 uppercase">Value</th>
+                <th class="px-6 py-3 text-left text-sm font-semibold text-gray-400 uppercase">Min Price</th>
+                <th class="px-6 py-3 text-left text-sm font-semibold text-gray-400 uppercase">Created On</th>
+                <th class="px-6 py-3 text-left text-sm font-semibold text-gray-400 uppercase">Expires On</th>
+                <th class="px-6 py-3 text-left text-sm font-semibold text-gray-400 uppercase">Usage Limit</th>
+                <th class="px-6 py-3 text-left text-sm font-semibold text-gray-400 uppercase">Per User</th>
+                <th class="px-6 py-3 text-left text-sm font-semibold text-gray-400 uppercase">Status</th>
+                <th class="px-6 py-3 text-left text-sm font-semibold text-gray-400 uppercase">Actions</th>
               </tr>
             </thead>
-            <tbody class="divide-y divide-gray-700">
+            <tbody class="divide-y divide-white/10">
               <% coupons.forEach((coupon, index) => { %>
-                <tr class="table-row hover:bg-gray-800 transition-all duration-200">
+                <tr class="table-row hover:bg-[var(--secondary-bg)] transition-all duration-300">
                   <td class="px-6 py-4"><%= index + 1 %></td>
                   <td class="px-6 py-4"><%= coupon.name %></td>
                   <td class="px-6 py-4"><%= coupon.code %></td>
@@ -76,13 +79,16 @@
                   </td>
                   <td class="px-6 py-4">
                     <div class="flex space-x-2">
-                      <a href="/admin/editCoupon/<%= coupon._id %>" class="action-icon text-blue-400 hover:text-blue-300 p-2 rounded-lg hover:bg-blue-500/20 transition-all duration-200">
+                      <a href="/admin/editCoupon/<%= coupon._id %>" 
+                         class="action-icon text-[#d4af37] hover:text-[#f9e076] p-2 rounded-lg hover:bg-[#d4af37]/20 transition-all duration-300">
                         <i class="fas fa-edit"></i>
                       </a>
-                      <a href="/admin/viewCoupon/<%= coupon._id %>" class="action-icon text-green-400 hover:text-green-300 p-2 rounded-lg hover:bg-green-500/20 transition-all duration-200">
+                      <a href="/admin/viewCoupon/<%= coupon._id %>" 
+                         class="action-icon text-green-400 hover:text-green-300 p-2 rounded-lg hover:bg-green-500/20 transition-all duration-300">
                         <i class="fas fa-eye"></i>
                       </a>
-                      <a href="/admin/deleteCoupon/<%= coupon._id %>" class="action-icon delete-btn text-red-400 hover:text-red-300 p-2 rounded-lg hover:bg-red-500/20 transition-all duration-200">
+                      <a href="/admin/deleteCoupon/<%= coupon._id %>" 
+                         class="action-icon delete-btn text-red-400 hover:text-red-300 p-2 rounded-lg hover:bg-red-500/20 transition-all duration-300">
                         <i class="fas fa-trash"></i>
                       </a>
                     </div>
@@ -94,10 +100,11 @@
         </div>
       <% } else { %>
         <div class="flex flex-col items-center justify-center py-12 text-center">
-          <i class="fas fa-ticket-alt text-4xl text-cyan-400 mb-4"></i>
-          <h3 class="text-xl font-semibold">No Coupons Found</h3>
+          <i class="fas fa-ticket-alt text-4xl text-[#d4af37] mb-4"></i>
+          <h3 class="text-xl font-semibold text-[var(--text-color)]">No Coupons Found</h3>
           <p class="text-gray-400 mt-2">Start by adding your first coupon.</p>
-          <a href="/admin/add-coupon" class="add-coupon-btn glass-effect bg-gradient-to-r from-green-500 to-teal-500 text-white px-4 py-2 rounded-lg hover:from-green-600 hover:to-teal-600 transition-all duration-300 mt-4">
+          <a href="/admin/add-coupon" 
+             class="add-coupon-btn glass-effect bg-gradient-to-r from-[#d4af37] to-[#f9e076] text-white px-4 py-2 rounded-lg hover:scale-105 transition-all duration-300 mt-4">
             <i class="fas fa-plus mr-2"></i> Create Coupon
           </a>
         </div>
@@ -105,42 +112,29 @@
     </section>
 
     <!-- Delete Confirmation Modal -->
-    <div id="confirmModal" class="modal-overlay fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center">
-      <div class="modal-content glass-effect bg-gray-900 p-6 rounded-lg max-w-md w-full">
-        <h2 class="text-xl font-semibold text-white">Are you sure?</h2>
+    <div id="confirmModal" class="modal-overlay fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden flex items-center justify-center">
+      <div class="modal-content glass-effect-dark bg-[var(--primary-bg)] p-6 rounded-xl max-w-md w-full shadow-xl border border-white/10">
+        <h2 class="text-xl font-semibold text-[var(--text-color)]">Are you sure?</h2>
         <p class="text-gray-400 mt-2">This action cannot be undone.</p>
         <div class="modal-buttons flex gap-4 justify-center mt-6">
-          <button onclick="confirmDelete()" class="confirm-btn bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition-all duration-300">Yes, Delete</button>
-          <button onclick="closeModal()" class="cancel-btn bg-gray-700 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition-all duration-300">Cancel</button>
+          <button onclick="confirmDelete()" 
+                  class="confirm-btn bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition-all duration-300 hover:scale-105">
+            Yes, Delete
+          </button>
+          <button onclick="closeModal()" 
+                  class="cancel-btn bg-[var(--content-bg)] text-[var(--text-color)] px-4 py-2 rounded-lg hover:bg-[var(--secondary-bg)] transition-all duration-300 hover:scale-105">
+            Cancel
+          </button>
         </div>
       </div>
     </div>
   </main>
 </div>
 
+<%- include('./partials/adminFooter.ejs') %>
+
 <script>
   document.addEventListener('DOMContentLoaded', () => {
-    // Initialize animations
-    const animateElements = () => {
-      const elements = document.querySelectorAll('.fade-in-up');
-      elements.forEach((element, index) => {
-        element.style.animationDelay = `${index * 0.1}s`;
-        element.style.opacity = '1';
-        element.classList.add('animate-[fadeInUp_0.6s_ease-out_forwards]');
-      });
-    };
-    animateElements();
-
-    // Dynamic sidebar height adjustment
-    const sidebar = document.querySelector('.sidebar');
-    const main = document.querySelector('main');
-    const updateHeight = () => {
-      const mainHeight = main.offsetHeight;
-      sidebar.style.height = `${Math.max(mainHeight, window.innerHeight)}px`;
-    };
-    updateHeight();
-    window.addEventListener('resize', updateHeight);
-
     // Delete confirmation modal
     let deleteUrl = '';
     const deleteButtons = document.querySelectorAll('.delete-btn');
@@ -171,9 +165,8 @@
     const buttons = document.querySelectorAll('button, .add-coupon-btn');
     buttons.forEach(button => {
       button.addEventListener('mousedown', () => button.style.transform = 'scale(0.98)');
-      button.addEventListener('mouseup', () => button.style.transform = 'scale(1)');
-      button.addEventListener('mouseenter', () => button.classList.add('shadow-lg'));
-      button.addEventListener('mouseleave', () => button.classList.remove('shadow-lg'));
+      button.addEventListener('mouseup', () => button.style.transform = button.classList.contains('hover:scale-105') ? 'scale(1)' : '');
+      button.addEventListener('mouseleave', () => button.style.transform = button.classList.contains('hover:scale-105') ? 'scale(1)' : '');
     });
 
     // Search input focus effect
@@ -186,6 +179,8 @@
       searchInput.addEventListener('blur', () => {
         searchContainer.classList.remove('scale-100', 'shadow-xl');
       });
-    });
+    }
+
+    // Removed sidebar height adjustment script as it's handled in adminSidebar.ejs
   });
 </script>

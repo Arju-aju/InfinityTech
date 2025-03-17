@@ -14,6 +14,7 @@ exports.getAllOffers = async (req, res) => {
         console.log('Fetched Offers:', offers);
 
         res.render('offer', {
+            path:req.path,
             offers,
             categories,
             products,

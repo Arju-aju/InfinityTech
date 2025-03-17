@@ -54,6 +54,7 @@ exports.getReturnRequests = async (req, res) => {
         }));
 
         res.render('returnOrder', {
+            path:req.path,
             returnRequests: formattedRequests,
             formatPrice,
         });

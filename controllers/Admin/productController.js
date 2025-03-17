@@ -51,6 +51,7 @@ const loadProduct = async (req, res) => {
         const totalPages = Math.ceil(totalProducts / limit);
 
         res.render('admin/products', {
+            path: req.path,
             products,
             categories,
             filters: { search, category, priceRange, stock, sortBy, status },
@@ -101,10 +102,8 @@ const addProduct = async (req, res) => {
         }
 
         const {
-            name, brand, category, price, stock, description, specifications
+            name, brand, category, price, discountPercentage, stock, description, processor, ram, storage, graphics
         } = req.body;
-
-        const specs = typeof specifications === 'string' ? JSON.parse(specifications) : specifications;
 
         const validateField = (field, value, message) => {
             if (!value || value.trim() === '') throw new Error(message);
@@ -116,10 +115,10 @@ const addProduct = async (req, res) => {
             brand: validateField('brand', brand, 'Brand is required'),
             description: validateField('description', description, 'Description is required'),
             category: validateField('category', category, 'Category is required'),
-            processor: validateField('processor', specs.processor, 'Processor is required'),
-            ram: validateField('ram', specs.ram, 'RAM is required'),
-            storage: validateField('storage', specs.storage, 'Storage is required'),
-            graphics: validateField('graphics', specs.graphics, 'Graphics is required')
+            processor: validateField('processor', processor, 'Processor is required'),
+            ram: validateField('ram', ram, 'RAM is required'),
+            storage: validateField('storage', storage, 'Storage is required'),
+            graphics: validateField('graphics', graphics, 'Graphics is required')
         };
 
         const parsedPrice = parseFloat(price);
@@ -130,6 +129,11 @@ const addProduct = async (req, res) => {
         const parsedStock = parseInt(stock);
         if (isNaN(parsedStock) || parsedStock < 0) {
             throw new Error('Stock must be a valid non-negative integer');
+        }
+
+        const discount = parseInt(discountPercentage);
+        if (isNaN(discount) || discount < 0 || discount > 100) {
+            throw new Error('Discount must be a valid non-negative integer between 0 and 100');
         }
 
         const categoryExists = await Category.findOne({ _id: category, isDeleted: false });
@@ -145,6 +149,7 @@ const addProduct = async (req, res) => {
             category,
             description: validatedFields.description,
             price: parsedPrice,
+            productOffer: discount,
             stock: parsedStock,
             specifications: {
                 processor: validatedFields.processor,
@@ -204,12 +209,10 @@ const updateProduct = async (req, res) => {
         console.log('Request Body:', req.body);
         console.log('Request Files:', req.files);
 
-        const { name, brand, category, description, price, stock, specifications } = req.body;
-        const specs = typeof specifications === 'string' ? JSON.parse(specifications) : specifications;
+        const { name, brand, category, description, discount, price, stock, processor, ram, storage, graphics } = req.body;
 
         const requiredFields = {
-            name, brand, category, description, price, stock,
-            processor: specs.processor, ram: specs.ram, storage: specs.storage, graphics: specs.graphics
+            name, brand, category, description, discount, price, stock, processor, ram, storage, graphics
         };
         const missingFields = Object.entries(requiredFields)
             .filter(([_, value]) => !value?.trim())
@@ -220,6 +223,10 @@ const updateProduct = async (req, res) => {
 
         const parsedPrice = parseFloat(price);
         const parsedStock = parseInt(stock);
+        const discountPercentage = parseInt(discount);
+        if (isNaN(discountPercentage) || discountPercentage < 0 || discountPercentage > 100) {
+            return res.status(400).json({ success: false, message: 'Discount must be a valid non-negative integer between 0 and 100' });
+        }
         if (isNaN(parsedPrice) || parsedPrice < 0) {
             return res.status(400).json({ success: false, message: 'Price must be a valid non-negative number' });
         }
@@ -238,12 +245,13 @@ const updateProduct = async (req, res) => {
             category,
             description: description.trim(),
             price: parsedPrice,
+            productOffer: discountPercentage,
             stock: parsedStock,
             specifications: {
-                processor: specs.processor.trim(),
-                ram: specs.ram.trim(),
-                storage: specs.storage.trim(),
-                graphics: specs.graphics.trim()
+                processor: processor.trim(),
+                ram: ram.trim(),
+                storage: storage.trim(),
+                graphics: graphics.trim()
             }
         };
 

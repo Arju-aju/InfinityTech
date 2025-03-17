@@ -1,11 +1,40 @@
 <style>
     :root {
         --sidebar-width: 16rem;
+        --primary-bg: #1e1e2f; /* Dark blue-gray */
+        --secondary-bg: #2a2438; /* Deep purple-gray */
+        --content-bg: #2d2d44; /* Lighter dark blue for content */
+        --accent-start: #6366f1; /* Indigo */
+        --accent-end: #8b5cf6; /* Purple */
+        --text-color: #e5e7eb; /* Light gray for text */
+        --secondary-button: #4b5563; /* Gray-600 for secondary buttons */
     }
 
     /* Gradient Background */
     .gradient-bg {
-        background: linear-gradient(135deg, #1a202c, #2d3748);
+        @apply bg-gradient-to-br from-[var(--primary-bg)] to-[var(--secondary-bg)];
+    }
+
+    /* Glass Effect for Content */
+    .glass-effect-dark {
+        @apply bg-[var(--content-bg)]/80 backdrop-blur-md border border-white/10;
+    }
+
+    /* Gradient Accent for Buttons */
+    .gradient-accent {
+        @apply bg-gradient-to-r from-[var(--accent-start)] to-[var(--accent-end)];
+    }
+
+    /* Typography */
+    body {
+        @apply font-sans text-[var(--text-color)] min-h-screen m-0 p-0;
+    }
+
+    /* Custom Animations */
+    @keyframes gradientAnimation {
+        0% { background-position: 0% 0%; }
+        50% { background-position: 100% 100%; }
+        100% { background-position: 0% 0%; }
     }
 
     .animate-gradient {
@@ -13,58 +42,16 @@
         animation: gradientAnimation 15s ease infinite;
     }
 
-    @keyframes gradientAnimation {
-        0% { background-position: 0% 0%; }
-        50% { background-position: 100% 100%; }
-        100% { background-position: 0% 0%; }
+    @keyframes fadeInUp {
+        from { opacity: 0; transform: translateY(30px); }
+        to { opacity: 1; transform: translateY(0); }
     }
 
-    /* Glass Effect */
-    .glass-effect {
-        background: rgba(255, 255, 255, 0.05);
-        backdrop-filter: blur(10px);
-        -webkit-backdrop-filter: blur(10px);
-        border: 1px solid rgba(255, 255, 255, 0.1);
+    .animate-fade-in-up {
+        animation: fadeInUp 0.8s ease-out forwards;
     }
 
-    .glass-effect-dark {
-        background: rgba(0, 0, 0, 0.2);
-        backdrop-filter: blur(10px);
-        -webkit-backdrop-filter: blur(10px);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-    }
-
-    /* Gradient Accent for Active Links */
-    .gradient-accent {
-        background: linear-gradient(90deg, #06b6d4, #3b82f6);
-    }
-
-    /* Typography */
-    body {
-        font-family: 'Inter', sans-serif;
-        color: #e5e7eb;
-        margin: 0;
-        padding: 0;
-    }
-
-    h3 {
-        font-size: 1.875rem;
-        line-height: 2.25rem;
-        font-weight: 500;
-    }
-
-    /* Button Styles */
-    button, a {
-        outline: none;
-    }
-
-    /* Sidebar Styling */
-    .sidebar {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: var(--sidebar-width, 16rem);
-        z-index: 100;
-        overflow-y: auto; /* Allow scrolling if content exceeds height */
-    }
+    .animation-delay-200 { animation-delay: 0.2s; }
+    .animation-delay-400 { animation-delay: 0.4s; }
+    .animation-delay-600 { animation-delay: 0.6s; }
 </style>

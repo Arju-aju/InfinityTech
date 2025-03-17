@@ -40,6 +40,7 @@ const customerInfo = async (req, res) => {
         const breadcrumbs = [{ name: 'Customers', url: '/admin/users' }];
 
         res.render('admin/customers', {
+            path:req.path,
             customers,
             pagination: { 
                 currentPage: page, 

@@ -92,6 +92,7 @@ exports.getAllCoupon = async (req, res) => {
         const coupons = await Coupon.find(query).sort({ createdOn: -1 });
 
         res.render('admin/coupon', {
+            path:req.path,
             coupons,
             success: req.flash('success'),
             error: req.flash('error'),

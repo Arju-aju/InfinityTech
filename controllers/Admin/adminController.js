@@ -164,6 +164,7 @@ const loadDashboard = async (req, res) => {
         ]);
 
         res.render('adminDashboard', {
+            path:req.path,
             userCount,
             totalOrders,
             totalSales: totalSales[0]?.total || 0,
