@@ -26,7 +26,7 @@ const categoryInfo = async (req, res) => {
             .limit(perPage);
 
         res.render('admin/categories', { 
-            path:req.path,
+            path: req.path,
             categories, 
             currentPage,
             totalPages: Math.ceil(totalCategories / perPage),
@@ -41,10 +41,6 @@ const categoryInfo = async (req, res) => {
         res.redirect('/admin/dashboard');
     }
 };
-
-
-
-
 
 // Load Add Category Page
 const loadCategory = async (req, res) => {
@@ -322,7 +318,6 @@ const toggleCategoryStatus = async (req, res) => {
         });
     }
 };
-
 
 const getCategoryDetails = async (req, res) => {
     try {

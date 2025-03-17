@@ -106,7 +106,7 @@
                                         </span>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
-                                        <button onclick="editCategory('<%= category._id %>')" 
+                                        <button data-action="edit" data-id="<%= category._id %>"
                                                 class="inline-flex items-center px-3 py-1.5 rounded-lg bg-[var(--content-bg)] text-[var(--text-color)] hover:bg-[var(--secondary-bg)] hover:text-white transition-all duration-300 transform hover:scale-105"
                                                 aria-label="Edit Category">
                                             <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
@@ -114,8 +114,8 @@
                                             </svg>
                                             Edit
                                         </button>
-                                        <button id="toggle-<%= category._id %>"
-                                                onclick="toggleCategory('<%= category._id %>')" 
+                                        <button data-action="toggle" data-id="<%= category._id %>"
+                                                id="toggle-<%= category._id %>"
                                                 class="inline-flex items-center px-3 py-1.5 rounded-lg <%= category.isActive ? 'bg-red-600 hover:bg-red-500' : 'bg-[#d4af37] hover:bg-[#f9e076]' %> text-white transition-all duration-300 transform hover:scale-105"
                                                 aria-label="<%= category.isActive ? 'Deactivate Category' : 'Activate Category' %>">
                                             <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
@@ -165,7 +165,7 @@
     <div class="glass-effect-dark rounded-xl p-8 max-w-lg w-full mx-4 shadow-xl border border-white/10">
         <div class="flex justify-between items-center mb-6">
             <h2 class="text-xl font-bold text-[var(--text-color)]" id="editModalTitle">Edit Category</h2>
-            <button onclick="closeEditModal()" 
+            <button id="closeModalBtn"
                     class="text-gray-400 hover:text-white transition-colors" 
                     aria-label="Close Edit Modal">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
@@ -188,7 +188,7 @@
                           aria-required="true" maxlength="500"></textarea>
             </div>
             <div class="flex justify-end space-x-3 pt-4">
-                <button type="button" onclick="closeEditModal()" 
+                <button type="button" id="cancelEditBtn"
                         class="px-4 py-2 rounded-lg bg-[var(--content-bg)] text-[var(--text-color)] hover:bg-[var(--secondary-bg)] hover:text-white transition-all duration-300"
                         aria-label="Cancel Edit">
                     Cancel
@@ -207,6 +207,74 @@
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // Event delegation for Edit and Toggle buttons
+        document.querySelector('table').addEventListener('click', (e) => {
+            const button = e.target.closest('button');
+            if (!button) return;
+
+            const categoryId = button.dataset.id;
+            const action = button.dataset.action;
+
+            if (action === 'edit') {
+                editCategory(categoryId);
+            } else if (action === 'toggle') {
+                toggleCategory(categoryId);
+            }
+        });
+
+        // Close modal button
+        document.getElementById('closeModalBtn').addEventListener('click', closeEditModal);
+        document.getElementById('cancelEditBtn').addEventListener('click', closeEditModal);
+
+        // Edit form submission
+        document.getElementById('editForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const categoryId = document.getElementById('categoryId').value;
+            const formData = {
+                name: document.getElementById('editName').value.trim(),
+                description: document.getElementById('editDescription').value.trim()
+            };
+
+            fetch(`/admin/updateCategory/${categoryId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(formData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Success!',
+                        text: data.message,
+                        background: 'var(--primary-bg)',
+                        color: 'var(--text-color)',
+                        confirmButtonColor: '#d4af37',
+                        timer: 1500,
+                        showConfirmButton: false
+                    }).then(() => {
+                        window.location.reload();
+                    });
+                } else {
+                    throw new Error(data.message);
+                }
+            })
+            .catch(error => {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error!',
+                    text: error.message,
+                    background: 'var(--primary-bg)',
+                    color: 'var(--text-color)',
+                    confirmButtonColor: '#d4af37'
+                });
+            });
+        });
+    });
+
     function editCategory(categoryId) {
         fetch(`/admin/categories/${categoryId}`)
             .then(response => {
@@ -220,7 +288,7 @@
                     document.getElementById('categoryId').value = data.category._id;
                     document.getElementById('editName').value = data.category.name;
                     document.getElementById('editDescription').value = data.category.description;
-                    
+
                     const editModal = document.getElementById('editModal');
                     editModal.classList.remove('hidden');
                     editModal.classList.add('flex');
@@ -240,52 +308,6 @@
                 });
             });
     }
-
-    document.getElementById('editForm').addEventListener('submit', function(e) {
-        e.preventDefault();
-        const categoryId = document.getElementById('categoryId').value;
-        const formData = {
-            name: document.getElementById('editName').value.trim(),
-            description: document.getElementById('editDescription').value.trim()
-        };
-        
-        fetch(`/admin/updateCategory/${categoryId}`, {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(formData)
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Success!',
-                    text: data.message,
-                    background: 'var(--primary-bg)',
-                    color: 'var(--text-color)',
-                    confirmButtonColor: '#d4af37',
-                    timer: 1500,
-                    showConfirmButton: false
-                }).then(() => {
-                    window.location.reload();
-                });
-            } else {
-                throw new Error(data.message);
-            }
-        })
-        .catch(error => {
-            Swal.fire({
-                icon: 'error',
-                title: 'Error!',
-                text: error.message,
-                background: 'var(--primary-bg)',
-                color: 'var(--text-color)',
-                confirmButtonColor: '#d4af37'
-            });
-        });
-    });
 
     function closeEditModal() {
         const editModal = document.getElementById('editModal');
@@ -358,7 +380,6 @@
             }
         });
     }
-
 </script>
 
 <%- include('./partials/adminFooter.ejs') %>
