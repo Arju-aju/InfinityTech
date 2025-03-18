@@ -2,7 +2,13 @@
 node_modules/
 
 .env
+<<<<<<< HEAD
 
 access.log
 combined.log
 error.log
+=======
+access.log
+combined.log
+error.log
+>>>>>>> c3ee097 (Saving local changes before pulling)
