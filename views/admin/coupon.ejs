@@ -1,9 +1,23 @@
 <%- include('./partials/adminHeader.ejs') %>
 
+<!-- SweetAlert2 CDN -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
 <div class="flex min-h-screen gradient-bg animate-gradient">
   <%- include('./partials/adminSidebar.ejs') %>
 
   <main class="flex-1 p-6" style="margin-left: var(--sidebar-width, 16rem);">
+    <!-- Breadcrumbs -->
+    <nav class="mb-6 animate-fade-in-up">
+      <ol class="flex items-center space-x-2 text-sm text-[var(--text-color)]">
+        <li>
+          <a href="/admin/dashboard" class="hover:text-[#d4af37] transition-colors duration-300">Dashboard</a>
+        </li>
+        <li><span class="text-gray-500">/</span></li>
+        <li class="text-[#d4af37]">Coupons Management</li>
+      </ol>
+    </nav>
+
     <!-- Header Section -->
     <header class="flex items-center justify-between mb-8 animate-fade-in-up">
       <h1 class="text-3xl font-extrabold bg-gradient-to-r from-[#d4af37] to-[#f9e076] bg-clip-text text-transparent tracking-tight">Coupons Management</h1>
@@ -15,20 +29,20 @@
 
     <!-- Search Section -->
     <section class="mb-8 animate-fade-in-up animation-delay-200">
-      <form action="/admin/coupon" method="GET">
+      <form action="/admin/coupons" method="GET" id="searchForm">
         <div class="search-container glass-effect-dark p-4 rounded-xl shadow-lg flex flex-col sm:flex-row items-center gap-4">
           <input 
             type="text" 
             name="search" 
             placeholder="Search coupons..." 
             class="search-input flex-1 bg-[var(--content-bg)] text-[var(--text-color)] border border-white/10 rounded-lg px-4 py-2 focus:border-[#d4af37] focus:ring-2 focus:ring-[#d4af37]/20 transition-all duration-300"
-            value="<%= typeof search !== 'undefined' ? search : '' %>"
+            value="<%= search %>"
           >
           <select name="status" 
                   class="search-select bg-[var(--content-bg)] text-[var(--text-color)] border border-white/10 rounded-lg px-4 py-2 focus:border-[#d4af37] focus:ring-2 focus:ring-[#d4af37]/20 transition-all duration-300">
             <option value="">All Status</option>
-            <option value="active" <%= typeof status !== 'undefined' && status === 'active' ? 'selected' : '' %>>Active</option>
-            <option value="inactive" <%= typeof status !== 'undefined' && status === 'inactive' ? 'selected' : '' %>>Inactive</option>
+            <option value="active" <%= status === 'active' ? 'selected' : '' %>>Active</option>
+            <option value="inactive" <%= status === 'inactive' ? 'selected' : '' %>>Inactive</option>
           </select>
           <button type="submit" 
                   class="search-button glass-effect bg-gradient-to-r from-[#d4af37] to-[#f9e076] text-white px-4 py-2 rounded-lg hover:scale-105 transition-all duration-300">
@@ -37,6 +51,14 @@
         </div>
       </form>
     </section>
+
+    <!-- Flash Messages -->
+    <% if (success && success.length > 0) { %>
+      <div class="glass-effect-dark bg-green-500/20 text-green-400 p-4 rounded mb-4 animate-fade-in-up animation-delay-400"><%= success %></div>
+    <% } %>
+    <% if (error && error.length > 0) { %>
+      <div class="glass-effect-dark bg-red-500/20 text-red-400 p-4 rounded mb-4 animate-fade-in-up animation-delay-400"><%= error %></div>
+    <% } %>
 
     <!-- Coupons Table -->
     <section class="table-container glass-effect-dark rounded-xl shadow-xl animate-fade-in-up animation-delay-400">
@@ -62,7 +84,7 @@
             <tbody class="divide-y divide-white/10">
               <% coupons.forEach((coupon, index) => { %>
                 <tr class="table-row hover:bg-[var(--secondary-bg)] transition-all duration-300">
-                  <td class="px-6 py-4"><%= index + 1 %></td>
+                  <td class="px-6 py-4"><%= (currentPage - 1) * 10 + index + 1 %></td>
                   <td class="px-6 py-4"><%= coupon.name %></td>
                   <td class="px-6 py-4"><%= coupon.code %></td>
                   <td class="px-6 py-4"><%= coupon.offerType %></td>
@@ -83,20 +105,37 @@
                          class="action-icon text-[#d4af37] hover:text-[#f9e076] p-2 rounded-lg hover:bg-[#d4af37]/20 transition-all duration-300">
                         <i class="fas fa-edit"></i>
                       </a>
-                      <a href="/admin/viewCoupon/<%= coupon._id %>" 
-                         class="action-icon text-green-400 hover:text-green-300 p-2 rounded-lg hover:bg-green-500/20 transition-all duration-300">
-                        <i class="fas fa-eye"></i>
-                      </a>
-                      <a href="/admin/deleteCoupon/<%= coupon._id %>" 
-                         class="action-icon delete-btn text-red-400 hover:text-red-300 p-2 rounded-lg hover:bg-red-500/20 transition-all duration-300">
+                      <button data-id="<%= coupon._id %>" 
+                              class="action-icon delete-btn text-red-400 hover:text-red-300 p-2 rounded-lg hover:bg-red-500/20 transition-all duration-300">
                         <i class="fas fa-trash"></i>
-                      </a>
+                      </button>
                     </div>
                   </td>
                 </tr>
               <% }) %>
             </tbody>
           </table>
+        </div>
+
+        <!-- Pagination -->
+        <div class="p-4 flex justify-between items-center text-[var(--text-color)]">
+          <p>Showing <%= (currentPage - 1) * 10 + 1 %> to <%= Math.min(currentPage * 10, totalCoupons) %> of <%= totalCoupons %> coupons</p>
+          <div class="flex space-x-2">
+            <a href="/admin/coupons?page=<%= currentPage > 1 ? currentPage - 1 : 1 %>&search=<%= search %>&status=<%= status %>" 
+               class="px-3 py-1 rounded-lg bg-[var(--content-bg)] <%= currentPage === 1 ? 'opacity-50 cursor-not-allowed' : 'hover:bg-[#d4af37] hover:text-white' %> transition-all duration-300">
+              Previous
+            </a>
+            <% for (let i = 1; i <= totalPages; i++) { %>
+              <a href="/admin/coupons?page=<%= i %>&search=<%= search %>&status=<%= status %>" 
+                 class="px-3 py-1 rounded-lg <%= currentPage === i ? 'bg-[#d4af37] text-white' : 'bg-[var(--content-bg)] hover:bg-[#d4af37] hover:text-white' %> transition-all duration-300">
+                <%= i %>
+              </a>
+            <% } %>
+            <a href="/admin/coupons?page=<%= currentPage < totalPages ? currentPage + 1 : totalPages %>&search=<%= search %>&status=<%= status %>" 
+               class="px-3 py-1 rounded-lg bg-[var(--content-bg)] <%= currentPage === totalPages ? 'opacity-50 cursor-not-allowed' : 'hover:bg-[#d4af37] hover:text-white' %> transition-all duration-300">
+              Next
+            </a>
+          </div>
         </div>
       <% } else { %>
         <div class="flex flex-col items-center justify-center py-12 text-center">
@@ -110,24 +149,6 @@
         </div>
       <% } %>
     </section>
-
-    <!-- Delete Confirmation Modal -->
-    <div id="confirmModal" class="modal-overlay fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden flex items-center justify-center">
-      <div class="modal-content glass-effect-dark bg-[var(--primary-bg)] p-6 rounded-xl max-w-md w-full shadow-xl border border-white/10">
-        <h2 class="text-xl font-semibold text-[var(--text-color)]">Are you sure?</h2>
-        <p class="text-gray-400 mt-2">This action cannot be undone.</p>
-        <div class="modal-buttons flex gap-4 justify-center mt-6">
-          <button onclick="confirmDelete()" 
-                  class="confirm-btn bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition-all duration-300 hover:scale-105">
-            Yes, Delete
-          </button>
-          <button onclick="closeModal()" 
-                  class="cancel-btn bg-[var(--content-bg)] text-[var(--text-color)] px-4 py-2 rounded-lg hover:bg-[var(--secondary-bg)] transition-all duration-300 hover:scale-105">
-            Cancel
-          </button>
-        </div>
-      </div>
-    </div>
   </main>
 </div>
 
@@ -135,24 +156,60 @@
 
 <script>
   document.addEventListener('DOMContentLoaded', () => {
-    // Delete confirmation modal
-    let deleteUrl = '';
+    // Determine the base URL dynamically to avoid hardcoding protocol
+    const baseUrl = window.location.protocol + '//' + window.location.host;
+
+    // Delete functionality with SweetAlert2
     const deleteButtons = document.querySelectorAll('.delete-btn');
     deleteButtons.forEach(btn => {
-      btn.addEventListener('click', (e) => {
+      btn.addEventListener('click', async (e) => {
         e.preventDefault();
-        deleteUrl = btn.href;
-        document.getElementById('confirmModal').style.display = 'flex';
+        const couponId = btn.getAttribute('data-id');
+
+        const result = await Swal.fire({
+          title: 'Are you sure?',
+          text: 'This action cannot be undone.',
+          icon: 'warning',
+          showCancelButton: true,
+          confirmButtonColor: '#d4af37',
+          cancelButtonColor: '#ef4444',
+          confirmButtonText: 'Yes, Delete',
+          background: '#1e1e2f',
+          color: '#e5e7eb'
+        });
+
+        if (result.isConfirmed) {
+          try {
+            // Use the same protocol as the page
+            const deleteUrl = `${baseUrl}/admin/deleteCoupon/${couponId}`;
+            const response = await fetch(deleteUrl, {
+              method: 'GET',
+              credentials: 'include' // Include cookies for session/flash messages
+            });
+
+            if (response.redirected) {
+              // Follow the redirect manually to reload the page
+              window.location.href = response.url;
+            } else if (!response.ok) {
+              throw new Error(`Server error: ${response.status}`);
+            } else {
+              // Unexpected case: reload anyway
+              window.location.reload();
+            }
+          } catch (error) {
+            console.error('Error deleting coupon:', error);
+            Swal.fire({
+              icon: 'error',
+              title: 'Error',
+              text: 'Failed to delete coupon. Please try again.',
+              confirmButtonColor: '#d4af37',
+              background: '#1e1e2f',
+              color: '#e5e7eb'
+            });
+          }
+        }
       });
     });
-
-    window.confirmDelete = () => {
-      window.location.href = deleteUrl;
-    };
-
-    window.closeModal = () => {
-      document.getElementById('confirmModal').style.display = 'none';
-    };
 
     // Table row hover effects
     const tableRows = document.querySelectorAll('.table-row');
@@ -181,6 +238,30 @@
       });
     }
 
-    // Removed sidebar height adjustment script as it's handled in adminSidebar.ejs
+    // Display flash messages with SweetAlert2 after page load
+    <% if (success && success.length > 0) { %>
+      Swal.fire({
+        icon: 'success',
+        title: 'Success',
+        text: '<%= success %>',
+        confirmButtonColor: '#d4af37',
+        background: '#1e1e2f',
+        color: '#e5e7eb',
+        timer: 3000,
+        timerProgressBar: true
+      });
+    <% } %>
+    <% if (error && error.length > 0) { %>
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: '<%= error %>',
+        confirmButtonColor: '#d4af37',
+        background: '#1e1e2f',
+        color: '#e5e7eb',
+        timer: 3000,
+        timerProgressBar: true
+      });
+    <% } %>
   });
 </script>

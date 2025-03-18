@@ -73,10 +73,11 @@ const validateCoupon = [
         .isInt({ min: 1 }).withMessage('Usage per user limit must be at least 1'),
 ];
 
-// Get all coupons
+// Get all coupons with pagination and filtering
 exports.getAllCoupon = async (req, res) => {
     try {
-        const { search, status } = req.query;
+        const { search, status, page = 1 } = req.query;
+        const limit = 10; // Number of coupons per page
         let query = {};
 
         if (search) {
@@ -89,13 +90,22 @@ exports.getAllCoupon = async (req, res) => {
         if (status === 'active') query.isActive = true;
         if (status === 'inactive') query.isActive = false;
 
-        const coupons = await Coupon.find(query).sort({ createdOn: -1 });
+        const totalCoupons = await Coupon.countDocuments(query);
+        const coupons = await Coupon.find(query)
+            .sort({ createdOn: -1 })
+            .skip((page - 1) * limit)
+            .limit(limit);
 
         res.render('admin/coupon', {
-            path:req.path,
+            path: req.path,
             coupons,
             success: req.flash('success'),
             error: req.flash('error'),
+            search: search || '',
+            status: status || '',
+            currentPage: parseInt(page),
+            totalPages: Math.ceil(totalCoupons / limit),
+            totalCoupons
         });
     } catch (error) {
         console.error('Error in getAllCoupon:', error);

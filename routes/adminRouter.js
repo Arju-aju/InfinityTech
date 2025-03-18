@@ -43,13 +43,14 @@ router.get('/addProduct', admin.isAdmin, productController.loadAddProduct);
 router.post('/addProduct', admin.isAdmin, upload, handleMulterError, productController.addProduct);
 router.get('/editProduct/:id', admin.isAdmin, productController.loadEditProduct);
 router.post('/editProduct/:id', admin.isAdmin, upload, handleMulterError, productController.updateProduct);
-router.post('/replaceProductImage/:productId', admin.isAdmin, upload, handleMulterError, productController.replaceProductImage); // Replaced deleteProductImage
+router.post('/replaceProductImage/:productId', admin.isAdmin, upload, handleMulterError, productController.replaceProductImage);
 router.post('/products/:id/toggle-list', admin.isAdmin, productController.toggleListStatus);
 router.post('/products/:id/toggle-featured', admin.isAdmin, productController.toggleFeaturedStatus);
 router.post('/softDeleteProduct/:id', admin.isAdmin, productController.softDeleteProduct);
 
 // Order Management
-router.get('/orders', admin.isAdmin, orderController.getOrders);
+router.get('/orders', admin.isAdmin, orderController.getOrders); // Existing route for order list
+router.get('/detailed-orders', admin.isAdmin, adminControllers.getDetailedOrders); // Distinct route for detailed orders
 router.patch('/orders/:orderId/toggle-status', admin.isAdmin, orderController.toggleOrderStatus);
 router.get('/viewdetails/:orderId', admin.isAdmin, orderController.viewOrderDetails);
 
@@ -59,6 +60,7 @@ router.get('/offers/add', admin.isAdmin, offerController.getAddOffer);
 router.post('/offers/add', admin.isAdmin, offerController.postAddOffer);
 router.get('/offers/edit/:id', admin.isAdmin, offerController.getEditOffer);
 router.post('/offers/edit/:id', admin.isAdmin, offerController.postEditOffer);
+router.patch('/offers/toggle/:id', admin.isAdmin, offerController.toggleOfferStatus);
 
 // Coupon Management
 router.get('/coupons', admin.isAdmin, couponController.getAllCoupon);

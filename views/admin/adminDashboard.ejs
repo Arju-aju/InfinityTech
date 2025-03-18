@@ -158,14 +158,13 @@
     <div class="glass-effect-dark rounded-xl p-6 max-w-md w-full mx-4 transform transition-all duration-300 scale-95 opacity-0" id="modalContent">
         <div class="flex justify-between items-center mb-6">
             <h3 class="text-xl font-bold text-[var(--text-color)]">Download Sales Report</h3>
-            <button onclick="closeModal()" class="text-gray-400 hover:text-white transition-colors">
+            <button id="closeModalBtn" class="text-gray-400 hover:text-white transition-colors">
                 <i class="fas fa-times text-lg"></i>
             </button>
         </div>
         <p class="text-gray-400 mb-6">Choose your preferred format to download the sales report:</p>
         <div class="grid grid-cols-2 gap-4 mb-6">
-            <button onclick="handleDownload('pdf')" 
-                    class="format-button bg-[var(--content-bg)] hover:bg-[var(--secondary-bg)] p-4 rounded-lg transition-all duration-300 group">
+            <button id="downloadPDFBtn" class="format-button bg-[var(--content-bg)] hover:bg-[var(--secondary-bg)] p-4 rounded-lg transition-all duration-300 group">
                 <div class="flex flex-col items-center">
                     <div class="w-12 h-12 bg-red-500/20 rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
                         <i class="fas fa-file-pdf text-red-500 text-xl"></i>
@@ -175,8 +174,7 @@
                 </div>
                 <div class="download-progress hidden h-1 bg-red-500 mt-3 rounded-full"></div>
             </button>
-            <button onclick="handleDownload('excel')" 
-                    class="format-button bg-[var(--content-bg)] hover:bg-[var(--secondary-bg)] p-4 rounded-lg transition-all duration-300 group">
+            <button id="downloadExcelBtn" class="format-button bg-[var(--content-bg)] hover:bg-[var(--secondary-bg)] p-4 rounded-lg transition-all duration-300 group">
                 <div class="flex flex-col items-center">
                     <div class="w-12 h-12 bg-green-500/20 rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
                         <i class="fas fa-file-excel text-green-500 text-xl"></i>
@@ -208,6 +206,13 @@
         fetchSalesReport();
         fetchTopSellers();
         renderReturnsChart();
+
+        // Add event listeners
+        document.getElementById("downloadReport").addEventListener("click", openModal);
+        document.getElementById("closeModalBtn").addEventListener("click", closeModal);
+        document.getElementById("downloadPDFBtn").addEventListener("click", () => handleDownload('pdf'));
+        document.getElementById("downloadExcelBtn").addEventListener("click", () => handleDownload('excel'));
+        document.getElementById('applyFilterButton').addEventListener('click', fetchSalesReport);
     });
 
     function loadInitialData() {
@@ -276,8 +281,8 @@
                 datasets: [{
                     label: 'Sales',
                     data: sales,
-                    backgroundColor: 'rgba(212, 175, 55, 0.3)', // Golden yellow with opacity
-                    borderColor: '#d4af37', // Golden yellow
+                    backgroundColor: 'rgba(212, 175, 55, 0.3)',
+                    borderColor: '#d4af37',
                     borderWidth: 3,
                     pointBackgroundColor: '#fff',
                     pointBorderColor: '#d4af37',
@@ -409,36 +414,136 @@
         }
     }
 
-    document.getElementById('applyFilterButton').addEventListener('click', fetchSalesReport);
-
     async function downloadPDF() {
         const { jsPDF } = window.jspdf;
-        const doc = new jsPDF();
-        doc.setFontSize(16);
-        doc.text("Sales Report - InfinityTech", 14, 10);
-        doc.setFontSize(10);
-        const data = await fetchSalesDataForDownload();
-        const headers = [["Date", "Orders", "Sales (₹)", "Items Sold", "Coupons Used", "Coupon Deductions"]];
-        const rows = data.map(item => [item.date, item.orders, item.sales.toFixed(2), item.totalItems, item.totalCouponsUsed, item.couponDeductions.toFixed(2)]);
-        doc.autoTable({
-            head: headers,
-            body: rows,
-            startY: 20,
-            theme: 'striped',
-            headStyles: { fillColor: [212, 175, 55], textColor: [255, 255, 255] }, // Golden yellow
-            styles: { textColor: [0, 0, 0] }
+        const doc = new jsPDF({
+            orientation: 'portrait',
+            unit: 'mm',
+            format: 'a4'
         });
-        doc.save("Sales_Report.pdf");
+
+        // Add header
+        doc.setFillColor(212, 175, 55);
+        doc.rect(0, 0, 210, 40, 'F');
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(20);
+        doc.text("InfinityTech Sales Report", 105, 20, { align: 'center' });
+        doc.setFontSize(12);
+        doc.text(`Date: ${new Date().toLocaleDateString()}`, 105, 30, { align: 'center' });
+
+        // Get sales data
+        const salesData = await fetchSalesDataForDownload();
+        const orders = await fetchDetailedOrders();
+
+        // Summary section
+        doc.setTextColor(0, 0, 0);
+        doc.setFontSize(14);
+        doc.text("Summary", 10, 50);
+        doc.setLineWidth(0.5);
+        doc.line(10, 52, 200, 52);
+
+        const summary = salesData.reduce((acc, curr) => ({
+            totalSales: acc.totalSales + curr.sales,
+            totalOrders: acc.totalOrders + curr.orders,
+            totalItems: acc.totalItems + curr.totalItems,
+            totalCoupons: acc.totalCoupons + curr.totalCouponsUsed,
+            deductions: acc.deductions + curr.couponDeductions
+        }), { totalSales: 0, totalOrders: 0, totalItems: 0, totalCoupons: 0, deductions: 0 });
+
+        doc.setFontSize(10);
+        const summaryData = [
+            ["Total Sales", `₹${summary.totalSales.toFixed(2)}`],
+            ["Total Orders", summary.totalOrders],
+            ["Total Items", summary.totalItems],
+            ["Coupons Used", summary.totalCoupons],
+            ["Coupon Deductions", `₹${summary.deductions.toFixed(2)}`]
+        ];
+        doc.autoTable({
+            startY: 55,
+            body: summaryData,
+            theme: 'grid',
+            styles: { fontSize: 10, cellPadding: 2 },
+            columnStyles: { 0: { fontStyle: 'bold' } }
+        });
+
+        // Detailed Orders
+        doc.addPage();
+        doc.setFillColor(212, 175, 55);
+        doc.rect(0, 0, 210, 20, 'F');
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(14);
+        doc.text("Detailed Orders", 105, 12, { align: 'center' });
+
+        const orderHeaders = [['Order ID', 'Date', 'Status', 'Amount', 'Items', 'Coupon', 'Customer']];
+        const orderRows = orders.map(order => [
+            order.orderId,
+            new Date(order.orderDate).toLocaleDateString(),
+            order.status,
+            `₹${order.orderAmount.toFixed(2)}`,
+            order.products.reduce((sum, p) => sum + p.quantity, 0),
+            order.couponApplied ? 'Yes' : 'No',
+            order.customerName || 'N/A'
+        ]);
+
+        doc.autoTable({
+            head: orderHeaders,
+            body: orderRows,
+            startY: 25,
+            theme: 'striped',
+            headStyles: { fillColor: [212, 175, 55], textColor: [255, 255, 255] },
+            styles: { fontSize: 8, cellPadding: 2 },
+            columnStyles: { 
+                0: { cellWidth: 30 },
+                1: { cellWidth: 25 },
+                2: { cellWidth: 20 },
+                3: { cellWidth: 25 },
+                4: { cellWidth: 20 },
+                5: { cellWidth: 20 },
+                6: { cellWidth: 50 }
+            }
+        });
+
+        // Footer
+        const pageCount = doc.internal.getNumberOfPages();
+        for (let i = 1; i <= pageCount; i++) {
+            doc.setPage(i);
+            doc.setFontSize(8);
+            doc.setTextColor(100);
+            doc.text(`Page ${i} of ${pageCount}`, 195, 285, { align: 'right' });
+        }
+
+        doc.save("InfinityTech_Sales_Report.pdf");
     }
 
     async function downloadExcel() {
-        const data = await fetchSalesDataForDownload();
-        const worksheetData = [["Date", "Orders", "Sales (₹)", "Items Sold", "Coupons Used", "Coupon Deductions"]];
-        data.forEach(item => worksheetData.push([item.date, item.orders, item.sales.toFixed(2), item.totalItems, item.totalCouponsUsed, item.couponDeductions.toFixed(2)]));
+        const salesData = await fetchSalesDataForDownload();
+        const orders = await fetchDetailedOrders();
+
         const wb = XLSX.utils.book_new();
-        const ws = XLSX.utils.aoa_to_sheet(worksheetData);
-        XLSX.utils.book_append_sheet(wb, ws, "Sales Report");
-        XLSX.writeFile(wb, "Sales_Report.xlsx");
+        
+        // Summary Sheet
+        const summaryWs = XLSX.utils.json_to_sheet([
+            { "Metric": "Total Sales", "Value": `₹${salesData.reduce((sum, d) => sum + d.sales, 0).toFixed(2)}` },
+            { "Metric": "Total Orders", "Value": salesData.reduce((sum, d) => sum + d.orders, 0) },
+            { "Metric": "Total Items", "Value": salesData.reduce((sum, d) => sum + d.totalItems, 0) },
+            { "Metric": "Coupons Used", "Value": salesData.reduce((sum, d) => sum + d.totalCouponsUsed, 0) },
+            { "Metric": "Coupon Deductions", "Value": `₹${salesData.reduce((sum, d) => sum + d.couponDeductions, 0).toFixed(2)}` }
+        ]);
+        XLSX.utils.book_append_sheet(wb, summaryWs, "Summary");
+
+        // Detailed Orders Sheet
+        const orderWs = XLSX.utils.json_to_sheet(orders.map(order => ({
+            "Order ID": order.orderId,
+            "Date": new Date(order.orderDate).toLocaleDateString(),
+            "Status": order.status,
+            "Amount": order.orderAmount,
+            "Items": order.products.reduce((sum, p) => sum + p.quantity, 0),
+            "Coupon Applied": order.couponApplied ? 'Yes' : 'No',
+            "Customer": order.customerName || 'N/A'
+        })));
+        XLSX.utils.book_append_sheet(wb, orderWs, "Orders");
+
+        XLSX.writeFile(wb, "InfinityTech_Sales_Report.xlsx");
     }
 
     async function fetchSalesDataForDownload() {
@@ -450,6 +555,31 @@
         const result = await response.json();
         if (!result.success) throw new Error(result.message || 'Error in sales data');
         return result.data.salesData;
+    }
+
+    async function fetchDetailedOrders() {
+        const startDate = document.getElementById('startDate').value;
+        const endDate = document.getElementById('endDate').value;
+        try {
+            const response = await fetch(`/admin/detailed-orders?startDate=${startDate}&endDate=${endDate}`);
+            if (!response.ok) {
+                const text = await response.text();
+                throw new Error(`Server responded with status ${response.status}: ${text}`);
+            }
+            const orders = await response.json();
+            return orders.map(order => ({
+                orderId: order._id,
+                orderDate: order.orderDate,
+                status: order.status,
+                orderAmount: order.orderAmount,
+                products: order.products,
+                couponApplied: order.couponApplied,
+                customerName: order.userId?.name
+            }));
+        } catch (error) {
+            console.error('Error fetching detailed orders:', error);
+            throw error; // Re-throw to be caught in handleDownload
+        }
     }
 
     function openModal() {
@@ -473,7 +603,7 @@
     }
 
     async function handleDownload(format) {
-        const button = document.getElementById(`${format}Button`);
+        const button = document.querySelector(`#download${format === 'pdf' ? 'PDF' : 'Excel'}Btn`);
         const progressBar = button.querySelector('.download-progress');
         document.querySelectorAll('.format-button').forEach(btn => btn.disabled = true);
         progressBar.classList.remove('hidden');
@@ -499,6 +629,4 @@
             });
         }
     }
-
-    document.getElementById("downloadReport").addEventListener("click", openModal);
 </script>

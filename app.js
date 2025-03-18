@@ -93,7 +93,7 @@ app.use(
                 defaultSrc: ["'self'"],
                 scriptSrc: [
                     "'self'",
-                    "'unsafe-inline'", // Allows inline <script> blocks
+                    "'unsafe-inline'", // Temporary allowance for existing inline scripts
                     "'unsafe-eval'",
                     "https://cdn.jsdelivr.net",
                     "https://unpkg.com",
@@ -103,7 +103,6 @@ app.use(
                     "https://checkout.razorpay.com",
                     "https://api.razorpay.com"
                 ],
-                scriptSrcAttr: ["'self'"], // Restricts inline event handlers to enforce event listeners
                 styleSrc: [
                     "'self'",
                     "'unsafe-inline'",

@@ -3,33 +3,28 @@ const Categories = require('../../models/categorySchema');
 const Product = require('../../models/productSchema');
 const mongoose = require('mongoose');
 
+// Get all offers (for /admin/offers route)
 exports.getAllOffers = async (req, res) => {
     try {
         const offers = await Offer.find()
-            .populate('Categories')
-            .populate('Product');
-        const categories = await Categories.find();
-        const products = await Product.find();
-
-        console.log('Fetched Offers:', offers);
+            .populate('Categories', 'name') // Populate category names
+            .populate('Product', 'name');   // Populate product names
 
         res.render('offer', {
-            path:req.path,
+            path: '/admin/offers',
             offers,
-            categories,
-            products,
-            editing: false,
-            success: req.flash('success'),
-            error: req.flash('error'),
+            success: req.flash('success')[0] || '',
+            error: req.flash('error')[0] || '',
             oldInput: {}
         });
     } catch (error) {
         console.error('Error fetching offers:', error);
-        req.flash('error', 'Failed to load offers.');
-        res.redirect('/admin');
+        req.flash('error', 'Failed to load offers');
+        res.redirect('/admin/dashboard');
     }
 };
 
+// Load add offer form
 exports.getAddOffer = async (req, res) => {
     try {
         const categories = await Categories.find();
@@ -40,7 +35,7 @@ exports.getAddOffer = async (req, res) => {
             categories,
             products,
             offer: {},
-            errorMessage: req.flash('error'),
+            errorMessage: req.flash('error')[0],
             validationErrors: [],
             oldInput: req.flash('oldInput')[0] || {}
         });
@@ -51,15 +46,12 @@ exports.getAddOffer = async (req, res) => {
     }
 };
 
+// Create a new offer
 exports.postAddOffer = async (req, res) => {
     try {
-        console.log('Request Body:', req.body);
-        console.log('Offer Type:', req.query.type);
+        const { name, description, discountType, discountValue, maxDiscount, minimumAmount, startDate, endDate, product, category, offerType } = req.body;
 
-        const { name, description, discountType, discountValue, maxDiscount, minimumAmount, startDate, endDate, product, category } = req.body;
-        const offerType = req.query.type;
-
-        if (!name || !discountType || !discountValue || !startDate || !endDate) {
+        if (!name || !discountType || !discountValue || !startDate || !endDate || !offerType) {
             throw new Error('Please fill in all required fields');
         }
 
@@ -91,7 +83,7 @@ exports.postAddOffer = async (req, res) => {
         if (isNaN(startDateObj.getTime()) || isNaN(endDateObj.getTime())) {
             throw new Error('Invalid date format');
         }
-        if (startDateObj < currentDate) {
+        if (startDateObj < currentDate.setHours(0, 0, 0, 0)) {
             throw new Error('Start date cannot be in the past');
         }
         if (endDateObj <= startDateObj) {
@@ -140,23 +132,30 @@ exports.postAddOffer = async (req, res) => {
         const newOffer = new Offer(offerData);
         await newOffer.save();
 
-        res.status(200).json({ message: 'Offer created successfully' });
+        res.json({
+            success: true,
+            message: 'Offer created successfully',
+            redirect: '/admin/offers'
+        });
     } catch (error) {
         console.error('Error creating offer:', error);
-        res.status(400).json({ message: error.message });
+        res.status(400).json({
+            success: false,
+            message: error.message
+        });
     }
 };
 
+// Load edit offer form
 exports.getEditOffer = async (req, res) => {
     try {
-        console.log('Editing offer ID:', req.params.id);
         if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
             throw new Error('Invalid offer ID');
         }
 
         const offer = await Offer.findById(req.params.id)
-            .populate('Categories')
-            .populate('Product');
+            .populate('Categories', 'name')
+            .populate('Product', 'name');
         if (!offer) {
             throw new Error('Offer not found');
         }
@@ -169,7 +168,7 @@ exports.getEditOffer = async (req, res) => {
             offer,
             categories,
             products,
-            errorMessage: req.flash('error'),
+            errorMessage: req.flash('error')[0],
             validationErrors: [],
             oldInput: req.flash('oldInput')[0] || offer
         });
@@ -180,6 +179,7 @@ exports.getEditOffer = async (req, res) => {
     }
 };
 
+// Update an existing offer
 exports.postEditOffer = async (req, res) => {
     try {
         if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
@@ -191,7 +191,7 @@ exports.postEditOffer = async (req, res) => {
             throw new Error('Offer not found');
         }
 
-        const { name, description, discountType, discountValue, maxDiscount, minimumAmount, startDate, endDate, product, category } = req.body;
+        const { name, description, discountType, discountValue, maxDiscount, minimumAmount, startDate, endDate, product, category, isActive } = req.body;
 
         if (!name || !discountType || !discountValue || !startDate || !endDate) {
             throw new Error('Please fill in all required fields');
@@ -257,27 +257,50 @@ exports.postEditOffer = async (req, res) => {
         offer.maxDiscount = maxDiscount ? parseFloat(maxDiscount) : null;
         offer.startDate = startDateObj;
         offer.endDate = endDateObj;
-        offer.isActive = req.body.isActive === 'on';
+        offer.isActive = isActive === 'on';
         offer.Categories = categoryArray.length ? categoryArray : offer.Categories;
         offer.Product = productArray.length ? productArray : offer.Product;
 
         await offer.save();
 
-        req.flash('success', 'Offer updated successfully');
-        res.redirect('/admin/offers');
+        res.json({
+            success: true,
+            message: 'Offer updated successfully',
+            redirect: '/admin/offers'
+        });
     } catch (error) {
         console.error('Error updating offer:', error);
-        const categories = await Categories.find();
-        const products = await Product.find();
+        res.status(400).json({
+            success: false,
+            message: error.message
+        });
+    }
+};
 
-        res.render('addOffer', {
-            editing: true,
-            offer: { _id: req.params.id, ...req.body },
-            categories,
-            products,
-            errorMessage: error.message,
-            validationErrors: [{ msg: error.message }],
-            oldInput: req.body
+// Toggle offer status (for /admin/offers/toggle/:id route)
+exports.toggleOfferStatus = async (req, res) => {
+    try {
+        if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+            throw new Error('Invalid offer ID');
+        }
+
+        const offer = await Offer.findById(req.params.id);
+        if (!offer) {
+            throw new Error('Offer not found');
+        }
+
+        offer.isActive = !offer.isActive;
+        await offer.save();
+
+        res.status(200).json({
+            success: true,
+            message: `Offer ${offer.isActive ? 'activated' : 'deactivated'} successfully`
+        });
+    } catch (error) {
+        console.error('Error toggling offer status:', error);
+        res.status(400).json({
+            success: false,
+            message: error.message
         });
     }
 };

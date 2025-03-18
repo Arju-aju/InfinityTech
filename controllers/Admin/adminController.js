@@ -66,7 +66,7 @@ const login = async (req, res) => {
 const applyCouponToOrder = async (req, res) => {
     try {
         const { orderId, couponCode } = req.body;
-        const adminId = req.session.admin?.id; // Assuming admin session exists
+        const adminId = req.session.admin?.id;
 
         if (!adminId) {
             return res.status(401).json({ success: false, message: "Unauthorized" });
@@ -117,7 +117,6 @@ const loadDashboard = async (req, res) => {
             { $group: { _id: null, total: { $sum: "$orderAmount" } } }
         ]);
 
-        // Default to daily sales for the last 30 days
         const today = new Date();
         const thirtyDaysAgo = new Date(today);
         thirtyDaysAgo.setDate(today.getDate() - 30);
@@ -164,7 +163,7 @@ const loadDashboard = async (req, res) => {
         ]);
 
         res.render('adminDashboard', {
-            path:req.path,
+            path: req.path,
             userCount,
             totalOrders,
             totalSales: totalSales[0]?.total || 0,
@@ -200,81 +199,81 @@ const logout = async (req, res) => {
 
 const getSalesReport = async (req, res) => {
     try {
-      const { startDate, endDate, timeFrame = 'daily' } = req.query;
-      const start = startDate ? new Date(startDate) : new Date(new Date().setDate(new Date().getDate() - 30));
-      const end = endDate ? new Date(endDate) : new Date();
-      end.setHours(23, 59, 59, 999);
-  
-      let dateFormat;
-      switch (timeFrame) {
-        case 'daily':
-          dateFormat = { $dateToString: { format: "%Y-%m-%d", date: "$orderDate" } };
-          break;
-        case 'weekly':
-          dateFormat = { $week: "$orderDate" };
-          break;
-        case 'monthly':
-          dateFormat = { $month: "$orderDate" };
-          break;
-        case 'yearly':
-          dateFormat = { $year: "$orderDate" };
-          break;
-        default:
-          dateFormat = { $dateToString: { format: "%Y-%m-%d", date: "$orderDate" } };
-      }
-  
-      const salesData = await Order.aggregate([
-        { $match: { orderDate: { $gte: start, $lte: end }, status: "Delivered" } },
-        {
-          $group: {
-            _id: dateFormat,
-            orders: { $sum: 1 },
-            sales: { $sum: "$orderAmount" },
-            totalItems: { $sum: { $sum: "$products.quantity" } },
-            totalCouponsUsed: { $sum: { $cond: [{ $ne: ["$couponApplied", null] }, 1, 0] } },
-            couponDeductions: { $sum: "$offerApplied" }
-          }
-        },
-        {
-          $project: {
-            date: "$_id",
-            orders: 1,
-            sales: 1,
-            totalItems: 1,
-            totalCouponsUsed: 1,
-            couponDeductions: 1,
-            _id: 0
-          }
-        },
-        { $sort: { date: 1 } }
-      ]);
-  
-      const paymentMethodStats = await Order.aggregate([
-        { $match: { orderDate: { $gte: start, $lte: end }, status: "Delivered" } },
-        { $group: { _id: "$paymentMethod", count: { $sum: 1 } } }
-      ]);
-  
-      const summary = salesData.reduce(
-        (acc, curr) => ({
-          totalSales: acc.totalSales + curr.sales,
-          totalOrders: acc.totalOrders + curr.orders,
-          totalItems: acc.totalItems + curr.totalItems,
-          totalCouponsUsed: acc.totalCouponsUsed + curr.totalCouponsUsed,
-          couponDeductions: acc.couponDeductions + curr.couponDeductions,
-          avgOrderValue: (acc.totalSales + curr.sales) / (acc.totalOrders + curr.orders) || 0
-        }),
-        { totalSales: 0, totalOrders: 0, totalItems: 0, totalCouponsUsed: 0, couponDeductions: 0, avgOrderValue: 0 }
-      );
-  
-      res.json({
-        success: true,
-        data: { salesData, summary, paymentMethodStats, timeFrame }
-      });
+        const { startDate, endDate, timeFrame = 'daily' } = req.query;
+        const start = startDate ? new Date(startDate) : new Date(new Date().setDate(new Date().getDate() - 30));
+        const end = endDate ? new Date(endDate) : new Date();
+        end.setHours(23, 59, 59, 999);
+
+        let dateFormat;
+        switch (timeFrame) {
+            case 'daily':
+                dateFormat = { $dateToString: { format: "%Y-%m-%d", date: "$orderDate" } };
+                break;
+            case 'weekly':
+                dateFormat = { $week: "$orderDate" };
+                break;
+            case 'monthly':
+                dateFormat = { $month: "$orderDate" };
+                break;
+            case 'yearly':
+                dateFormat = { $year: "$orderDate" };
+                break;
+            default:
+                dateFormat = { $dateToString: { format: "%Y-%m-%d", date: "$orderDate" } };
+        }
+
+        const salesData = await Order.aggregate([
+            { $match: { orderDate: { $gte: start, $lte: end }, status: "Delivered" } },
+            {
+                $group: {
+                    _id: dateFormat,
+                    orders: { $sum: 1 },
+                    sales: { $sum: "$orderAmount" },
+                    totalItems: { $sum: { $sum: "$products.quantity" } },
+                    totalCouponsUsed: { $sum: { $cond: [{ $ne: ["$couponApplied", null] }, 1, 0] } },
+                    couponDeductions: { $sum: "$offerApplied" }
+                }
+            },
+            {
+                $project: {
+                    date: "$_id",
+                    orders: 1,
+                    sales: 1,
+                    totalItems: 1,
+                    totalCouponsUsed: 1,
+                    couponDeductions: 1,
+                    _id: 0
+                }
+            },
+            { $sort: { date: 1 } }
+        ]);
+
+        const paymentMethodStats = await Order.aggregate([
+            { $match: { orderDate: { $gte: start, $lte: end }, status: "Delivered" } },
+            { $group: { _id: "$paymentMethod", count: { $sum: 1 } } }
+        ]);
+
+        const summary = salesData.reduce(
+            (acc, curr) => ({
+                totalSales: acc.totalSales + curr.sales,
+                totalOrders: acc.totalOrders + curr.orders,
+                totalItems: acc.totalItems + curr.totalItems,
+                totalCouponsUsed: acc.totalCouponsUsed + curr.totalCouponsUsed,
+                couponDeductions: acc.couponDeductions + curr.couponDeductions,
+                avgOrderValue: (acc.totalSales + curr.sales) / (acc.totalOrders + curr.orders) || 0
+            }),
+            { totalSales: 0, totalOrders: 0, totalItems: 0, totalCouponsUsed: 0, couponDeductions: 0, avgOrderValue: 0 }
+        );
+
+        res.json({
+            success: true,
+            data: { salesData, summary, paymentMethodStats, timeFrame }
+        });
     } catch (error) {
-      console.error("Error fetching sales report:", error);
-      res.status(500).json({ success: false, message: "Error fetching sales report" });
+        console.error("Error fetching sales report:", error);
+        res.status(500).json({ success: false, message: "Error fetching sales report" });
     }
-  };
+};
 
 const getTopSellers = async (req, res) => {
     try {
@@ -388,6 +387,24 @@ const getTopSellers = async (req, res) => {
     }
 };
 
+const getDetailedOrders = async (req, res) => {
+    try {
+        const { startDate, endDate } = req.query;
+        const start = startDate ? new Date(startDate) : new Date(new Date().setDate(new Date().getDate() - 30));
+        const end = endDate ? new Date(endDate) : new Date();
+        end.setHours(23, 59, 59, 999);
+
+        const orders = await Order.find({
+            orderDate: { $gte: start, $lte: end }
+        }).populate('userId', 'name').lean();
+
+        res.status(200).json(orders);
+    } catch (error) {
+        console.error("Error fetching detailed orders:", error);
+        res.status(500).json({ success: false, message: "Error fetching detailed orders", error: error.message });
+    }
+};
+
 module.exports = {
     pageerror,
     loadLogin,
@@ -396,5 +413,6 @@ module.exports = {
     logout,
     getSalesReport,
     getTopSellers,
-    applyCouponToOrder
+    applyCouponToOrder,
+    getDetailedOrders
 };

@@ -130,17 +130,15 @@
 
     <div class="flex-1 flex flex-col overflow-hidden">
         <main class="flex-1 overflow-x-hidden overflow-y-auto p-6">
-            <div class="mb-8 animate-fade-in-up">
-                <h1 class="text-4xl font-extrabold golden-button bg-clip-text text-transparent">Offer Management</h1>
-                <p class="text-gray-400 mt-2 text-lg">Manage your deals</p>
-            </div>
-
-            <div class="mb-6 animate-fade-in-up animation-delay-200">
-                <a href="/admin/offers/add" class="golden-button inline-flex items-center">
-                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+            <div class="flex justify-between items-center mb-8 animate-fade-in-up">
+                <h1 class="text-3xl font-extrabold bg-gradient-to-r from-[#d4af37] to-[#f9e076] bg-clip-text text-transparent tracking-tight" aria-label="Categories Management">Offers</h1>
+                <a href="/admin/offers/add" 
+                   class="inline-flex items-center px-4 py-2 rounded-lg bg-gradient-to-r from-[#d4af37] to-[#f9e076] text-white font-medium transition-all duration-300 transform hover:scale-105 group"
+                   aria-label="Add New Category">
+                    <svg class="w-5 h-5 mr-2 transition-transform duration-300 group-hover:rotate-12" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
                     </svg>
-                    Add New Offer
+                    Add Offer
                 </a>
             </div>
 
