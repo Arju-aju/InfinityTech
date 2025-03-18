@@ -13,7 +13,7 @@ const wishlist = require('../controllers/user/wishlistController');
 const walletController = require('../controllers/user/walletController');
 const paymentController = require('../controllers/user/paymentController');
 
-const { isAuthenticated, isNotAuthenticated, auth, authMiddleware } = require('../middleware/auth');
+const { isAuthenticated, isNotAuthenticated, auth } = require('../middleware/auth');
 const passport = require('passport');
 
 // Authentication routes
@@ -53,13 +53,14 @@ router.get('/product/:id', auth, productController.getSingleProduct);
 router.get('/categories', auth, productController.getAllCategories);
 router.get('/category/:id', productController.getCategoryProducts);
 router.get('/search', productController.searchProducts);
+router.get('/api/product/stock/:productId', auth, productController.getProductStock); // Added
 
 // Cart routes
 router.get('/cart', auth, cartController.getCart);
 router.post('/api/cart/add', auth, cartController.addToCart);
 router.put('/cart/update/:productId', auth, cartController.updateCartQuantity);
 router.delete('/cart/remove/:productId', auth, cartController.removeFromCart);
-router.get('/cart/count', cartController.getCartCount);
+router.get('/api/cart/count', auth, cartController.getCartCount);
 
 // Checkout routes
 router.get('/checkout', auth, checkoutController.getCheckout);
@@ -74,7 +75,7 @@ router.get('/orders/:id', auth, orderController.getOrderDetails);
 router.put('/api/orders/:id/cancel', auth, orderController.cancelOrder);
 router.put('/api/orders/:id/return', auth, orderController.returnOrder);
 router.put('/api/orders/:id/cancel-product/:productId', auth, orderController.cancelProduct);
-router.put('/api/orders/:id/return-product/:productId', auth, orderController.requestReturn); 
+router.put('/api/orders/:id/return-product/:productId', auth, orderController.requestReturn);
 router.get('/api/orders/download-invoice/:id', auth, orderController.downloadInvoice);
 
 // Static pages
@@ -83,8 +84,8 @@ router.get('/contact', userController.loadContactPage);
 
 // Profile management
 router.get('/profile', auth, profileController.loadProfile);
-router.get("/edit-profile", profileController.getEditProfile);
-router.post("/edit-profile", profileController.postEditProfile);
+router.get('/edit-profile', profileController.getEditProfile);
+router.post('/edit-profile', profileController.postEditProfile);
 
 // Address Management
 router.get('/address', addressController.getAddress);
@@ -98,7 +99,8 @@ router.delete('/delete-address/:id', addressController.deleteAddress);
 router.get('/wishlist', auth, wishlist.getWishlist);
 router.post('/api/wishlist/toggle', auth, wishlist.toggleWishlist);
 router.delete('/api/wishlist/remove/:wishlistItemId', auth, wishlist.removeFromWishlist);
-router.get('/wishlist/count', wishlist.getWishlistCount);
+router.get('/api/wishlist/count', auth, wishlist.getWishlistCount);
+router.get('/api/user/wishlist/products', auth, wishlist.getWishlistProductIds);
 
 // Wallet Management
 router.get('/wallet', auth, walletController.getWallet);

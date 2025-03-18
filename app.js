@@ -17,8 +17,8 @@ db();
 const port = process.env.PORT || 3000;
 const app = express();
 
-// Morgan logging middleware (console only)
-app.use(morgan('dev')); // Logs to console in 'dev' format, no file saving
+// Morgan logging middleware
+app.use(morgan('dev'));
 
 // View engine setup
 app.set('view engine', 'ejs');
@@ -31,8 +31,6 @@ app.set('views', [
 // Static files
 app.use(express.static(path.join(__dirname, 'public')));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
-
-// Serve manifest.json if you have one
 app.use('/manifest.json', express.static(path.join(__dirname, 'public', 'manifest.json')));
 
 // Body parsing middleware
@@ -57,7 +55,7 @@ app.use(
         cookie: { 
             maxAge: 1000 * 60 * 60 * 24, 
             httpOnly: true, 
-            secure: process.env.NODE_ENV === 'production' // Ensure secure cookies on AWS
+            secure: process.env.NODE_ENV === 'production'
         },
     })
 );
@@ -90,8 +88,8 @@ app.use(
                 defaultSrc: ["'self'"],
                 scriptSrc: [
                     "'self'",
-                    "'unsafe-inline'", // Temporary for inline scripts
-                    "'unsafe-eval'",   // Temporary for eval (avoid in production if possible)
+                    "'unsafe-inline'",
+                    "'unsafe-eval'",
                     "https://cdn.jsdelivr.net",
                     "https://unpkg.com",
                     "https://cdn.tailwindcss.com",
@@ -99,8 +97,8 @@ app.use(
                     "https://cdnjs.cloudflare.com",
                     "https://checkout.razorpay.com",
                     "https://api.razorpay.com",
-                    "https://www.google.com",       // Google Maps
-                    "https://maps.googleapis.com"   // Google Maps API
+                    "https://www.google.com",
+                    "https://maps.googleapis.com"
                 ],
                 styleSrc: [
                     "'self'",
@@ -113,28 +111,29 @@ app.use(
                 ],
                 connectSrc: [
                     "'self'",
+                    "http://localhost:3000", // Allow local API calls
                     "https://unpkg.com",
                     "https://cdn.jsdelivr.net",
                     "https://lumberjack.razorpay.com",
                     "https://api.razorpay.com",
                     "https://checkout.razorpay.com",
-                    "https://www.google.com",       // Google Maps
-                    "https://maps.googleapis.com",  // Google Maps API
+                    "https://www.google.com",
+                    "https://maps.googleapis.com",
                 ],
                 frameSrc: [
                     "'self'",
                     "https://api.razorpay.com",
                     "https://checkout.razorpay.com",
-                    "https://www.google.com",       // Google Maps iframe
-                    "https://maps.google.com"       // Additional Google Maps domain
+                    "https://www.google.com",
+                    "https://maps.google.com"
                 ],
                 imgSrc: [
                     "'self'",
                     "data:",
                     "https:",
                     "blob:",
-                    "https://maps.gstatic.com",     // Map tiles
-                    "https://*.googleapis.com",     // Google APIs
+                    "https://maps.gstatic.com",
+                    "https://*.googleapis.com",
                 ],
                 fontSrc: [
                     "'self'",
@@ -145,7 +144,7 @@ app.use(
                 mediaSrc: ["'self'", "https:", "blob:", "https://*.amazonaws.com"],
                 objectSrc: ["'none'"],
                 formAction: ["'self'"],
-                upgradeInsecureRequests: [] // Enforce HTTPS in production
+                upgradeInsecureRequests: []
             }
         },
         crossOriginEmbedderPolicy: false,
@@ -169,7 +168,12 @@ app.use('/admin', adminRouter);
 
 // 404 handler
 app.use((req, res, next) => {
-    res.status(404).render('404', { title: 'Page Not Found' });
+    console.log(`404 Error: ${req.method} ${req.url}`); // Debug log
+    if (req.xhr || req.headers.accept?.includes('json')) {
+        res.status(404).json({ success: false, message: 'API route not found' });
+    } else {
+        res.status(404).render('404', { title: 'Page Not Found' });
+    }
 });
 
 // Global error handler

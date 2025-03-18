@@ -233,13 +233,12 @@ const loadShop = async (req, res) => {
         const minPrice = req.query.minPrice ? parseFloat(req.query.minPrice) : null;
         const maxPrice = req.query.maxPrice ? parseFloat(req.query.maxPrice) : null;
 
-        // Fetch active categories with fallback
         let activeCategories = [];
         try {
             activeCategories = await LaptopCategory.find({ isActive: true }).select('_id name').lean();
         } catch (err) {
             console.error('Error fetching categories:', err);
-            activeCategories = []; // Fallback to empty array
+            activeCategories = [];
         }
 
         const filter = {
@@ -259,16 +258,14 @@ const loadShop = async (req, res) => {
             filter.category = { $in: selectedCategories };
         }
 
-        // Fetch products with fallback
         let allProducts = [];
         try {
             allProducts = await Product.find(filter).populate('category').lean();
         } catch (err) {
             console.error('Error fetching products:', err);
-            allProducts = []; // Fallback to empty array
+            allProducts = [];
         }
 
-        // Calculate offers with error handling
         const productsWithOffers = await Promise.all(allProducts.map(async (product) => {
             try {
                 const offerDetails = await getBestOfferForProduct(product);
@@ -288,7 +285,6 @@ const loadShop = async (req, res) => {
             }
         }));
 
-        // Filter by price range
         let filteredProducts = productsWithOffers;
         if (minPrice !== null) {
             filteredProducts = filteredProducts.filter(p => p.offerDetails.finalPrice >= minPrice);
@@ -297,7 +293,6 @@ const loadShop = async (req, res) => {
             filteredProducts = filteredProducts.filter(p => p.offerDetails.finalPrice <= maxPrice);
         }
 
-        // Sort products
         const sortQuery = {
             'price_low_to_high': (a, b) => a.offerDetails.finalPrice - b.offerDetails.finalPrice,
             'price_high_to_low': (a, b) => b.offerDetails.finalPrice - a.offerDetails.finalPrice,
@@ -315,7 +310,6 @@ const loadShop = async (req, res) => {
         const totalProducts = filteredProducts.length;
         const totalPages = Math.ceil(totalProducts / limit);
 
-        // Fetch wishlist with fallback
         let wishlist = [];
         if (req.user && req.user._id) {
             try {
@@ -323,11 +317,10 @@ const loadShop = async (req, res) => {
                 wishlist = user ? user.wishlist.map(id => id.toString()) : [];
             } catch (err) {
                 console.error('Error fetching wishlist:', err);
-                wishlist = []; // Fallback to empty array
+                wishlist = [];
             }
         }
 
-        // Render shop page even if data is partial
         res.render('user/shop', {
             products: paginatedProducts,
             categories: activeCategories,
@@ -348,7 +341,6 @@ const loadShop = async (req, res) => {
             }
         });
     } catch (error) {
-        // Log the error but render the page with fallback data instead of redirecting
         console.error('Unexpected error in loadShop:', error);
         req.flash('error', 'Something went wrong while loading the shop page.');
         res.render('user/shop', {
@@ -388,12 +380,10 @@ const searchProducts = async (req, res) => {
         .populate('category')
         .lean();
 
-        // Calculate discounted price for each product
         products.forEach(product => {
             product.discountedPrice = product.price - (product.price * (product.discountPercentage / 100));
         });
 
-        // If the request accepts JSON (for AJAX), return JSON
         if (req.accepts('json')) {
             return res.json({
                 html: `
@@ -429,7 +419,6 @@ const searchProducts = async (req, res) => {
             });
         }
 
-        // Render the search results page (for non-AJAX requests)
         res.render('user/search', {
             products,
             searchQuery,
@@ -483,6 +472,24 @@ const addToWishlist = async (req, res) => {
     }
 };
 
+// Get Product Stock
+const getProductStock = async (req, res) => {
+    try {
+        const { productId } = req.params;
+        if (!mongoose.Types.ObjectId.isValid(productId)) {
+            return res.status(400).json({ success: false, message: 'Invalid product ID' });
+        }
+        const product = await Product.findById(productId).select('stock');
+        if (!product) {
+            return res.status(404).json({ success: false, message: 'Product not found' });
+        }
+        res.json({ success: true, stock: product.stock });
+    } catch (error) {
+        console.error('Error fetching product stock:', error);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+};
+
 module.exports = {
     getHomePageProducts,
     getSingleProduct,
@@ -491,4 +498,5 @@ module.exports = {
     loadShop,
     searchProducts,
     addToWishlist,
+    getProductStock
 };
