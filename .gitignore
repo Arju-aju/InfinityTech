@@ -12,3 +12,6 @@ access.log
 combined.log
 error.log
 >>>>>>> c3ee097 (Saving local changes before pulling)
+access.log
+combined.log
+error.log
