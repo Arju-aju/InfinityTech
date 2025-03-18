@@ -59,6 +59,7 @@ router.get('/cart', auth, cartController.getCart);
 router.post('/api/cart/add', auth, cartController.addToCart);
 router.put('/cart/update/:productId', auth, cartController.updateCartQuantity);
 router.delete('/cart/remove/:productId', auth, cartController.removeFromCart);
+router.get('/cart/count', cartController.getCartCount);
 
 // Checkout routes
 router.get('/checkout', auth, checkoutController.getCheckout);
@@ -97,6 +98,7 @@ router.delete('/delete-address/:id', addressController.deleteAddress);
 router.get('/wishlist', auth, wishlist.getWishlist);
 router.post('/api/wishlist/toggle', auth, wishlist.toggleWishlist);
 router.delete('/api/wishlist/remove/:wishlistItemId', auth, wishlist.removeFromWishlist);
+router.get('/wishlist/count', wishlist.getWishlistCount);
 
 // Wallet Management
 router.get('/wallet', auth, walletController.getWallet);

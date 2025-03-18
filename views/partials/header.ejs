@@ -73,7 +73,7 @@
             to { transform: translateY(0); opacity: 1; }
         }
         .animate-spin-slow {
-             animation: spin 8s linear infinite;
+            animation: spin 8s linear infinite;
         }
     </style>
 </head>
@@ -88,28 +88,20 @@
                 <a href="/contact" class="nav-link text-white font-semibold">Contact</a>
             </div>
             <div class="flex items-center space-x-6">
-                <div x-data="{ open: false }" class="relative" @click.outside="open = false">
-                    <button @click="open = !open" class="text-white hover:text-gray-200 relative">
-                        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
-                        </svg>
-                        <span class="absolute -top-2 -right-2 bg-yellow-400 text-gray-900 text-xs rounded-full h-5 w-5 flex items-center justify-center font-bold">0</span>
-                    </button>
-                    <div x-cloak x-show="open" x-transition class="absolute right-0 mt-3 w-72 bg-white rounded-xl shadow-2xl p-5">
-                        <a href="/cart" class="block mt-3 text-indigo-600 hover:underline font-medium">View Cart</a>
-                    </div>
-                </div>
-                <div x-data="{ open: false }" class="relative" @click.outside="open = false">
-                    <button @click="open = !open" class="text-white hover:text-gray-200 relative">
-                        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                        </svg>
-                        <span class="absolute -top-2 -right-2 bg-yellow-400 text-gray-900 text-xs rounded-full h-5 w-5 flex items-center justify-center font-bold">0</span>
-                    </button>
-                    <div x-cloak x-show="open" x-transition class="absolute right-0 mt-3 w-72 bg-white rounded-xl shadow-2xl p-5">
-                        <a href="/wishlist" class="block mt-3 text-indigo-600 hover:underline font-medium">View Wishlist</a>
-                    </div>
-                </div>
+                <!-- Cart Icon -->
+                <a href="/cart" class="text-white hover:text-gray-200 relative">
+                    <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+                    </svg>
+                    <span id="cart-count" class="absolute -top-2 -right-2 bg-yellow-400 text-gray-900 text-xs rounded-full h-5 w-5 flex items-center justify-center font-bold hidden">0</span>
+                </a>
+                <!-- Wishlist Icon -->
+                <a href="/wishlist" class="text-white hover:text-gray-200 relative">
+                    <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                    </svg>
+                    <span id="wishlist-count" class="absolute -top-2 -right-2 bg-yellow-400 text-gray-900 text-xs rounded-full h-5 w-5 flex items-center justify-center font-bold hidden">0</span>
+                </a>
                 <% if (locals.user) { %>
                     <div x-data="{ open: false }" class="relative" @click.outside="open = false">
                         <button @click="open = !open" class="flex items-center px-4 py-2 bg-white text-gray-800 rounded-full shadow-md hover:bg-gray-100 transition-all">
@@ -152,9 +144,88 @@
                     mobileMenuOpen: false,
                     toggleMobileMenu() {
                         this.mobileMenuOpen = !this.mobileMenuOpen;
+                    },
+                    async updateCounts() {
+                        try {
+                            // Fetch cart count
+                            const cartResponse = await fetch('/api/cart/count', { 
+                                credentials: 'include',
+                                headers: { 'Accept': 'application/json' }
+                            });
+                            console.log('Cart API Response:', cartResponse.status, cartResponse.statusText);
+                            if (!cartResponse.ok) throw new Error(`Cart API failed with status: ${cartResponse.status}`);
+                            const cartData = await cartResponse.json();
+                            console.log('Cart Data:', cartData);
+                            const cartCount = cartData.success && typeof cartData.count === 'number' ? cartData.count : 0;
+                            const cartCounter = document.getElementById('cart-count');
+                            if (cartCounter) {
+                                cartCounter.textContent = cartCount;
+                                cartCount > 0 ? cartCounter.classList.remove('hidden') : cartCounter.classList.add('hidden');
+                            } else {
+                                console.error('Cart counter element not found');
+                            }
+
+                            // Fetch wishlist count
+                            const wishlistResponse = await fetch('/api/wishlist/count', { 
+                                credentials: 'include',
+                                headers: { 'Accept': 'application/json' }
+                            });
+                            console.log('Wishlist API Response:', wishlistResponse.status, wishlistResponse.statusText);
+                            if (!wishlistResponse.ok) throw new Error(`Wishlist API failed with status: ${wishlistResponse.status}`);
+                            const wishlistData = await wishlistResponse.json();
+                            console.log('Wishlist Data:', wishlistData);
+                            const wishlistCount = wishlistData.success && typeof wishlistData.count === 'number' ? wishlistData.count : 0;
+                            const wishlistCounter = document.getElementById('wishlist-count');
+                            if (wishlistCounter) {
+                                wishlistCounter.textContent = wishlistCount;
+                                wishlistCount > 0 ? wishlistCounter.classList.remove('hidden') : wishlistCounter.classList.add('hidden');
+                            } else {
+                                console.error('Wishlist counter element not found');
+                            }
+                        } catch (error) {
+                            console.error('Error updating counts:', error.message);
+                            const cartCounter = document.getElementById('cart-count');
+                            const wishlistCounter = document.getElementById('wishlist-count');
+                            if (cartCounter) {
+                                cartCounter.textContent = '0';
+                                cartCounter.classList.add('hidden');
+                            }
+                            if (wishlistCounter) {
+                                wishlistCounter.textContent = '0';
+                                wishlistCounter.classList.add('hidden');
+                            }
+                        }
+                    },
+                    init() {
+                        console.log('Initializing navigation menu');
+                        this.updateCounts();
                     }
                 }));
             });
+
+            window.updateHeaderCounts = function() {
+                console.log('Triggering updateHeaderCounts');
+                const nav = Alpine.$data(document.querySelector('nav'));
+                if (nav) {
+                    nav.updateCounts();
+                } else {
+                    console.error('Navigation component not found');
+                }
+            };
+
+            document.addEventListener('DOMContentLoaded', () => {
+                console.log('DOM fully loaded, updating counts');
+                window.updateHeaderCounts();
+            });
+
+            document.addEventListener('cartUpdated', () => {
+                console.log('Cart updated event received');
+                window.updateHeaderCounts();
+            });
+            document.addEventListener('wishlistUpdated', () => {
+                console.log('Wishlist updated event received');
+                window.updateHeaderCounts();
+            });
         </script>
     </header>
-    <main class="flex-grow pt-20">
+    <main class="flex-grow">

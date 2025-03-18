@@ -9,7 +9,7 @@
         <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-28 text-center">
             <h1 class="text-5xl md:text-6xl font-extrabold text-white mb-6 tracking-tight fade-in">Discover Next-Gen Gaming Laptops</h1>
             <p class="text-xl md:text-2xl text-gray-100 mb-10 slide-up">Unleash unparalleled performance with our premium lineup</p>
-            <a href="/products" class="inline-flex items-center px-8 py-4 text-lg font-semibold text-indigo-900 bg-white rounded-full hover:bg-yellow-400 hover:text-gray-900 transition-all duration-300 shadow-lg">Explore Now
+            <a href="/shop" class="inline-flex items-center px-8 py-4 text-lg font-semibold text-indigo-900 bg-white rounded-full hover:bg-yellow-400 hover:text-gray-900 transition-all duration-300 shadow-lg">Explore Now
                 <svg class="ml-3 w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
                 </svg>
@@ -17,8 +17,8 @@
         </div>
     </section>
 
-       <!-- Featured Products Section -->
-       <section class="py-20 bg-white">
+    <!-- Featured Products Section -->
+    <section class="py-20 bg-white">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <h2 class="text-4xl md:text-5xl font-bold text-center mb-16 text-gray-900 fade-in">Featured Products</h2>
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
@@ -30,7 +30,7 @@
                                     <img src="<%= product.images[0] %>" alt="<%= product.name %>" class="w-full h-56 object-cover transition-transform duration-500 hover:scale-105">
                                 </a>
                                 <button class="wishlist-btn absolute top-4 right-4 bg-white p-2 rounded-full shadow-md hover:bg-yellow-400 transition-all" data-product-id="<%= product._id %>">
-                                    <svg class="h-6 w-6 text-gray-600 hover:text-gray-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <svg class="h-6 w-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
                                     </svg>
                                 </button>
@@ -50,6 +50,7 @@
                                         </div>
                                         <span class="bg-yellow-100 text-yellow-700 text-xs font-semibold px-3 py-1 rounded-full">Featured</span>
                                     </div>
+                                    <p class="text-sm text-gray-600 mt-2">Stock: <span id="stock-<%= product._id %>"><%= product.stock %></span></p>
                                 </a>
                                 <div class="flex space-x-3 mt-5">
                                     <button class="add-to-cart-btn flex-1 bg-gray-100 hover:bg-gray-200 text-gray-800 py-3 rounded-lg font-semibold transition-all" data-product-id="<%= product._id %>">Add to Cart</button>
@@ -78,7 +79,7 @@
                                     <img src="<%= product.images[0] %>" alt="<%= product.name %>" class="w-full h-56 object-cover transition-transform duration-500 hover:scale-105">
                                 </a>
                                 <button class="wishlist-btn absolute top-4 right-4 bg-white p-2 rounded-full shadow-md hover:bg-yellow-400 transition-all" data-product-id="<%= product._id %>">
-                                    <svg class="h-6 w-6 text-gray-600 hover:text-gray-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <svg class="h-6 w-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
                                     </svg>
                                 </button>
@@ -98,6 +99,7 @@
                                         </div>
                                         <span class="bg-green-100 text-green-700 text-xs font-semibold px-3 py-1 rounded-full">New</span>
                                     </div>
+                                    <p class="text-sm text-gray-600 mt-2">Stock: <span id="stock-<%= product._id %>"><%= product.stock %></span></p>
                                 </a>
                                 <div class="flex space-x-3 mt-5">
                                     <button class="add-to-cart-btn flex-1 bg-gray-100 hover:bg-gray-200 text-gray-800 py-3 rounded-lg font-semibold transition-all" data-product-id="<%= product._id %>">Add to Cart</button>
@@ -200,164 +202,40 @@
 
 <%- include('../partials/footer') %>
 
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<script src="https://unpkg.com/swiper/swiper-bundle.min.js"></script>
 <script>
-    function addToCart(productId) {
-        showNotification('Adding to cart...', 'info');
-        fetch('/api/cart/add', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ productId: productId, quantity: 1 }),
-            credentials: 'same-origin'
-        })
-        .then(response => {
-            if (!response.ok) throw new Error('Network response was not ok');
-            return response.json();
-        })
-        .then(data => {
-            const cartCounter = document.getElementById('cart-counter');
-            if (cartCounter && data.totalItems) {
-                cartCounter.textContent = data.totalItems;
-                cartCounter.classList.remove('hidden');
-            }
-            showNotification('Product added to cart!', 'success');
-        })
-        .catch(error => {
-            console.error('Error adding to cart:', error);
-            showNotification('Failed to add product to cart. Please try again.', 'error');
-        });
-    }
-
-    function buyNow(productId) {
-        showNotification('Processing...', 'info');
-        fetch('/api/cart/add', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ productId: productId, quantity: 1, buyNow: true }),
-            credentials: 'same-origin'
-        })
-        .then(response => {
-            if (!response.ok) throw new Error('Network response was not ok');
-            return response.json();
-        })
-        .then(data => {
-            window.location.href = '/checkout?source=buy_now';
-        })
-        .catch(error => {
-            console.error('Error processing buy now:', error);
-            showNotification('Failed to process. Please try again.', 'error');
-        });
-    }
-
-    function toggleWishlist(event, productId) {
-        event.preventDefault();
-        const wishlistBtn = event.currentTarget;
-        const wishlistIcon = wishlistBtn.querySelector('svg');
-        wishlistIcon.classList.toggle('text-red-500');
-        wishlistIcon.classList.toggle('text-gray-600');
-        const isAdding = wishlistIcon.classList.contains('text-red-500');
-        showNotification(isAdding ? 'Adding to wishlist...' : 'Removing from wishlist...', 'info');
-        fetch('/api/wishlist/toggle', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ productId }),
-            credentials: 'same-origin'
-        })
-        .then(response => {
-            if (!response.ok) {
-                if (response.status === 401) {
-                    wishlistIcon.classList.toggle('text-red-500');
-                    wishlistIcon.classList.toggle('text-gray-600');
-                    showNotification('Please log in to modify wishlist', 'error');
-                    return { success: false };
+    window.updateStockCount = async function(productId) {
+        try {
+            const response = await fetch(`/api/product/stock/${productId}`, { credentials: 'include' });
+            console.log('Stock Response:', response.status, response.statusText); // Debug
+            const data = await response.json();
+            console.log('Stock Data:', data); // Debug
+            const stockElement = document.getElementById(`stock-${productId}`);
+            if (stockElement && data.success) {
+                stockElement.textContent = data.stock;
+                const addToCartBtn = document.querySelector(`.add-to-cart-btn[data-product-id="${productId}"]`);
+                const buyNowBtn = document.querySelector(`.buy-now-btn[data-product-id="${productId}"]`);
+                if (data.stock === 0) {
+                    addToCartBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                    addToCartBtn.disabled = true;
+                    buyNowBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                    buyNowBtn.disabled = true;
+                } else {
+                    addToCartBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                    addToCartBtn.disabled = false;
+                    buyNowBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                    buyNowBtn.disabled = false;
                 }
-                throw new Error('Network response was not ok');
             }
-            return response.json();
-        })
-        .then(data => {
-            if (data.success) {
-                showNotification(data.added ? 'Product added to wishlist!' : 'Product removed from wishlist', 'success');
-            } else {
-                wishlistIcon.classList.toggle('text-red-500');
-                wishlistIcon.classList.toggle('text-gray-600');
-                showNotification(data.message || 'Error updating wishlist', 'error');
-            }
-        })
-        .catch(error => {
-            console.error('Error toggling wishlist:', error);
-            wishlistIcon.classList.toggle('text-red-500');
-            wishlistIcon.classList.toggle('text-gray-600');
-            showNotification('Failed to update wishlist. Please try again.', 'error');
-        });
-    }
-
-    function showNotification(message, type = 'info') {
-        let bgColor;
-        switch (type) {
-            case 'success': bgColor = '#28a745'; break;
-            case 'error': bgColor = '#dc3545'; break;
-            case 'info': bgColor = '#007bff'; break;
-            case 'warning': bgColor = '#ffc107'; break;
-            default: bgColor = '#6c757d';
+        } catch (error) {
+            console.error(`Error updating stock for product ${productId}:`, error);
         }
-        Swal.fire({
-            text: message,
-            icon: type,
-            toast: true,
-            position: 'bottom-end',
-            timer: 3000,
-            timerProgressBar: true,
-            showConfirmButton: false,
-            background: bgColor,
-            color: '#fff',
-        });
-    }
+    };
 
-    document.addEventListener('DOMContentLoaded', function() {
-        document.querySelectorAll('.wishlist-btn').forEach(button => {
-            button.addEventListener('click', function(event) {
-                const productId = this.getAttribute('data-product-id');
-                if (productId) toggleWishlist(event, productId);
-            });
+    document.addEventListener('DOMContentLoaded', () => {
+        console.log('Home DOMContentLoaded'); // Debug
+        document.querySelectorAll('.add-to-cart-btn').forEach(btn => {
+            const productId = btn.getAttribute('data-product-id');
+            window.updateStockCount(productId);
         });
-        document.querySelectorAll('.add-to-cart-btn').forEach(button => {
-            button.addEventListener('click', function() {
-                const productId = this.getAttribute('data-product-id');
-                if (productId) addToCart(productId);
-            });
-        });
-        document.querySelectorAll('.buy-now-btn').forEach(button => {
-            button.addEventListener('click', function() {
-                const productId = this.getAttribute('data-product-id');
-                if (productId) buyNow(productId);
-            });
-        });
-        fetch('/api/user/wishlist/products')
-            .then(response => {
-                if (!response.ok) {
-                    if (response.status === 401) return null;
-                    throw new Error('Network response was not ok');
-                }
-                return response.json();
-            })
-            .then(data => {
-                if (data && data.wishlistItems) {
-                    data.wishlistItems.forEach(itemId => {
-                        const wishlistBtns = document.querySelectorAll(`[data-product-id="${itemId}"]`);
-                        wishlistBtns.forEach(btn => {
-                            if (btn.classList.contains('wishlist-btn')) {
-                                const wishlistIcon = btn.querySelector('svg');
-                                if (wishlistIcon) {
-                                    wishlistIcon.classList.remove('text-gray-600');
-                                    wishlistIcon.classList.add('text-red-500');
-                                }
-                            }
-                        });
-                    });
-                }
-            })
-            .catch(error => console.error('Error fetching wishlist data:', error));
     });
 </script>

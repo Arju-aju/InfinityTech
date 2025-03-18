@@ -17,11 +17,8 @@ db();
 const port = process.env.PORT || 3000;
 const app = express();
 
-// Morgan logging middleware
-app.use(morgan('dev'));
-app.use(morgan('combined', {
-    stream: require('fs').createWriteStream(path.join(__dirname, 'access.log'), { flags: 'a' })
-}));
+// Morgan logging middleware (console only)
+app.use(morgan('dev')); // Logs to console in 'dev' format, no file saving
 
 // View engine setup
 app.set('view engine', 'ejs');
