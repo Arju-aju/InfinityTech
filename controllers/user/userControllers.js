@@ -67,7 +67,7 @@ const loadLogin = async (req, res) => {
     try {
         res.render('user/login', {
             messages: req.flash() || { error: [], success: [] },
-            email: '' // Ensure email field is empty unless preserved
+            email: ''
         });
     } catch (error) {
         console.error('Error loading login page:', error);
@@ -81,7 +81,6 @@ const login = async (req, res) => {
     try {
         const { email, password } = req.body;
 
-        // Backend Validation
         if (!email || !email.trim()) {
             req.flash('error', 'Email is required');
             return res.redirect('/login');
@@ -102,27 +101,23 @@ const login = async (req, res) => {
             return res.redirect('/login');
         }
 
-        // Find user
         const user = await User.findOne({ email: email.toLowerCase() });
         if (!user) {
             req.flash('error', 'Invalid email or password');
             return res.redirect('/login');
         }
 
-        // Check if user is blocked
         if (user.isBlocked) {
             req.flash('error', 'Your account has been blocked. Please contact support');
             return res.redirect('/login');
         }
 
-        // Verify password
         const isPasswordMatch = await bcrypt.compare(password, user.password);
         if (!isPasswordMatch) {
             req.flash('error', 'Invalid email or password');
             return res.redirect('/login');
         }
 
-        // Successful login
         req.session.user = {
             _id: user._id,
             name: user.name,
@@ -157,7 +152,6 @@ const signup = async (req, res) => {
     try {
         const { name, email, phone, password, confirmPassword } = req.body;
 
-        // Backend Validation
         if (!name || !/^[a-zA-Z][a-zA-Z\s]*$/.test(name)) {
             req.flash('error', 'Name must start with a letter and contain only letters and spaces');
             return res.redirect('/signup');
@@ -332,7 +326,7 @@ const logout = async (req, res) => {
     }
 };
 
-// Load Home Page
+// Load Home Page (Updated Featured Products Query)
 const loadHomePage = async (req, res) => {
     try {
         console.log('Session in loadHomePage:', req.session);
@@ -363,12 +357,15 @@ const loadHomePage = async (req, res) => {
             .sort({ createdAt: -1 })
             .limit(8);
 
+        // Updated query to use isFeatured field
         const featuredProducts = await Product.find({
             isDeleted: false,
-            discountPercentage: { $gt: 55 },
+            isListed: true,
+            isFeatured: true
         })
-            .sort({ discountPercentage: -1 })
+            .sort({ createdAt: -1 }) // Sort by newest first
             .limit(8);
+        console.log('Featured Products:', featuredProducts); // Debug log
 
         const topSellingProducts = await Product.find({
             isDeleted: false,
@@ -423,14 +420,12 @@ const loadContactPage = async (req, res) => {
 // Handle Google Callback
 const handleGoogleCallback = async (req, res) => {
     try {
-        // Check if authentication failed due to blocked status
         if (!req.user) {
             console.log('Google auth failed - possible blocked user');
             req.flash('error', 'Authentication failed: Your account may be blocked. Please contact support.');
             return res.redirect('/login');
         }
 
-        // Additional verification of blocked status
         const user = await User.findById(req.user._id);
         if (!user || user.isBlocked) {
             console.log(`Blocked user detected in callback: ${req.user?.email}`);
@@ -444,7 +439,6 @@ const handleGoogleCallback = async (req, res) => {
             return;
         }
 
-        // Successful authentication
         req.session.user = {
             _id: user._id,
             name: user.name,

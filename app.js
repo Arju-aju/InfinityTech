@@ -60,7 +60,7 @@ app.use(
         cookie: { 
             maxAge: 1000 * 60 * 60 * 24, 
             httpOnly: true, 
-            secure: process.env.NODE_ENV === 'production' 
+            secure: process.env.NODE_ENV === 'production' // Ensure secure cookies on AWS
         },
     })
 );
@@ -93,15 +93,17 @@ app.use(
                 defaultSrc: ["'self'"],
                 scriptSrc: [
                     "'self'",
-                    "'unsafe-inline'", // Temporary allowance for existing inline scripts
-                    "'unsafe-eval'",
+                    "'unsafe-inline'", // Temporary for inline scripts
+                    "'unsafe-eval'",   // Temporary for eval (avoid in production if possible)
                     "https://cdn.jsdelivr.net",
                     "https://unpkg.com",
                     "https://cdn.tailwindcss.com",
                     "https://code.jquery.com",
                     "https://cdnjs.cloudflare.com",
                     "https://checkout.razorpay.com",
-                    "https://api.razorpay.com"
+                    "https://api.razorpay.com",
+                    "https://www.google.com",       // Google Maps
+                    "https://maps.googleapis.com"   // Google Maps API
                 ],
                 styleSrc: [
                     "'self'",
@@ -118,24 +120,35 @@ app.use(
                     "https://cdn.jsdelivr.net",
                     "https://lumberjack.razorpay.com",
                     "https://api.razorpay.com",
-                    "https://checkout.razorpay.com"
+                    "https://checkout.razorpay.com",
+                    "https://www.google.com",       // Google Maps
+                    "https://maps.googleapis.com",  // Google Maps API
                 ],
                 frameSrc: [
                     "'self'",
                     "https://api.razorpay.com",
-                    "https://checkout.razorpay.com"
+                    "https://checkout.razorpay.com",
+                    "https://www.google.com",       // Google Maps iframe
+                    "https://maps.google.com"       // Additional Google Maps domain
                 ],
-                imgSrc: ["'self'", "data:", "https:", "blob:"],
+                imgSrc: [
+                    "'self'",
+                    "data:",
+                    "https:",
+                    "blob:",
+                    "https://maps.gstatic.com",     // Map tiles
+                    "https://*.googleapis.com",     // Google APIs
+                ],
                 fontSrc: [
                     "'self'",
                     "https://cdnjs.cloudflare.com",
                     "https://fonts.gstatic.com",
                     "data:"
                 ],
-                mediaSrc: ["'self'", "https:", "blob:"],
+                mediaSrc: ["'self'", "https:", "blob:", "https://*.amazonaws.com"],
                 objectSrc: ["'none'"],
                 formAction: ["'self'"],
-                upgradeInsecureRequests: []
+                upgradeInsecureRequests: [] // Enforce HTTPS in production
             }
         },
         crossOriginEmbedderPolicy: false,

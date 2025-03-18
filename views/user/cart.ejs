@@ -8,7 +8,27 @@
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
   <style>
-    /* Same styles as before */
+    body {
+      font-family: 'Inter', sans-serif;
+    }
+
+    .fade-in {
+      animation: fadeIn 0.3s ease;
+    }
+
+    .slide-up {
+      animation: slideUp 0.3s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    @keyframes slideUp {
+      from { transform: translateY(20px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
   </style>
 </head>
 <body class="min-h-screen">
