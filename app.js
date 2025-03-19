@@ -88,7 +88,7 @@ app.use(
                 defaultSrc: ["'self'"],
                 scriptSrc: [
                     "'self'",
-                    "'unsafe-inline'", // Allows inline <script> blocks
+                    "'unsafe-inline'",
                     "'unsafe-eval'",
                     "https://cdn.jsdelivr.net",
                     "https://unpkg.com",
@@ -127,6 +127,7 @@ app.use(
                     "https://checkout.razorpay.com",
                     "https://www.google.com",
                     "https://maps.google.com",
+                    
                 ],
                 imgSrc: [
                     "'self'",
