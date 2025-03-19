@@ -10,6 +10,7 @@
         .gradient-bg {
             background: linear-gradient(135deg, #6366f1, #8b5cf6);
             background-size: 400% 400%;
+            animation: gradient 15s ease infinite;
         }
         @keyframes gradient {
             0% { background-position: 0% 50%; }
@@ -24,18 +25,18 @@
     <div class="flex-1 p-8 flex justify-center items-start">
         <div class="w-full max-w-2xl">
             <% if (locals.messages?.success) { %>
-                <div id="successMessage" class="bg-green-500 text-white p-4 rounded-lg mb-4 flex items-center justify-between animate-fade-in hidden">
+                <div id="successMessage" class="bg-green-500 text-white p-4 rounded-lg mb-4 flex items-center justify-between animate-fade-in">
                     <span><i class="fas fa-check-circle mr-2"></i><%= messages.success %></span>
-                    <button onclick="this.parentElement.remove()" class="hover:text-gray-200 focus:outline-none">
+                    <button class="close-btn hover:text-gray-200 focus:outline-none">
                         <i class="fas fa-times"></i>
                     </button>
                 </div>
             <% } %>
             
             <% if (locals.messages?.error) { %>
-                <div id="errorMessage" class="bg-red-500 text-white p-4 rounded-lg mb-4 flex items-center justify-between animate-fade-in hidden">
+                <div id="errorMessage" class="bg-red-500 text-white p-4 rounded-lg mb-4 flex items-center justify-between animate-fade-in">
                     <span><i class="fas fa-exclamation-circle mr-2"></i><%= messages.error %></span>
-                    <button onclick="this.parentElement.remove()" class="hover:text-gray-200 focus:outline-none">
+                    <button class="close-btn hover:text-gray-200 focus:outline-none">
                         <i class="fas fa-times"></i>
                     </button>
                 </div>
@@ -99,7 +100,7 @@
                     <div class="flex justify-end space-x-4">
                         <button 
                             type="button" 
-                            onclick="window.location.href='/profile'" 
+                            id="cancel-btn"
                             class="px-6 py-3 rounded bg-white/10 text-white hover:bg-white/20 focus:outline-none focus:ring-2 focus:ring-white/50"
                         >
                             Cancel
@@ -115,5 +116,29 @@
             </div>
         </div>
     </div>
+
+    <script>
+        // Auto-hide flash messages after 5 seconds
+        setTimeout(() => {
+            const messages = document.querySelectorAll('#successMessage, #errorMessage');
+            messages.forEach(msg => {
+                msg.style.opacity = '0';
+                msg.style.transition = 'opacity 0.5s ease';
+                setTimeout(() => msg.remove(), 500);
+            });
+        }, 5000);
+
+        // Close flash messages on button click
+        document.querySelectorAll('.close-btn').forEach(button => {
+            button.addEventListener('click', () => {
+                button.parentElement.remove();
+            });
+        });
+
+        // Cancel button handler
+        document.getElementById('cancel-btn').addEventListener('click', () => {
+            window.location.href = '/profile';
+        });
+    </script>
 </body>
 </html>

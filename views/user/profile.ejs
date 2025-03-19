@@ -66,7 +66,7 @@
             <% if (messages.success && messages.success.length > 0) { %>
                 <div class="bg-green-600/80 text-white p-5 rounded-xl mb-6 flex items-center justify-between fade-in glass-card">
                     <span><i class="fas fa-check-circle mr-3"></i><%= messages.success %></span>
-                    <button onclick="this.parentElement.remove()" class="hover:text-gray-200">
+                    <button class="close-btn hover:text-gray-200">
                         <i class="fas fa-times"></i>
                     </button>
                 </div>
@@ -74,7 +74,7 @@
             <% if (messages.error && messages.error.length > 0) { %>
                 <div class="bg-red-600/80 text-white p-5 rounded-xl mb-6 flex items-center justify-between fade-in glass-card">
                     <span><i class="fas fa-exclamation-circle mr-3"></i><%= messages.error %></span>
-                    <button onclick="this.parentElement.remove()" class="hover:text-gray-200">
+                    <button class="close-btn hover:text-gray-200">
                         <i class="fas fa-times"></i>
                     </button>
                 </div>
@@ -98,7 +98,7 @@
             <div class="glass-card p-8 text-white shadow-xl">
                 <div class="flex justify-between items-center mb-8">
                     <h2 class="text-3xl font-bold tracking-tight">Profile Details</h2>
-                    <button onclick="confirmEditProfile()" class="btn-primary px-6 py-3 rounded-xl text-white font-semibold flex items-center shadow-md">
+                    <button id="edit-profile-btn" class="btn-primary px-6 py-3 rounded-xl text-white font-semibold flex items-center shadow-md">
                         <i class="fas fa-edit mr-3"></i>Edit Profile
                     </button>
                 </div>
@@ -233,11 +233,17 @@
             });
         }, 5000);
 
-        function confirmEditProfile() {
-            if (confirm("Do you want to edit your profile?")) {
-                window.location.href = "/edit-profile";
-            }
-        }
+        // Close flash messages on button click
+        document.querySelectorAll('.close-btn').forEach(button => {
+            button.addEventListener('click', () => {
+                button.parentElement.remove();
+            });
+        });
+
+        // Edit profile button handler (no confirmation)
+        document.getElementById('edit-profile-btn').addEventListener('click', () => {
+            window.location.href = '/edit-profile';
+        });
     </script>
 </body>
 </html>

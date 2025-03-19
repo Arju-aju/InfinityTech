@@ -58,45 +58,54 @@
           Add New Address
         </a>
 
-        <!-- Add Address Form -->
+        <!-- Enhanced Address Form with Updated Validation -->
         <div class="mt-6">
           <h3 class="text-lg font-semibold text-gray-800 mb-4">Add New Shipping Address</h3>
-          <form action="/add-address" method="POST" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <form id="addressForm" action="/add-address" method="POST" class="grid grid-cols-1 md:grid-cols-2 gap-4" novalidate>
             <div>
               <label for="addressType" class="block text-sm font-medium text-gray-700">Address Type</label>
-              <select id="addressType" name="addressType"  class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+              <select id="addressType" name="addressType" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" required>
+                <option value="">Select Type</option>
                 <option value="Home">Home</option>
                 <option value="Work">Work</option>
                 <option value="Other">Other</option>
               </select>
+              <p class="text-red-500 text-xs mt-1 hidden error-msg">Address type is required</p>
             </div>
             <div>
               <label for="name" class="block text-sm font-medium text-gray-700">Full Name</label>
-              <input type="text" id="name" name="name"  class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" placeholder="John Doe">
+              <input type="text" id="name" name="name" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" required pattern="^[A-Za-z\s]+$" placeholder="John Doe">
+              <p class="text-red-500 text-xs mt-1 hidden error-msg">Name must contain only letters</p>
             </div>
             <div class="md:col-span-2">
               <label for="address" class="block text-sm font-medium text-gray-700">Street Address</label>
-              <input type="text" id="address" name="address"  class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" placeholder="123 Main St">
+              <input type="text" id="address" name="address" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" required minlength="5" placeholder="123 Main St">
+              <p class="text-red-500 text-xs mt-1 hidden error-msg">Address must be at least 5 characters</p>
             </div>
             <div>
               <label for="city" class="block text-sm font-medium text-gray-700">City</label>
-              <input type="text" id="city" name="city" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" placeholder="Mumbai">
+              <input type="text" id="city" name="city" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" required pattern="^[A-Za-z\s]+$" placeholder="Mumbai">
+              <p class="text-red-500 text-xs mt-1 hidden error-msg">City must contain only letters</p>
             </div>
             <div>
               <label for="landmark" class="block text-sm font-medium text-gray-700">Landmark</label>
-              <input type="text" id="landmark" name="landmark"  class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" placeholder="Near Park">
+              <input type="text" id="landmark" name="landmark" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" required pattern="^[A-Za-z\s]+$" placeholder="Near Park">
+              <p class="text-red-500 text-xs mt-1 hidden error-msg">Landmark must contain only letters</p>
             </div>
             <div>
               <label for="state" class="block text-sm font-medium text-gray-700">State</label>
-              <input type="text" id="state" name="state" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" placeholder="Maharashtra">
+              <input type="text" id="state" name="state" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" required pattern="^[A-Za-z\s]+$" placeholder="Maharashtra">
+              <p class="text-red-500 text-xs mt-1 hidden error-msg">State must contain only letters</p>
             </div>
             <div>
               <label for="pincode" class="block text-sm font-medium text-gray-700">Pincode</label>
-              <input type="number" id="pincode" name="pincode" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" placeholder="400001">
+              <input type="text" id="pincode" name="pincode" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" required pattern="^\d{6}$" placeholder="400001">
+              <p class="text-red-500 text-xs mt-1 hidden error-msg">Pincode must be 6 digits</p>
             </div>
             <div>
               <label for="phone" class="block text-sm font-medium text-gray-700">Phone</label>
-              <input type="text" id="phone" name="phone" pattern="\d{10}" title="Phone number must be 10 digits" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" placeholder="9999999999">
+              <input type="tel" id="phone" name="phone" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" required pattern="^\d{10}$" placeholder="9999999999">
+              <p class="text-red-500 text-xs mt-1 hidden error-msg">Phone must be 10 digits</p>
             </div>
             <div class="md:col-span-2">
               <button type="submit" class="w-full bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-600 transition-all duration-300 transform hover:scale-105">Save Address</button>
@@ -106,7 +115,7 @@
       </div>
     </div>
 
-    <!-- Order Summary -->
+    <!-- Order Summary (unchanged) -->
     <div class="w-full lg:w-1/3 px-4">
       <div class="bg-white p-6 rounded-xl shadow-2xl border border-gray-200 sticky top-4 transform hover:scale-105 transition-transform duration-500">
         <h2 class="text-2xl font-semibold mb-4 text-gray-800">Order Summary</h2>
@@ -261,11 +270,101 @@
     const paymentMethods = document.querySelectorAll('input[name="paymentMethod"]');
     const applyCouponBtn = document.getElementById('applyCouponBtn');
     const couponInput = document.getElementById('coupon');
+    const addressForm = document.getElementById('addressForm');
 
     const defaultAddressCard = document.querySelector('.saved-address-card.selected');
     if (defaultAddressCard) {
       orderState.selectedAddress = JSON.parse(defaultAddressCard.dataset.address);
     }
+
+    // Address Form Validation
+    addressForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      let isValid = true;
+
+      addressForm.querySelectorAll('.error-msg').forEach(msg => msg.classList.add('hidden'));
+      addressForm.querySelectorAll('input, select').forEach(input => input.classList.remove('border-red-500'));
+
+      const validations = [
+        { id: 'addressType', check: val => val !== '', msg: 'Address type is required' },
+        { id: 'name', check: val => /^[A-Za-z\s]+$/.test(val) && val.length >= 2, msg: 'Name must contain only letters and be at least 2 characters' },
+        { id: 'address', check: val => val.length >= 5, msg: 'Address must be at least 5 characters' },
+        { id: 'city', check: val => /^[A-Za-z\s]+$/.test(val) && val.length > 0, msg: 'City must contain only letters' },
+        { id: 'landmark', check: val => /^[A-Za-z\s]+$/.test(val) && val.length > 0, msg: 'Landmark must contain only letters' },
+        { id: 'state', check: val => /^[A-Za-z\s]+$/.test(val) && val.length > 0, msg: 'State must contain only letters' },
+        { id: 'pincode', check: val => /^\d{6}$/.test(val), msg: 'Pincode must be 6 digits' },
+        { id: 'phone', check: val => /^\d{10}$/.test(val), msg: 'Phone must be 10 digits' }
+      ];
+
+      validations.forEach(({ id, check, msg }) => {
+        const input = document.getElementById(id);
+        const value = input.value.trim();
+        if (!check(value)) {
+          isValid = false;
+          input.classList.add('border-red-500');
+          const errorMsg = input.nextElementSibling;
+          if (errorMsg && errorMsg.classList.contains('error-msg')) {
+            errorMsg.textContent = msg;
+            errorMsg.classList.remove('hidden');
+          }
+        }
+      });
+
+      if (isValid) {
+        fetch('/add-address', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(Object.fromEntries(new FormData(addressForm)))
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            Swal.fire({
+              icon: 'success',
+              title: 'Success',
+              text: data.message,
+              toast: true,
+              position: 'top-end',
+              timer: 2000
+            }).then(() => location.reload());
+          } else {
+            Swal.fire({
+              icon: 'error',
+              title: 'Error',
+              text: data.message,
+              toast: true,
+              position: 'top-end',
+              timer: 3000
+            });
+          }
+        })
+        .catch(error => {
+          console.error('Form submission error:', error);
+          Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'Failed to add address. Please try again.',
+            toast: true,
+            position: 'top-end',
+            timer: 3000
+          });
+        });
+      }
+    });
+
+    // Real-time input validation
+    addressForm.querySelectorAll('input, select').forEach(input => {
+      input.addEventListener('input', () => {
+        const errorMsg = input.nextElementSibling;
+        if (errorMsg && errorMsg.classList.contains('error-msg')) {
+          const value = input.value.trim();
+          const pattern = input.pattern ? new RegExp(input.pattern) : null;
+          const isValid = pattern ? pattern.test(value) : value.length > 0;
+          input.classList.toggle('border-red-500', !isValid && value.length > 0);
+          errorMsg.classList.toggle('hidden', isValid || value.length === 0);
+        }
+      });
+    });
 
     addressCards.forEach(card => {
       card.addEventListener('click', () => {

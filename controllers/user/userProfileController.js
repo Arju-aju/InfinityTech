@@ -1,27 +1,25 @@
 const { profile } = require("winston");
 const User = require("../../models/userSchema");
-const Order =  require('../../models/orderSchema')
+const Order = require('../../models/orderSchema');
 
 exports.loadProfile = async (req, res) => {
     try {
         const userId = req.user._id;
 
-        const user = await User.findById(userId)
-            .lean();
+        const user = await User.findById(userId).lean();
 
         if (!user) {
             return res.status(404).json({ message: 'User not found' });
         }
 
-        const recentOrders = await Order.find({user:userId})
-        .sort({createdAt:-1})
-        .limit(3)
-        .lean()
-
+        const recentOrders = await Order.find({ user: userId })
+            .sort({ createdAt: -1 })
+            .limit(3)
+            .lean();
 
         // Format orders for the view
         const formattedOrders = recentOrders.map(order => ({
-            orderNumber: order._id.toString().slice(-6), // Last 6 characters for readability
+            orderNumber: order._id.toString().slice(-6),
             amount: order.orderAmount,
             status: order.status,
             date: new Date(order.createdAt).toLocaleDateString()
@@ -40,8 +38,6 @@ exports.loadProfile = async (req, res) => {
             isVerified: user.isVerified,
             wallet: user.wallet || 0,
             profileImage: user.profileImage || '/api/placeholder/120/120',
-
-            // Account verification details
             accountDetails: {
                 isAdmin: user.isAdmin || false,
                 isVerified: user.isVerified,
@@ -53,7 +49,7 @@ exports.loadProfile = async (req, res) => {
         // Render the profile page with user data and recent orders
         res.render('user/profile', {
             userProfile,
-            orders: formattedOrders 
+            orders: formattedOrders
         });
 
     } catch (error) {
@@ -62,18 +58,46 @@ exports.loadProfile = async (req, res) => {
     }
 };
 
+// Get profile edit page
+exports.getEditProfile = async (req, res) => {
+    try {
+        const userId = req.user._id;
+        const user = await User.findById(userId).lean();
 
-
-exports.getEditProfile = (req, res) => {
-    res.render("user/editProfile", {
-        user: req.user,
-        messages: {
-            success: req.flash('success'),
-            error: req.flash('error')
+        if (!user) {
+            req.flash('error', 'User not found');
+            return res.redirect('/profile');
         }
-    });
+
+        // Prepare userProfile object for sidebar
+        const userProfile = {
+            name: user.name,
+            email: user.email,
+            phone: user.phone || 'Not provided',
+            memberSince: new Date(user.createdOn).toLocaleDateString('en-US', {
+                month: 'long',
+                year: 'numeric'
+            }),
+            status: user.isBlocked ? 'Blocked' : 'Active'
+        };
+
+        res.render('user/editProfile', {
+            user: req.user,
+            userProfile, // Pass userProfile for the sidebar
+            messages: {
+                success: req.flash('success'),
+                error: req.flash('error')
+            },
+            errors: {}
+        });
+    } catch (error) {
+        console.error('Error loading edit profile:', error);
+        req.flash('error', 'An error occurred while loading the edit profile page.');
+        res.redirect('/profile');
+    }
 };
 
+// Validate input
 const validateInput = (input) => {
     const errors = {};
     
@@ -129,18 +153,6 @@ const sanitizeInput = (input) => {
     };
 };
 
-// Get profile edit page
-exports.getEditProfile = (req, res) => {
-    res.render('user/editProfile', {
-        user: req.user,
-        messages: {
-            success: req.flash('success'),
-            error: req.flash('error')
-        },
-        errors: {}
-    });
-};
-
 // Handle profile update
 exports.postEditProfile = async (req, res) => {
     try {
@@ -151,8 +163,22 @@ exports.postEditProfile = async (req, res) => {
         const { isValid, errors } = validateInput(sanitizedInput);
         
         if (!isValid) {
+            const userId = req.user._id;
+            const user = await User.findById(userId).lean();
+            const userProfile = {
+                name: user.name,
+                email: user.email,
+                phone: user.phone || 'Not provided',
+                memberSince: new Date(user.createdOn).toLocaleDateString('en-US', {
+                    month: 'long',
+                    year: 'numeric'
+                }),
+                status: user.isBlocked ? 'Blocked' : 'Active'
+            };
+
             return res.render('user/editProfile', {
                 user: sanitizedInput,
+                userProfile,
                 errors,
                 messages: {}
             });
@@ -165,8 +191,22 @@ exports.postEditProfile = async (req, res) => {
         });
 
         if (existingUser) {
+            const userId = req.user._id;
+            const user = await User.findById(userId).lean();
+            const userProfile = {
+                name: user.name,
+                email: user.email,
+                phone: user.phone || 'Not provided',
+                memberSince: new Date(user.createdOn).toLocaleDateString('en-US', {
+                    month: 'long',
+                    year: 'numeric'
+                }),
+                status: user.isBlocked ? 'Blocked' : 'Active'
+            };
+
             return res.render('user/editProfile', {
                 user: sanitizedInput,
+                userProfile,
                 errors: { email: 'Email is already in use' },
                 messages: {}
             });
@@ -200,8 +240,22 @@ exports.postEditProfile = async (req, res) => {
         
         // Handle different types of errors
         if (error.name === 'MongoError' && error.code === 11000) {
+            const userId = req.user._id;
+            const user = await User.findById(userId).lean();
+            const userProfile = {
+                name: user.name,
+                email: user.email,
+                phone: user.phone || 'Not provided',
+                memberSince: new Date(user.createdOn).toLocaleDateString('en-US', {
+                    month: 'long',
+                    year: 'numeric'
+                }),
+                status: user.isBlocked ? 'Blocked' : 'Active'
+            };
+
             return res.render('user/editProfile', {
                 user: req.body,
+                userProfile,
                 errors: { email: 'Email is already in use' },
                 messages: {}
             });
