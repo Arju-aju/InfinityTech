@@ -34,11 +34,11 @@ const uploadConfig = multer({
     storage: storage,
     fileFilter: fileFilter,
     limits: {
-        fileSize: 5 * 1024 * 1024 // 5MB limit per file
+        fileSize: 5 * 1024 * 1024 
     }
 }).fields([
-    { name: 'images', maxCount: 5 }, // For addProduct and updateProduct
-    { name: 'newImage', maxCount: 1 } // For replaceProductImage
+    { name: 'images', maxCount: 5 }, 
+    { name: 'newImage', maxCount: 1 } 
 ]);
 
 const handleMulterError = (err, req, res, next) => {

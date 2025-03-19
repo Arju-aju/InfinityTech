@@ -47,7 +47,7 @@
               <div class="saved-address-card rounded-lg cursor-pointer p-5 border border-gray-200 hover:border-blue-500 hover:bg-blue-50 hover:shadow-lg transition-all duration-300 <%= index === defaultAddressIndex ? 'selected border-blue-500 bg-blue-50 shadow-lg' : '' %>"
                    data-address='<%= JSON.stringify(address) %>'>
                 <h3 class="font-semibold text-lg text-gray-800 mb-2"><%= address.addressType || 'Home' %></h3>
-                <p class="text-sm text-gray-600"><%= address.fullName %>, <%= address.street %>, <%= address.city %>, <%= address.state %> <%= address.pincode %></p>
+                <p class="text-sm text-gray-600"><%= address.name %>, <%= address.street %>, <%= address.city %>, <%= address.state %> <%= address.pincode %></p>
                 <p class="text-sm text-gray-600 mt-1">Phone: <%= address.phone %></p>
               </div>
             <% }); %>
@@ -57,6 +57,52 @@
           <svg class="h-5 w-5 mr-1 animate-spin-slow" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clip-rule="evenodd" /></svg>
           Add New Address
         </a>
+
+        <!-- Add Address Form -->
+        <div class="mt-6">
+          <h3 class="text-lg font-semibold text-gray-800 mb-4">Add New Shipping Address</h3>
+          <form action="/add-address" method="POST" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label for="addressType" class="block text-sm font-medium text-gray-700">Address Type</label>
+              <select id="addressType" name="addressType"  class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                <option value="Home">Home</option>
+                <option value="Work">Work</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+            <div>
+              <label for="name" class="block text-sm font-medium text-gray-700">Full Name</label>
+              <input type="text" id="name" name="name"  class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" placeholder="John Doe">
+            </div>
+            <div class="md:col-span-2">
+              <label for="address" class="block text-sm font-medium text-gray-700">Street Address</label>
+              <input type="text" id="address" name="address"  class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" placeholder="123 Main St">
+            </div>
+            <div>
+              <label for="city" class="block text-sm font-medium text-gray-700">City</label>
+              <input type="text" id="city" name="city" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" placeholder="Mumbai">
+            </div>
+            <div>
+              <label for="landmark" class="block text-sm font-medium text-gray-700">Landmark</label>
+              <input type="text" id="landmark" name="landmark"  class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" placeholder="Near Park">
+            </div>
+            <div>
+              <label for="state" class="block text-sm font-medium text-gray-700">State</label>
+              <input type="text" id="state" name="state" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" placeholder="Maharashtra">
+            </div>
+            <div>
+              <label for="pincode" class="block text-sm font-medium text-gray-700">Pincode</label>
+              <input type="number" id="pincode" name="pincode" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" placeholder="400001">
+            </div>
+            <div>
+              <label for="phone" class="block text-sm font-medium text-gray-700">Phone</label>
+              <input type="text" id="phone" name="phone" pattern="\d{10}" title="Phone number must be 10 digits" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" placeholder="9999999999">
+            </div>
+            <div class="md:col-span-2">
+              <button type="submit" class="w-full bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-600 transition-all duration-300 transform hover:scale-105">Save Address</button>
+            </div>
+          </form>
+        </div>
       </div>
     </div>
 
@@ -125,17 +171,17 @@
           <h3 class="font-semibold text-gray-800 mb-3">Payment Method</h3>
           <div class="space-y-4">
             <div class="relative">
-              <input type="radio" id="cod" name="paymentMethod" value="cod" class="absolute w-0 h-0 opacity-0 peer" <%= totalAmount > 4000 ? 'disabled' : 'checked' %>>
+              <input type="radio" id="cod" name="paymentMethod" value="cod" class="absolute w-0 h-0 opacity-0 peer" <%= totalAmount > 7000 ? 'disabled' : 'checked' %>>
               <label for="cod" class="flex items-center p-4 border rounded-lg cursor-pointer transition-all duration-300 peer-checked:border-blue-500 peer-checked:bg-blue-50 hover:bg-gray-50 hover:shadow-md <%= totalAmount > 4000 ? 'opacity-50 cursor-not-allowed' : '' %> block">
                 <i class="fas fa-money-bill-wave text-xl mr-3 text-gray-600 animate-wiggle"></i>
                 <div class="flex flex-col">
                   <span class="font-medium text-gray-800">Cash on Delivery</span>
-                  <span class="text-sm text-gray-500"><%= totalAmount > 4000 ? 'Not available for orders above ₹4000' : 'Pay when you receive your order' %></span>
+                  <span class="text-sm text-gray-500"><%= totalAmount > 7000 ? 'Not available for orders above ₹4000' : 'Pay when you receive your order' %></span>
                 </div>
               </label>
             </div>
             <div class="relative">
-              <input type="radio" id="razorpay" name="paymentMethod" value="razorpay" class="absolute w-0 h-0 opacity-0 peer" <%= totalAmount > 4000 ? 'checked' : '' %>>
+              <input type="radio" id="razorpay" name="paymentMethod" value="razorpay" class="absolute w-0 h-0 opacity-0 peer" <%= totalAmount > 7000 ? 'checked' : '' %>>
               <label for="razorpay" class="flex items-center p-4 border rounded-lg cursor-pointer transition-all duration-300 peer-checked:border-blue-500 peer-checked:bg-blue-50 hover:bg-gray-50 hover:shadow-md block">
                 <i class="fas fa-credit-card text-xl mr-3 text-gray-600 animate-wiggle"></i>
                 <div class="flex flex-col">
@@ -288,13 +334,19 @@
         return;
       }
 
+      placeOrderBtn.disabled = true;
+      placeOrderBtn.innerHTML = 'Processing...';
+
       if (orderState.paymentMethod === 'cod') {
-        await handleCashOrder();
+        await handleOrder('cod');
       } else if (orderState.paymentMethod === 'razorpay') {
         await handleRazorpayOrder();
       } else if (orderState.paymentMethod === 'wallet') {
-        await handleWalletOrder();
+        await handleOrder('wallet');
       }
+
+      placeOrderBtn.disabled = false;
+      placeOrderBtn.innerHTML = orderState.paymentMethod === 'razorpay' ? 'Proceed to Payment' : 'Place Order';
     });
 
     function validateOrderState() {
@@ -303,14 +355,14 @@
       placeOrderBtn.classList.toggle('cursor-not-allowed', placeOrderBtn.disabled);
     }
 
-    async function handleCashOrder() {
+    async function handleOrder(paymentMethod) {
       try {
         const response = await fetch('/checkout/place-order', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             addressId: orderState.selectedAddress._id,
-            paymentMethod: 'cod',
+            paymentMethod,
             totalAmount: orderState.totalAmount,
             couponCode: orderState.couponCode,
             couponDiscount: orderState.couponDiscount
@@ -319,47 +371,54 @@
         const result = await response.json();
 
         if (response.ok && result.success) {
-          Swal.fire({ icon: 'success', title: 'Order Placed!', text: 'Your order has been successfully placed.', toast: true, position: 'top-end', timer: 2000 });
-          window.location.href = result.redirectUrl;
+          if (result.showSuccessModal) {
+            Swal.fire({
+              icon: 'success',
+              title: 'Order Placed!',
+              text: result.message,
+              toast: true,
+              position: 'top-end',
+              timer: 2000,
+              timerProgressBar: true
+            }).then(() => {
+              window.location.href = result.redirectUrl;
+            });
+          }
         } else {
-          throw new Error(result.message || 'Error placing COD order');
+          if (result.showFailureModal) {
+            Swal.fire({
+              icon: 'error',
+              title: 'Error',
+              text: result.message,
+              toast: true,
+              position: 'top-end',
+              timer: 3000,
+              timerProgressBar: true
+            }).then(() => {
+              window.location.href = result.redirectUrl;
+            });
+          } else {
+            throw new Error(result.message || 'Unknown error');
+          }
         }
       } catch (error) {
-        console.error('Cash order error:', error);
-        Swal.fire({ icon: 'error', title: 'Error', text: error.message || 'Error placing order', toast: true, position: 'top-end', timer: 3000 });
-      }
-    }
-
-    async function handleWalletOrder() {
-      try {
-        const response = await fetch('/checkout/place-order', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            addressId: orderState.selectedAddress._id,
-            paymentMethod: 'wallet',
-            totalAmount: orderState.totalAmount,
-            couponCode: orderState.couponCode,
-            couponDiscount: orderState.couponDiscount
-          })
+        console.error(`${paymentMethod} order error:`, error);
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: error.message || `Error processing ${paymentMethod} payment`,
+          toast: true,
+          position: 'top-end',
+          timer: 3000,
+          timerProgressBar: true
+        }).then(() => {
+          window.location.href = '/checkout';
         });
-        const result = await response.json();
-
-        if (response.ok && result.success) {
-          Swal.fire({ icon: 'success', title: 'Order Placed!', text: 'Payment successful via wallet.', toast: true, position: 'top-end', timer: 2000 });
-          window.location.href = result.redirectUrl;
-        } else {
-          throw new Error(result.message || 'Unknown error during wallet payment');
-        }
-      } catch (error) {
-        console.error('Wallet order error:', error);
-        Swal.fire({ icon: 'error', title: 'Error', text: error.message || 'Error processing wallet payment', toast: true, position: 'top-end', timer: 3000 });
       }
     }
 
     async function handleRazorpayOrder() {
       try {
-        console.log('Client-side orderState before request:', JSON.stringify(orderState, null, 2));
         const response = await fetch('/checkout/create-razorpay-order', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -372,18 +431,11 @@
         const order = await response.json();
 
         if (!response.ok || !order.success) {
-          console.error('Razorpay order creation failed:', order);
           throw new Error(order.message || 'Failed to create payment order');
         }
 
-        // Sync client-side total with server response
         orderState.totalAmount = order.amount / 100;
         document.getElementById('cartTotal').textContent = `₹${orderState.totalAmount.toFixed(2)}`;
-        console.log('Razorpay options:', {
-          key: order.key,
-          amount: order.amount,
-          order_id: order.orderId,
-        });
 
         const options = {
           key: order.key,
@@ -408,17 +460,35 @@
               const verifyResult = await verifyResponse.json();
 
               if (verifyResponse.ok && verifyResult.success) {
-                Swal.fire({
-                  icon: 'success',
-                  title: 'Payment Successful!',
-                  text: 'Your order has been placed.',
-                  toast: true,
-                  position: 'top-end',
-                  timer: 2000,
-                });
-                window.location.href = `/orders/${verifyResult.orderId}`;
+                if (verifyResult.showSuccessModal) {
+                  Swal.fire({
+                    icon: 'success',
+                    title: 'Payment Successful!',
+                    text: 'Your order has been placed.',
+                    toast: true,
+                    position: 'top-end',
+                    timer: 2000,
+                    timerProgressBar: true
+                  }).then(() => {
+                    window.location.href = verifyResult.redirectUrl;
+                  });
+                }
               } else {
-                throw new Error(verifyResult.message || 'Payment verification failed');
+                if (verifyResult.showFailureModal) {
+                  Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: verifyResult.message,
+                    toast: true,
+                    position: 'top-end',
+                    timer: 3000,
+                    timerProgressBar: true
+                  }).then(() => {
+                    window.location.href = verifyResult.redirectUrl;
+                  });
+                } else {
+                  throw new Error(verifyResult.message || 'Payment verification failed');
+                }
               }
             } catch (error) {
               console.error('Payment verification error:', error);
@@ -429,6 +499,9 @@
                 toast: true,
                 position: 'top-end',
                 timer: 3000,
+                timerProgressBar: true
+              }).then(() => {
+                window.location.href = '/checkout';
               });
             }
           },
@@ -442,7 +515,7 @@
 
         const rzp = new Razorpay(options);
         rzp.on('payment.failed', (response) => {
-          console.error('Payment failed:', JSON.stringify(response.error, null, 2));
+          console.error('Payment failed:', response.error);
           Swal.fire({
             icon: 'error',
             title: 'Payment Failed',
@@ -450,6 +523,9 @@
             toast: true,
             position: 'top-end',
             timer: 3000,
+            timerProgressBar: true
+          }).then(() => {
+            window.location.href = '/checkout';
           });
         });
         rzp.open();
@@ -462,6 +538,9 @@
           toast: true,
           position: 'top-end',
           timer: 3000,
+          timerProgressBar: true
+        }).then(() => {
+          window.location.href = '/checkout';
         });
       }
     }

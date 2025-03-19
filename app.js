@@ -111,7 +111,8 @@ app.use(
                 ],
                 connectSrc: [
                     "'self'",
-                    "http://localhost:3000", // Allow local API calls
+                    "'unsafe-inline'",  
+                    "http://localhost:3000", 
                     "https://unpkg.com",
                     "https://cdn.jsdelivr.net",
                     "https://lumberjack.razorpay.com",
@@ -125,7 +126,8 @@ app.use(
                     "https://api.razorpay.com",
                     "https://checkout.razorpay.com",
                     "https://www.google.com",
-                    "https://maps.google.com"
+                    "https://maps.google.com",
+                    
                 ],
                 imgSrc: [
                     "'self'",
@@ -134,6 +136,7 @@ app.use(
                     "blob:",
                     "https://maps.gstatic.com",
                     "https://*.googleapis.com",
+                    "https://checkout.razorpay.com"
                 ],
                 fontSrc: [
                     "'self'",
@@ -143,7 +146,11 @@ app.use(
                 ],
                 mediaSrc: ["'self'", "https:", "blob:", "https://*.amazonaws.com"],
                 objectSrc: ["'none'"],
-                formAction: ["'self'"],
+                formAction: [
+                    "'self'",
+                    "https://api.razorpay.com",
+                    "https://checkout.razorpay.com"
+                ],
                 upgradeInsecureRequests: []
             }
         },
@@ -168,7 +175,7 @@ app.use('/admin', adminRouter);
 
 // 404 handler
 app.use((req, res, next) => {
-    console.log(`404 Error: ${req.method} ${req.url}`); // Debug log
+    console.log(`404 Error: ${req.method} ${req.url}`); 
     if (req.xhr || req.headers.accept?.includes('json')) {
         res.status(404).json({ success: false, message: 'API route not found' });
     } else {

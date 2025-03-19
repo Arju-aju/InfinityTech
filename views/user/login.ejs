@@ -5,241 +5,207 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>InfinityTech - Login</title>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         /* Gradient Animation */
-        @keyframes gradientFlow {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
+        @keyframes gradientShift {
+            0% { background-position: 0% 0%; }
+            50% { background-position: 100% 100%; }
+            100% { background-position: 0% 0%; }
         }
-        .animate-gradient {
-            background-size: 200% 200%;
-            animation: gradientFlow 8s ease infinite;
+        .gradient-bg {
+            background: linear-gradient(135deg, #1E1F5E, #5B2E8C, #A517BA, #FF007A);
+            background-size: 300% 300%;
+
         }
 
-        /* Input Focus Animation */
-        .input-focus {
-            transition: all 0.3s ease;
-        }
-        .input-focus:focus {
-            box-shadow: 0 0 15px rgba(40, 69, 174, 0.6);
-            transform: scale(1.02);
-            border-color: #A517BA;
+        /* Neon Glow */
+        .neon-glow {
+            box-shadow: 0 0 20px rgba(165, 23, 186, 0.5), 0 0 40px rgba(165, 23, 186, 0.3);
         }
 
-        /* Button Hover Animation */
-        .btn-hover {
+        /* Input Animation */
+        .input-modern {
             transition: all 0.4s ease;
         }
-        .btn-hover:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 8px 25px rgba(40, 69, 174, 0.5);
+        .input-modern:focus {
+            border-color: #FF007A;
+            box-shadow: 0 0 15px rgba(255, 0, 122, 0.6);
+            transform: translateY(-2px);
         }
 
-        /* Subtle Glow Effect */
-        .glow-effect {
-            box-shadow: 0 0 20px rgba(165, 23, 186, 0.2);
+        /* Button Animation */
+        .btn-modern {
+            position: relative;
+            overflow: hidden;
+            transition: all 0.4s ease;
         }
+        .btn-modern:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 30px rgba(165, 23, 186, 0.6);
+        }
+        .btn-modern::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 300%;
+            height: 300%;
+            background: rgba(255, 255, 255, 0.1);
+            transform: translate(-50%, -50%) rotate(45deg);
+            transition: all 0.5s ease;
+            opacity: 0;
+        }
+        .btn-modern:hover::after {
+            width: 0;
+            height: 0;
+            opacity: 1;
+        }
+
+        /* Floating Particles */
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
+        }
+        .particle {
+            position: absolute;
+            border-radius: 50%;
+            opacity: 0.3;
+            animation: float 6s ease-in-out infinite;
+        }
+        
     </style>
 </head>
-<body class="bg-gray-900 min-h-screen overflow-hidden font-sans">
+<body class="bg-black min-h-screen overflow-hidden font-sans">
     <!-- Animated Background -->
-    <div class="fixed inset-0 overflow-hidden">
-        <div class="absolute inset-0 bg-gradient-to-tr from-[#1F2A77] via-[#5D2E8C] to-[#A517BA] animate-gradient opacity-40"></div>
-        <div class="absolute inset-0 opacity-10">
-            <div class="w-full h-full bg-[radial-gradient(circle_at_center,#ffffff30_1px,transparent_1px)] bg-[length:40px_40px]"></div>
-        </div>
-        <div class="absolute inset-0 bg-[linear-gradient(45deg,rgba(255,255,255,0.05)_0%,rgba(255,255,255,0)_100%)]"></div>
+    <div class="fixed inset-0 gradient-bg">
+        <div class="absolute inset-0 opacity-20" style="background: radial-gradient(circle, rgba(255,255,255,0.1) 1px, transparent 1px); background-size: 50px 50px;"></div>
+        <!-- Floating Particles -->
+        <div class="particle w-4 h-4 bg-[#A517BA] top-10 left-20"></div>
+        <div class="particle w-6 h-6 bg-[#FF007A] top-40 right-24 delay-1000"></div>
+        <div class="particle w-3 h-3 bg-[#5B2E8C] bottom-20 left-32 delay-2000"></div>
     </div>
 
     <!-- Main Container -->
     <div class="container mx-auto px-4 h-screen flex items-center justify-center relative z-10">
-        <div class="max-w-md w-full space-y-8 bg-gray-800/70 backdrop-blur-xl p-10 rounded-3xl shadow-2xl border border-gray-700/20 glow-effect">
+        <div class="max-w-lg w-full space-y-10 bg-gray-900/90 backdrop-blur-2xl p-12 rounded-2xl neon-glow border border-gray-800/50">
             <!-- Header Section -->
-            <div class="relative text-center">
-                <div class="absolute -top-6 -left-6 w-20 h-20 bg-gradient-to-br from-[#2845AE] to-[#A517BA] rounded-full blur-3xl opacity-40 animate-pulse"></div>
-                <h2 class="text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-[#2845AE] to-[#A517BA] animate-gradient">
-                    Welcome Back
+            <div class="text-center relative">
+                <h2 class="text-6xl font-bold gradient-text custom-pulse">
+                    InfinityTech
                 </h2>
-                <p class="mt-3 text-base text-gray-300 tracking-wide">
-                    Sign in to InfinityTech
+                <p class="mt-2 text-lg text-gray-300 tracking-wider">
+                    Enter the Future
                 </p>
             </div>
 
             <!-- Flash Messages -->
             <% if (messages.error && messages.error.length > 0) { %>
-                <div class="text-center text-sm p-4 rounded-xl bg-red-900/80 text-white shadow-lg border border-red-700/50 animate-pulse">
-                    <i class="fas fa-exclamation-circle mr-2"></i><%= messages.error[0] %>
+                <div class="text-center p-4 rounded-lg bg-red-900/70 text-white neon-glow">
+                    <i class="fas fa-exclamation-triangle mr-2"></i><%= messages.error[0] %>
                 </div>
             <% } else if (messages.success && messages.success.length > 0) { %>
-                <div class="text-center text-sm p-4 rounded-xl bg-green-900/80 text-white shadow-lg border border-green-700/50">
+                <div class="text-center p-4 rounded-lg bg-green-900/70 text-white neon-glow">
                     <i class="fas fa-check-circle mr-2"></i><%= messages.success[0] %>
                 </div>
             <% } %>
 
             <!-- Login Form -->
-            <form id="login-form" class="mt-8 space-y-8" method="POST" action="/login">
-                <input type="hidden" name="remember" value="true">
+            <form id="login-form" class="mt-10 space-y-8" method="POST" action="/login">
                 <div class="space-y-6">
                     <!-- Email Field -->
-                    <div class="relative group">
-                        <label for="email" class="block text-sm font-medium text-gray-200 transition-all duration-300 group-hover:text-[#A517BA]">Email Address</label>
-                        <div class="mt-2 relative">
-                            <input id="email" name="email" type="email" 
-                                   class="input-focus appearance-none block w-full px-5 py-3 bg-gray-900/50 border border-gray-700 text-white rounded-xl placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#2845AE] hover:border-[#A517BA] transition-all duration-300" 
-                                   placeholder="you@example.com" value="<%= locals.email || '' %>"
-                                   >
-                            <p id="emailError" class="hidden text-red-400 text-xs mt-2"></p>
-                        </div>
+                    <div>
+                        <label for="email" class="block text-sm font-medium text-gray-200">Email</label>
+                        <input id="email" name="email" type="email" 
+                               class="input-modern w-full mt-2 px-5 py-3 bg-gray-950/70 border border-gray-700 text-white rounded-lg placeholder-gray-400 focus:outline-none focus:ring-0 transition-all" 
+                               placeholder="you@infinitytech.com" value="<%= locals.email || '' %>">
+                        <p id="emailError" class="hidden text-red-400 text-xs mt-2"></p>
                     </div>
 
                     <!-- Password Field -->
-                    <div class="relative group">
-                        <label for="password" class="block text-sm font-medium text-gray-200 transition-all duration-300 group-hover:text-[#A517BA]">Password</label>
-                        <div class="mt-2 relative">
-                            <input id="password" name="password" type="password" 
-                                   class="input-focus appearance-none block w-full px-5 py-3 bg-gray-900/50 border border-gray-700 text-white rounded-xl placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#2845AE] hover:border-[#A517BA] transition-all duration-300" 
-                                   placeholder="••••••••"
-                                   >
-                            <p id="passwordError" class="hidden text-red-400 text-xs mt-2"></p>
-                        </div>
+                    <div>
+                        <label for="password" class="block text-sm font-medium text-gray-200">Password</label>
+                        <input id="password" name="password" type="password" 
+                               class="input-modern w-full mt-2 px-5 py-3 bg-gray-950/70 border border-gray-700 text-white rounded-lg placeholder-gray-400 focus:outline-none focus:ring-0 transition-all" 
+                               placeholder="••••••••">
+                        <p id="passwordError" class="hidden text-red-400 text-xs mt-2"></p>
                     </div>
                 </div>
 
-                <!-- Remember Me & Forgot Password -->
+                <!-- Actions -->
                 <div class="flex items-center justify-between">
-                    <div class="flex items-center">
-                        <input id="remember-me" name="remember-me" type="checkbox" 
-                               class="h-4 w-4 text-[#2845AE] focus:ring-[#2845AE] border-gray-700 rounded bg-gray-900/50">
-                        <label for="remember-me" class="ml-2 block text-sm text-gray-200">
-                            Remember me
-                        </label>
-                    </div>
-                    <div class="text-sm">
-                        <a href="/forgotPassword" class="font-semibold text-[#2845AE] hover:text-[#A517BA] transition-colors duration-300">
-                            Forgot Password?
-                        </a>
-                    </div>
+                    <label class="flex items-center text-sm text-gray-300">
+                        <input type="checkbox" class="h-4 w-4 text-[#FF007A] bg-gray-950 border-gray-700 rounded focus:ring-0">
+                        <span class="ml-2">Stay Signed In</span>
+                    </label>
+                    <a href="/forgotPassword" class="text-sm text-[#A517BA] hover:text-[#FF007A] transition-colors">Forgot Password?</a>
                 </div>
 
                 <!-- Submit Button -->
-                <div>
-                    <button type="submit" 
-                            class="btn-hover w-full flex justify-center py-4 px-6 border border-transparent text-base font-semibold rounded-xl text-white bg-gradient-to-r from-[#2845AE] to-[#A517BA] hover:from-[#1F2A77] hover:to-[#8A139E] focus:outline-none focus:ring-4 focus:ring-[#2845AE]/50 relative overflow-hidden transition-all duration-300">
-                        <span class="absolute inset-0 bg-gradient-to-r from-[#2845AE]/30 to-[#A517BA]/30 animate-gradient"></span>
-                        <span class="relative flex items-center">
-                            <i class="fas fa-lock mr-3"></i>
-                            Sign In
-                        </span>
-                    </button>
-                </div>
+                <button type="submit" 
+                        class="btn-modern w-full py-4 px-6 text-white bg-gradient-to-r from-[#A517BA] to-[#FF007A] rounded-lg font-semibold tracking-wide">
+                    <span class="relative z-10 flex items-center justify-center">
+                        <i class="fas fa-sign-in-alt mr-3"></i> Log In
+                    </span>
+                </button>
             </form>
 
-            <!-- Social Login Options -->
-            <div class="mt-6">
-                <div class="relative">
-                    <div class="absolute inset-0 flex items-center">
-                        <div class="w-full border-t border-gray-700"></div>
-                    </div>
-                    <div class="relative flex justify-center text-sm">
-                        <span class="px-4 bg-gray-800/70 text-gray-400 tracking-wide">
-                            Or continue with
-                        </span>
-                    </div>
-                </div>
-
-                <div class="mt-6 grid grid-cols-2 gap-4">
-                    <a href="/auth/google" 
-                       class="btn-hover flex justify-center py-3 px-4 border border-gray-700 rounded-xl bg-gray-900/50 text-white hover:bg-gray-800/70 transition-all duration-300 shadow-md hover:shadow-lg">
-                        <i class="fab fa-google text-red-400 mr-2"></i>
-                        Google
-                    </a>
-                    <a href="/auth/facebook" 
-                       class="btn-hover flex justify-center py-3 px-4 border border-gray-700 rounded-xl bg-gray-900/50 text-white hover:bg-gray-800/70 transition-all duration-300 shadow-md hover:shadow-lg">
-                        <i class="fab fa-facebook text-blue-400 mr-2"></i>
-                        Facebook
-                    </a>
-                </div>
+            <!-- Social Login -->
+            <div class="relative text-center">
+                <span class="absolute inset-x-0 top-1/2 h-px bg-gray-700"></span>
+                <span class="relative bg-gray-900/90 px-4 text-gray-400">Or sign in with</span>
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+                <a href="/auth/google" class="btn-modern py-3 px-4 bg-gray-950/70 text-white rounded-lg flex items-center justify-center border border-gray-800 hover:bg-gray-900">
+                    <i class="fab fa-google mr-2 text-[#FF007A]"></i> Google
+                </a>
+                <a href="/auth/facebook" class="btn-modern py-3 px-4 bg-gray-950/70 text-white rounded-lg flex items-center justify-center border border-gray-800 hover:bg-gray-900">
+                    <i class="fab fa-facebook mr-2 text-[#A517BA]"></i> Facebook
+                </a>
             </div>
 
-            <!-- Sign Up Link -->
-            <div class="text-center">
-                <p class="text-sm text-gray-400 tracking-wide">
-                    Don’t have an account? 
-                    <a href="/signup" class="font-semibold text-[#2845AE] hover:text-[#A517BA] transition-colors duration-300">
-                        Sign Up
-                    </a>
-                </p>
-            </div>
+            <!-- Sign Up -->
+            <p class="text-center text-gray-400">
+                New here? <a href="/signup" class="text-[#FF007A] hover:text-[#A517BA] font-semibold transition-colors">Sign Up</a>
+            </p>
         </div>
     </div>
 
-    <!-- Back to Home Button -->
+    <!-- Back to Home -->
     <div class="fixed top-6 left-6 z-20">
-        <a href="/" class="flex items-center text-white bg-gray-900/70 hover:bg-gray-800/80 px-5 py-3 rounded-full transition-all duration-300 shadow-lg hover:shadow-xl border border-gray-700/50">
-            <i class="fas fa-arrow-left mr-2"></i>
-            Back to Home
+        <a href="/" class="btn-modern px-5 py-3 text-white bg-gradient-to-r from-[#A517BA] to-[#FF007A] rounded-full flex items-center">
+            <i class="fas fa-arrow-left mr-2"></i> Home
         </a>
     </div>
 
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', () => {
             const form = document.getElementById('login-form');
-    
-            form.addEventListener('submit', function(e) {
-                // ... existing form validation code ...
+            form.addEventListener('submit', (e) => {
+                const email = document.getElementById('email').value;
+                const password = document.getElementById('password').value;
+                let valid = true;
+
+                if (!email || !/\S+@\S+\.\S+/.test(email)) {
+                    document.getElementById('emailError').textContent = 'Valid email required';
+                    document.getElementById('emailError').classList.remove('hidden');
+                    valid = false;
+                }
+                if (!password || password.length < 8) {
+                    document.getElementById('passwordError').textContent = 'Password must be 8+ characters';
+                    document.getElementById('passwordError').classList.remove('hidden');
+                    valid = false;
+                }
+                if (!valid) e.preventDefault();
             });
-    
-            // Enhanced flash message handling
+
+            // SweetAlert2 for flash messages
             <% if (messages.error && messages.error.length > 0) { %>
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Login Failed',
-                    text: '<%= messages.error[0] %>',
-                    confirmButtonColor: '#d33',
-                    confirmButtonText: 'OK'
-                });
+                Swal.fire({ icon: 'error', title: 'Oops!', text: '<%= messages.error[0] %>', confirmButtonColor: '#FF007A' });
             <% } else if (messages.success && messages.success.length > 0) { %>
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Success',
-                    text: '<%= messages.success[0] %>',
-                    confirmButtonColor: '#A517BA',
-                    confirmButtonText: 'OK'
-                });
+                Swal.fire({ icon: 'success', title: 'Welcome!', text: '<%= messages.success[0] %>', confirmButtonColor: '#A517BA' });
             <% } %>
-    
-            // Enhanced URL params handling
-            const urlParams = new URLSearchParams(window.location.search);
-            const error = urlParams.get('error');
-            
-            if (error === 'blocked') {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Account Blocked',
-                    text: 'Your account has been blocked. Please contact support.',
-                    confirmButtonColor: '#d33',
-                    confirmButtonText: 'OK'
-                });
-            } else if (error === 'session_expired') {
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'Session Expired',
-                    text: 'Please log in again.',
-                    confirmButtonColor: '#A517BA',
-                    confirmButtonText: 'OK'
-                });
-            } else if (error) {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Authentication Error',
-                    text: 'Login failed. Please try again.',
-                    confirmButtonColor: '#d33',
-                    confirmButtonText: 'OK'
-                });
-            }
         });
     </script>
 </body>

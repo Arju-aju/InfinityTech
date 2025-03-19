@@ -9,7 +9,6 @@ exports.getAddress = async (req, res) => {
             return res.redirect('/login');
         }
 
-        // Fetch user profile from session (assuming it contains name and email)
         const userProfile = req.session.user;
 
         if (!userProfile || !userProfile.name || !userProfile.email) {
@@ -66,9 +65,17 @@ exports.addAddress = async (req, res) => {
             }
         }
 
+        // Additional validation for phone and pincode
+        if (phone && !/^\d{10}$/.test(phone)) {
+            errors.push('Phone number must be 10 digits');
+        }
+        if (pincode && isNaN(pincode)) {
+            errors.push('Pincode must be a valid number');
+        }
+
         if (errors.length > 0) {
             req.flash('error', errors);
-            return res.redirect('/address');
+            return res.redirect('/checkout'); // Redirect to checkout
         }
 
         let userAddress = await Address.findOne({ userID });
@@ -84,20 +91,21 @@ exports.addAddress = async (req, res) => {
             city,
             landmark,
             state,
-            pincode,
+            pincode: Number(pincode), // Ensure pincode is stored as a number
             phone,
+            isDefault: userAddress.address.length === 0 // Set as default if first address
         };
 
         userAddress.address.push(newAddress);
         await userAddress.save();
 
         req.flash('success', 'Address added successfully');
-        res.redirect('/address');
+        res.redirect('/checkout'); // Redirect to checkout
 
     } catch (error) {
         console.error(error);
         req.flash('error', 'Failed to add address');
-        res.redirect('/address');
+        res.redirect('/checkout'); // Redirect to checkout
     }
 };
 
@@ -121,7 +129,6 @@ exports.editAddress = async (req, res) => {
             return res.redirect('/address');
         }
 
-        // Since editing happens via a modal in address.ejs, redirect back to /address with the data
         res.redirect('/address');
     } catch (error) {
         console.error(error);
