@@ -53,7 +53,7 @@ router.get('/product/:id', auth, productController.getSingleProduct);
 router.get('/categories', auth, productController.getAllCategories);
 router.get('/category/:id', productController.getCategoryProducts);
 router.get('/search', productController.searchProducts);
-router.get('/api/product/stock/:productId', auth, productController.getProductStock); // Added
+router.get('/api/product/stock/:productId', auth, productController.getProductStock);
 
 // Cart routes
 router.get('/cart', auth, cartController.getCart);
@@ -63,13 +63,13 @@ router.delete('/cart/remove/:productId', auth, cartController.removeFromCart);
 router.get('/api/cart/count', auth, cartController.getCartCount);
 
 // Checkout routes
-router.get('/checkout', auth, checkoutController.getCheckout);
-router.post('/checkout/place-order', auth, checkoutController.placeOrder);
-router.post('/apply-coupon', auth, checkoutController.applyCoupon);
-router.post('/checkout/create-razorpay-order', auth, paymentController.createRazorpayOrder);
-router.post('/verify-payment', auth, paymentController.verifyPayment);
-router.get('/my-orders', auth, orderController.getMyOrders);
-router.post('/checkout/pending-order', checkoutController.pendingOrder);
+router.get('/checkout', auth, checkoutController.renderCheckout);
+router.post('/checkout/place-order', auth, checkoutController.initiateCheckout);
+router.post('/checkout/create-razorpay-order', auth, checkoutController.createRazorpayOrder);
+router.post('/verify-payment', auth, checkoutController.verifyPayment);
+router.post('/checkout/pending-order', auth, checkoutController.savePendingOrder);
+router.patch('/retry-payment/:orderId', auth, checkoutController.retryPayment);
+router.get('/orders/:orderId/invoice', auth, checkoutController.downloadInvoice); // Updated route prefix
 
 // Order routes
 router.get('/orders', auth, orderController.getOrdersList);
@@ -78,7 +78,6 @@ router.put('/api/orders/:id/cancel', auth, orderController.cancelOrder);
 router.put('/api/orders/:id/return', auth, orderController.returnOrder);
 router.put('/api/orders/:id/cancel-product/:productId', auth, orderController.cancelProduct);
 router.put('/api/orders/:id/return-product/:productId', auth, orderController.requestReturn);
-router.get('/api/orders/download-invoice/:id', auth, orderController.downloadInvoice);
 
 // Static pages
 router.get('/about', userController.loadAboutPage);
@@ -86,8 +85,8 @@ router.get('/contact', userController.loadContactPage);
 
 // Profile management
 router.get('/profile', auth, profileController.loadProfile);
-router.get('/edit-profile',auth, profileController.getEditProfile);
-router.post('/edit-profile',auth, profileController.postEditProfile);
+router.get('/edit-profile', auth, profileController.getEditProfile);
+router.post('/edit-profile', auth, profileController.postEditProfile);
 
 // Address Management
 router.get('/address', addressController.getAddress);

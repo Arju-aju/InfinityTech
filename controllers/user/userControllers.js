@@ -329,10 +329,9 @@ const logout = async (req, res) => {
 // Load Home Page (Updated Featured Products Query)
 const loadHomePage = async (req, res) => {
     try {
-        console.log('Session in loadHomePage:', req.session);
         if (req.session.user) {
             const user = await User.findById(req.session.user._id);
-            console.log('User found in loadHomePage:', user);
+
             if (!user) {
                 console.log('User not found, destroying session');
                 req.session.destroy(() => res.redirect('/login?error=session_expired'));
@@ -357,15 +356,16 @@ const loadHomePage = async (req, res) => {
             .sort({ createdAt: -1 })
             .limit(8);
 
+
         // Updated query to use isFeatured field
         const featuredProducts = await Product.find({
             isDeleted: false,
             isListed: true,
             isFeatured: true
         })
-            .sort({ createdAt: -1 }) // Sort by newest first
+            .sort({ createdAt: -1 }) 
             .limit(8);
-        console.log('Featured Products:', featuredProducts); // Debug log
+
 
         const topSellingProducts = await Product.find({
             isDeleted: false,

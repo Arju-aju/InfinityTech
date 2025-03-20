@@ -51,9 +51,6 @@ exports.authMiddleware = async (req, res, next) => {
 
 exports.auth = async (req, res, next) => {
     try {
-        // Check if user is logged in via session
-        console.log('req.user: ',req.user)
-        console.log('req.session.user>>',req.session.user);
         
         if (!req.session.user) {
             return res.redirect('/')
