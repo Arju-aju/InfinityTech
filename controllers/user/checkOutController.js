@@ -68,8 +68,13 @@ exports.getCheckout = async (req, res) => {
 exports.createRazorpayOrder = async (req, res) => {
   try {
     const { addressId, couponCode, couponDiscount } = req.body;
-    const cart = await Cart.findOne({ user: req.user._id }).populate('items.product');
+    console.log('Creating Razorpay order with:', { addressId, couponCode, couponDiscount });
 
+    if (!req.user || !req.user._id) {
+      return res.status(401).json({ success: false, message: 'User not authenticated' });
+    }
+
+    const cart = await Cart.findOne({ user: req.user._id }).populate('items.product');
     if (!cart || cart.items.length === 0) {
       return res.status(400).json({ success: false, message: 'Cart is empty' });
     }
@@ -103,27 +108,31 @@ exports.createRazorpayOrder = async (req, res) => {
       receipt: `receipt_${Date.now()}`,
     };
 
+    console.log('Razorpay order options:', options);
     const razorpayOrder = await razorpay.orders.create(options);
+    console.log('Razorpay order created:', razorpayOrder);
+
     res.json({
       success: true,
-      key: process.env.RAZORPAY_KEY_ID,
+      key: process.env.Test_Key_ID, // Use the same key as initialized
       amount: options.amount,
       orderId: razorpayOrder.id,
     });
   } catch (error) {
-    console.error('Razorpay order creation error:', error);
-    res.status(500).json({ success: false, message: 'Error creating Razorpay order' });
+    console.error('Razorpay order creation error:', error.message, error.stack);
+    res.status(500).json({ success: false, message: 'Error creating Razorpay order', error: error.message });
   }
 };
 
 // Verify Payment and Place Order
-
 exports.verifyPayment = async (req, res) => {
   try {
     const { razorpay_order_id, razorpay_payment_id, razorpay_signature, addressId, totalAmount, couponCode, couponDiscount } = req.body;
+    console.log('Verifying payment with:', { razorpay_order_id, razorpay_payment_id, razorpay_signature });
+
     const crypto = require('crypto');
     const generatedSignature = crypto
-      .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET)
+      .createHmac('sha256', process.env.Test_Key_Secret)
       .update(`${razorpay_order_id}|${razorpay_payment_id}`)
       .digest('hex');
 
@@ -170,15 +179,15 @@ exports.verifyPayment = async (req, res) => {
     order.paymentError = null;
     await order.save();
 
-    // Modified redirect to orders page
+    console.log('Payment verified and order saved:', order._id);
     res.json({ 
       success: true, 
       orderId: order._id, 
-      redirectUrl: '/orders', // Changed from /orders/${order._id} to /orders
+      redirectUrl: '/orders', 
       showSuccessModal: true 
     });
   } catch (error) {
-    console.error('Payment verification error:', error);
+    console.error('Payment verification error:', error.message, error.stack);
     res.status(500).json({ success: false, message: 'Error verifying payment', showFailureModal: true, redirectUrl: '/checkout' });
   }
 };
@@ -187,6 +196,7 @@ exports.verifyPayment = async (req, res) => {
 exports.placeOrder = async (req, res) => {
   try {
     const { addressId, paymentMethod, totalAmount, couponCode, couponDiscount } = req.body;
+    console.log('Placing order with:', { addressId, paymentMethod, totalAmount, couponCode, couponDiscount });
 
     if (!req.user || !req.user._id) {
       return res.status(401).json({ success: false, message: 'User not authenticated' });
@@ -270,6 +280,7 @@ exports.placeOrder = async (req, res) => {
       await order.save();
       await Cart.findByIdAndDelete(cart._id);
 
+      console.log('Order placed successfully:', order._id);
       return res.json({
         success: true,
         orderId: order._id,
@@ -307,6 +318,7 @@ exports.placeOrder = async (req, res) => {
 exports.applyCoupon = async (req, res) => {
   try {
     const { couponCode } = req.body;
+    console.log('Applying coupon:', couponCode);
 
     if (!couponCode) {
       return res.status(400).json({ success: false, message: 'Coupon code is required' });
@@ -354,6 +366,7 @@ exports.applyCoupon = async (req, res) => {
     }
     await coupon.save();
 
+    console.log('Coupon applied successfully:', { discount, discountedTotal });
     res.json({
       success: true,
       discount,
@@ -364,62 +377,77 @@ exports.applyCoupon = async (req, res) => {
     });
   } catch (error) {
     console.error('Coupon error:', error.message, error.stack);
-    res.status(500).json({ success: false, message: 'Error applying coupon' });
+    res.status(500).json({ success: false, message: 'Error applying coupon', error: error.message });
   }
 };
 
+// Save Pending Order
 exports.pendingOrder = async (req, res) => {
   try {
-      const { addressId, totalAmount, couponCode, couponDiscount, razorpayOrderId, error } = req.body;
-      const cart = await Cart.findOne({ user: req.user._id }).populate('items.product');
+    const { addressId, totalAmount, couponCode, couponDiscount, razorpayOrderId, error } = req.body;
+    console.log('Saving pending order with:', { addressId, totalAmount, couponCode, couponDiscount, razorpayOrderId, error });
 
-      if (!cart || cart.items.length === 0) {
-          return res.status(400).json({ success: false, message: 'Cart is empty' });
-      }
+    if (!req.user || !req.user._id) {
+      return res.status(401).json({ success: false, message: 'User not authenticated' });
+    }
 
-      const addressDoc = await Address.findOne({ userID: req.user._id });
-      const selectedAddress = addressDoc?.address.find(addr => addr._id.toString() === addressId);
-      if (!selectedAddress) {
-          return res.status(400).json({ success: false, message: 'Invalid delivery address' });
-      }
+    if (!addressId || !totalAmount || !razorpayOrderId) {
+      return res.status(400).json({ success: false, message: 'Missing required fields (addressId, totalAmount, razorpayOrderId)' });
+    }
 
-      const cartItemsWithOffers = await Promise.all(cart.items.filter(item => item.product).map(async (item) => {
-          const offerDetails = await getBestOfferForProduct(item.product);
-          const finalPrice = offerDetails?.finalPrice || item.product.price;
-          return {
-              productId: item.product._id,
-              quantity: item.quantity,
-              price: item.product.price,
-              finalPrice,
-              totalPrice: finalPrice * item.quantity,
-              status: 'Ordered'
-          };
-      }));
+    const cart = await Cart.findOne({ user: req.user._id }).populate('items.product');
+    if (!cart || cart.items.length === 0) {
+      console.log('Cart is empty or not found for user:', req.user._id);
+      return res.status(400).json({ success: false, message: 'Cart is empty' });
+    }
 
-      const order = new Order({
-          user: req.user._id,
-          products: cartItemsWithOffers,
-          deliveryAddress: selectedAddress,
-          orderAmount: totalAmount,
-          shippingCharge: 50,
-          paymentMethod: 'razorpay',
-          paymentStatus: 'pending',
-          status: 'Pending Payment',
-          orderDate: new Date(),
-          couponCode: couponCode || null,
-          couponDiscount: couponDiscount || 0,
-          couponApplied: couponCode ? (await Coupon.findOne({ code: couponCode }))?._id : null,
-          razorpayOrderId: razorpayOrderId,
-          paymentError: error ? JSON.stringify(error) : null
-      });
+    const addressDoc = await Address.findOne({ userID: req.user._id });
+    const selectedAddress = addressDoc?.address.find(addr => addr._id.toString() === addressId);
+    if (!selectedAddress) {
+      console.log('Invalid address ID:', addressId);
+      return res.status(400).json({ success: false, message: 'Invalid delivery address' });
+    }
 
-      await order.save();
-      await Cart.findByIdAndDelete(cart._id);
+    const cartItemsWithOffers = await Promise.all(
+      cart.items.filter(item => item.product).map(async (item) => {
+        const offerDetails = await getBestOfferForProduct(item.product);
+        const finalPrice = offerDetails?.finalPrice || item.product.price;
+        return {
+          productId: item.product._id,
+          quantity: item.quantity,
+          price: item.product.price,
+          finalPrice,
+          totalPrice: finalPrice * item.quantity,
+          status: 'Ordered',
+        };
+      })
+    );
 
-      res.json({ success: true, orderId: order._id });
+    const order = new Order({
+      user: req.user._id,
+      products: cartItemsWithOffers,
+      deliveryAddress: selectedAddress,
+      orderAmount: totalAmount,
+      shippingCharge: 50,
+      paymentMethod: 'razorpay',
+      paymentStatus: 'pending',
+      status: 'Pending Payment',
+      orderDate: new Date(),
+      couponCode: couponCode || null,
+      couponDiscount: couponDiscount || 0,
+      couponApplied: couponCode ? (await Coupon.findOne({ code: couponCode }))?._id : null,
+      razorpayOrderId: razorpayOrderId,
+      paymentError: error ? JSON.stringify(error) : null,
+    });
+
+    await order.save();
+    await Cart.findByIdAndDelete(cart._id);
+    console.log('Pending order created successfully:', order._id);
+
+    res.json({ success: true, orderId: order._id });
   } catch (error) {
-      console.error('Pending order error:', error);
-      res.status(500).json({ success: false, message: 'Error creating pending order' });
+    console.error('Error in pendingOrder:', error.message, error.stack);
+    res.status(500).json({ success: false, message: 'Error creating pending order', error: error.message });
   }
 };
 

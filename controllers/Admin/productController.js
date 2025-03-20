@@ -99,7 +99,7 @@ const addProduct = async (req, res) => {
         }
 
         const {
-            name, brand, category, price, productOffer, stock, description, processor, ram, storage, graphics
+            name, brand, category, price, productOffer, stock, description, specifications
         } = req.body;
 
         const validateField = (field, value, message) => {
@@ -112,10 +112,10 @@ const addProduct = async (req, res) => {
             brand: validateField('brand', brand, 'Brand is required'),
             description: validateField('description', description, 'Description is required'),
             category: validateField('category', category, 'Category is required'),
-            processor: validateField('processor', processor, 'Processor is required'),
-            ram: validateField('ram', ram, 'RAM is required'),
-            storage: validateField('storage', storage, 'Storage is required'),
-            graphics: validateField('graphics', graphics, 'Graphics is required')
+            processor: validateField('processor', specifications?.processor, 'Processor is required'),
+            ram: validateField('ram', specifications?.ram, 'RAM is required'),
+            storage: validateField('storage', specifications?.storage, 'Storage is required'),
+            graphics: validateField('graphics', specifications?.graphics, 'Graphics is required')
         };
 
         const parsedPrice = parseFloat(price);

@@ -69,6 +69,7 @@ router.post('/apply-coupon', auth, checkoutController.applyCoupon);
 router.post('/checkout/create-razorpay-order', auth, paymentController.createRazorpayOrder);
 router.post('/verify-payment', auth, paymentController.verifyPayment);
 router.get('/my-orders', auth, orderController.getMyOrders);
+router.post('/checkout/pending-order', checkoutController.pendingOrder);
 
 // Order routes
 router.get('/orders', auth, orderController.getOrdersList);
