@@ -517,133 +517,133 @@
     }
 
     async function handleRazorpayOrder() {
-      try {
+    try {
         const response = await fetch('/checkout/create-razorpay-order', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            addressId: orderState.selectedAddress._id,
-            couponCode: orderState.couponCode,
-            couponDiscount: orderState.couponDiscount,
-          }),
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                addressId: orderState.selectedAddress._id,
+                couponCode: orderState.couponCode,
+                couponDiscount: orderState.couponDiscount,
+            }),
         });
         const order = await response.json();
 
         if (!response.ok || !order.success) {
-          throw new Error(order.message || 'Failed to create payment order');
+            throw new Error(order.message || 'Failed to create payment order');
         }
 
         orderState.totalAmount = order.amount / 100;
         document.getElementById('cartTotal').textContent = `₹${orderState.totalAmount.toFixed(2)}`;
 
         const options = {
-          key: order.key,
-          amount: order.amount,
-          currency: 'INR',
-          order_id: order.orderId,
-          handler: async (response) => {
-            try {
-              const verifyResponse = await fetch('/verify-payment', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                  razorpay_order_id: response.razorpay_order_id,
-                  razorpay_payment_id: response.razorpay_payment_id,
-                  razorpay_signature: response.razorpay_signature,
-                  addressId: orderState.selectedAddress._id,
-                  totalAmount: orderState.totalAmount,
-                  couponCode: orderState.couponCode,
-                  couponDiscount: orderState.couponDiscount,
-                }),
-              });
-              const verifyResult = await verifyResponse.json();
+            key: order.key,
+            amount: order.amount,
+            currency: 'INR',
+            order_id: order.orderId,
+            handler: async (response) => {
+                try {
+                    const verifyResponse = await fetch('/verify-payment', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            razorpay_order_id: response.razorpay_order_id,
+                            razorpay_payment_id: response.razorpay_payment_id,
+                            razorpay_signature: response.razorpay_signature,
+                            addressId: orderState.selectedAddress._id,
+                            totalAmount: orderState.totalAmount,
+                            couponCode: orderState.couponCode,
+                            couponDiscount: orderState.couponDiscount,
+                        }),
+                    });
+                    const verifyResult = await verifyResponse.json();
 
-              if (verifyResponse.ok && verifyResult.success) {
-                if (verifyResult.showSuccessModal) {
-                  Swal.fire({
-                    icon: 'success',
-                    title: 'Payment Successful!',
-                    text: 'Your order has been placed.',
-                    toast: true,
-                    position: 'top-end',
-                    timer: 2000,
-                    timerProgressBar: true
-                  }).then(() => {
-                    window.location.href = verifyResult.redirectUrl;
-                  });
+                    if (verifyResponse.ok && verifyResult.success) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Payment Successful!',
+                            text: 'Your order has been placed.',
+                            toast: true,
+                            position: 'top-end',
+                            timer: 2000
+                        }).then(() => {
+                            window.location.href = verifyResult.redirectUrl;
+                        });
+                    } else {
+                        throw new Error(verifyResult.message || 'Payment verification failed');
+                    }
+                } catch (error) {
+                    console.error('Payment verification error:', error);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Payment Failed',
+                        text: 'Payment was not completed. You can retry from your orders page.',
+                        toast: true,
+                        position: 'top-end',
+                        timer: 3000
+                    });
                 }
-              } else {
-                if (verifyResult.showFailureModal) {
-                  Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: verifyResult.message,
-                    toast: true,
-                    position: 'top-end',
-                    timer: 3000,
-                    timerProgressBar: true
-                  }).then(() => {
-                    window.location.href = verifyResult.redirectUrl;
-                  });
-                } else {
-                  throw new Error(verifyResult.message || 'Payment verification failed');
+            },
+            prefill: {
+                name: userData.name,
+                email: userData.email,
+                contact: userData.phone,
+            },
+            theme: { color: '#3b82f6' },
+            modal: {
+                ondismiss: async () => {
+                    // Handle payment window closed without completion
+                    await fetch('/checkout/pending-order', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            addressId: orderState.selectedAddress._id,
+                            totalAmount: orderState.totalAmount,
+                            couponCode: orderState.couponCode,
+                            couponDiscount: orderState.couponDiscount,
+                            razorpayOrderId: order.orderId
+                        })
+                    });
                 }
-              }
-            } catch (error) {
-              console.error('Payment verification error:', error);
-              Swal.fire({
-                icon: 'error',
-                title: 'Error',
-                text: error.message || 'Error verifying payment',
-                toast: true,
-                position: 'top-end',
-                timer: 3000,
-                timerProgressBar: true
-              }).then(() => {
-                window.location.href = '/checkout';
-              });
             }
-          },
-          prefill: {
-            name: userData.name,
-            email: userData.email,
-            contact: userData.phone,
-          },
-          theme: { color: '#3b82f6' },
         };
 
         const rzp = new Razorpay(options);
-        rzp.on('payment.failed', (response) => {
-          console.error('Payment failed:', response.error);
-          Swal.fire({
-            icon: 'error',
-            title: 'Payment Failed',
-            text: response.error.description || 'Payment failed. Please try again.',
-            toast: true,
-            position: 'top-end',
-            timer: 3000,
-            timerProgressBar: true
-          }).then(() => {
-            window.location.href = '/checkout';
-          });
+        rzp.on('payment.failed', async (response) => {
+            await fetch('/checkout/pending-order', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    addressId: orderState.selectedAddress._id,
+                    totalAmount: orderState.totalAmount,
+                    couponCode: orderState.couponCode,
+                    couponDiscount: orderState.couponDiscount,
+                    razorpayOrderId: order.orderId,
+                    error: response.error
+                })
+            });
+            Swal.fire({
+                icon: 'error',
+                title: 'Payment Failed',
+                text: 'You can retry payment from your orders page.',
+                toast: true,
+                position: 'top-end',
+                timer: 3000
+            });
         });
         rzp.open();
-      } catch (error) {
+    } catch (error) {
         console.error('Razorpay order error:', error);
         Swal.fire({
-          icon: 'error',
-          title: 'Error',
-          text: error.message || 'Error processing payment',
-          toast: true,
-          position: 'top-end',
-          timer: 3000,
-          timerProgressBar: true
-        }).then(() => {
-          window.location.href = '/checkout';
+            icon: 'error',
+            title: 'Error',
+            text: error.message || 'Error processing payment',
+            toast: true,
+            position: 'top-end',
+            timer: 3000
         });
-      }
     }
-
+}
     validateOrderState();
   });
 </script>

@@ -52,10 +52,10 @@ router.post('/softDeleteProduct/:id', admin.isAdmin, productController.softDelet
 router.get('/orders', admin.isAdmin, orderController.getOrders); // List all orders
 router.get('/detailed-orders', admin.isAdmin, adminControllers.getDetailedOrders); // Detailed orders (unchanged)
 router.patch('/orders/:orderId/toggle-status', admin.isAdmin, orderController.toggleOrderStatus); // Toggle overall order status
-router.get('/orders/:orderId', admin.isAdmin, orderController.viewOrderDetails); // View order details (updated path)
-router.post('/orders/:orderId/cancel-product', admin.isAdmin, orderController.cancelProduct); // Cancel individual product
-router.post('/orders/:orderId/return-product', admin.isAdmin, orderController.returnProduct); // Request return for individual product
-router.post('/orders/:orderId/approve-return', admin.isAdmin, orderController.approveReturn); // Approve return for individual product
+router.get('/orders/:orderId', admin.isAdmin, orderController.viewOrderDetails); 
+router.post('/orders/:orderId/cancel-product', admin.isAdmin, orderController.cancelProduct); 
+router.post('/orders/:orderId/return-product', admin.isAdmin, orderController.returnProduct); 
+router.post('/orders/:orderId/approve-return', admin.isAdmin, orderController.approveReturn); 
 
 // Offer Management
 router.get('/offers', admin.isAdmin, offerController.getAllOffers);

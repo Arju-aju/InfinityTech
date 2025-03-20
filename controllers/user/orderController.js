@@ -8,6 +8,31 @@ const PDFDocument = require('pdfkit');
 const fs = require('fs');
 const path = require('path');
 
+
+exports.getMyOrders = async (req, res) => {
+    try {
+        const userId = req.user._id;
+        const orders = await Order.find({ user: userId })
+            .populate({
+                path: 'products.productId',
+                select: 'name images price'
+            })
+            .sort({ createdAt: -1 });
+        const user = await User.findById(userId).select('name email phone');
+        
+        res.render('user/my-orders', {
+            orders,
+            user,
+            success_msg: req.flash('success_msg'),
+            error_msg: req.flash('error_msg')
+        });
+    } catch (error) {
+        console.error('Get my orders error:', error);
+        res.status(500).render('error', { message: 'Error retrieving your orders' });
+    }
+};
+
+
 // Get all orders for a user
 exports.getOrdersList = async (req, res) => {
     try {
