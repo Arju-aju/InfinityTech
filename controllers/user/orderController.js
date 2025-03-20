@@ -1,4 +1,4 @@
-const mongoose = require('mongoose'); // Ensure mongoose is imported for ObjectId validation
+const mongoose = require('mongoose');
 const Order = require('../../models/orderSchema');
 const Return = require('../../models/returnSchema');
 const User = require('../../models/userSchema');
@@ -78,6 +78,7 @@ exports.downloadInvoice = async (req, res) => {
         }
         const stream = fs.createWriteStream(filePath);
         doc.pipe(stream);
+
         doc.fontSize(25).fillColor('#4b5eAA').text('Invoice', { align: 'center' });
         doc.moveDown();
         doc.fontSize(12).fillColor('#333')
@@ -91,7 +92,9 @@ exports.downloadInvoice = async (req, res) => {
         doc.fontSize(14).fillColor('#4b5eAA').text(`Order #${order._id.toString().slice(-6)}`, { align: 'left' });
         doc.fontSize(12).fillColor('#333')
             .text(`Date: ${new Date(order.orderDate).toLocaleDateString('en-US')}`, { align: 'left' })
+            .text(`Status: ${order.status}`, { align: 'left' })
             .moveDown();
+
         const tableTop = doc.y;
         doc.fontSize(12).fillColor('#fff').font('Helvetica-Bold')
             .rect(50, tableTop, 495, 20).fill('#4b5eAA')
@@ -101,21 +104,26 @@ exports.downloadInvoice = async (req, res) => {
             .text('Price', 400, tableTop + 5)
             .text('Total', 480, tableTop + 5, { align: 'right' });
         let y = tableTop + 25;
-        order.products.forEach((product, index) => {
+        order.products.forEach((product) => {
             doc.fillColor('#333').font('Helvetica')
-                .text(product.productId.name, 55, y)
+                .text(`${product.productId.name} (${product.status})`, 55, y)
                 .text(product.quantity, 300, y)
-                .text(`₹${product.productId.price.toFixed(2)}`, 400, y)
-                .text(`₹${(product.quantity * product.productId.price).toFixed(2)}`, 480, y, { align: 'right' });
+                .text(`₹${product.price.toFixed(2)}`, 400, y)
+                .text(`₹${product.totalPrice.toFixed(2)}`, 480, y, { align: 'right' });
             y += 20;
         });
         doc.moveDown()
-            .fontSize(14).fillColor('#4b5eAA').text(`Total Amount: ₹${order.orderAmount.toFixed(2)}`, { align: 'right' });
+            .fontSize(12).fillColor('#333')
+            .text(`Shipping Charge: ₹${order.shippingCharge.toFixed(2)}`, { align: 'right' })
+            .text(`Coupon Discount: -₹${order.couponDiscount.toFixed(2)}`, { align: 'right' })
+            .fontSize(14).fillColor('#4b5eAA')
+            .text(`Total Amount: ₹${order.orderAmount.toFixed(2)}`, { align: 'right' });
         doc.moveDown(2)
             .fontSize(10).fillColor('#666')
             .text('Thank you for your purchase!', { align: 'center' })
             .text('Contact us at support@company.com for any queries.', { align: 'center' });
         doc.end();
+
         stream.on('finish', () => {
             res.download(filePath, fileName, (err) => {
                 if (err) {
@@ -148,15 +156,17 @@ exports.cancelOrder = async (req, res) => {
         order.status = 'Cancelled';
         order.cancellationReason = reason;
         order.cancelDate = new Date();
+        let refundAmount = order.orderAmount;
         for (const product of order.products) {
-            const productDoc = await Product.findById(product.productId._id);
-            if (productDoc) {
-                productDoc.stock += product.quantity;
-                await productDoc.save();
+            if (product.status === 'Ordered') {
+                const productDoc = await Product.findById(product.productId._id);
+                if (productDoc) {
+                    productDoc.stock += product.quantity;
+                    await productDoc.save();
+                }
+                product.status = 'Cancelled';
             }
-            product.status = 'Cancelled';
         }
-        const refundAmount = order.orderAmount + order.shippingCharge; // Refund full amount including shipping
         if (order.paymentMethod !== 'cod' && refundAmount > 0) {
             await refundToWallet(order._id, order.user, refundAmount, `Refund for cancelled order #${order._id}`);
         }
@@ -199,136 +209,67 @@ exports.returnOrder = async (req, res) => {
     }
 };
 
-// Updated cancelProduct function
+// Cancel a specific product
 exports.cancelProduct = async (req, res) => {
     try {
-        const { id: orderId, productId } = req.params; // Consistent with your route param naming
+        const { id: orderId, productId } = req.params;
         const { reason } = req.body;
-
-        console.log('req.params:', req.params);
-        console.log('Cancel Product - Order ID:', orderId, 'Product ID:', productId, 'User ID:', req.user._id);
-
-        // Validate orderId and productId
-        if (!orderId) {
-            return res.status(400).json({ success: false, message: 'Order ID is required' });
-        }
-        if (!productId) {
-            return res.status(400).json({ success: false, message: 'Product ID is required' });
-        }
-        if (!mongoose.Types.ObjectId.isValid(orderId)) {
-            return res.status(400).json({ success: false, message: 'Invalid Order ID format' });
-        }
-        if (!mongoose.Types.ObjectId.isValid(productId)) {
-            return res.status(400).json({ success: false, message: 'Invalid Product ID format' });
-        }
-
-        // Find the order
         const order = await Order.findOne({ _id: orderId, user: req.user._id })
             .populate('products.productId');
         if (!order) {
-            console.log('Order not found for user:', req.user._id);
             return res.status(404).json({ success: false, message: 'Order not found' });
         }
-
-        // Check order status
         if (!['Pending', 'Processing'].includes(order.status)) {
             return res.status(400).json({ success: false, message: 'Products can only be cancelled in Pending or Processing status' });
         }
-
-        // Find the product in the order
         const productIndex = order.products.findIndex(p => p.productId._id.toString() === productId);
         if (productIndex === -1) {
-            console.log('Product not found in order:', order.products);
             return res.status(400).json({ success: false, message: 'Product not found in order' });
         }
-
         const product = order.products[productIndex];
         if (product.status !== 'Ordered') {
             return res.status(400).json({ success: false, message: 'Product cannot be cancelled' });
         }
 
-        // Store original values for refund calculation
         const productTotalPrice = product.totalPrice;
-        const originalShippingCharge = order.shippingCharge;
-        const originalCouponDiscount = order.couponDiscount;
-
-        // Update product status
         product.status = 'Cancelled';
         product.cancellationReason = reason;
         product.cancelDate = new Date();
 
-        // Calculate remaining products
-        const remainingProducts = order.products.filter(p => p.status !== 'Cancelled');
+        const activeProducts = order.products.filter(p => p.status === 'Ordered');
         const originalSubtotal = order.products.reduce((sum, p) => sum + p.totalPrice, 0);
-        const newSubtotal = remainingProducts.reduce((sum, p) => sum + p.totalPrice, 0);
+        const newSubtotal = activeProducts.reduce((sum, p) => sum + p.totalPrice, 0);
 
-        // Adjust coupon discount proportionally
-        let refundCouponAmount = 0;
+        let refundAmount = productTotalPrice;
         if (order.couponDiscount > 0 && originalSubtotal > 0) {
             const couponDiscountPerProduct = order.couponDiscount * (productTotalPrice / originalSubtotal);
-            refundCouponAmount = Math.round(couponDiscountPerProduct);
-            if (remainingProducts.length > 0) {
-                order.couponDiscount = Math.round((order.couponDiscount * newSubtotal) / originalSubtotal);
-            } else {
-                order.couponDiscount = 0; // No discount if all products are cancelled
-            }
+            refundAmount += couponDiscountPerProduct;
+            order.couponDiscount = activeProducts.length > 0 ? (order.couponDiscount * newSubtotal) / originalSubtotal : 0;
         }
-
-        // Adjust shipping charge
-        let refundShippingAmount = 0;
-        if (remainingProducts.length === 0) {
-            refundShippingAmount = order.shippingCharge;
-            order.shippingCharge = 0; // Remove shipping charge if all products are cancelled
-        } else {
-            order.shippingCharge = 50; // Keep shipping charge if there are remaining products (adjust as per your logic)
-        }
-
-        // Update order amount
         order.orderAmount = newSubtotal + order.shippingCharge - order.couponDiscount;
 
-        // Calculate total refund amount
-        const refundAmount = productTotalPrice + refundShippingAmount + refundCouponAmount;
-
-        // Restock the product
         const productDoc = await Product.findById(product.productId._id);
         if (productDoc) {
             productDoc.stock += product.quantity;
             await productDoc.save();
         }
 
-        // Refund to wallet if payment method is not COD
         if (order.paymentMethod !== 'cod' && refundAmount > 0) {
             await refundToWallet(order._id, order.user, refundAmount, `Refund for cancelled product ${product.productId.name} in order #${order._id}`);
         }
 
-        // Update order status if all products are cancelled
-        if (remainingProducts.length === 0) {
+        if (activeProducts.length === 0) {
             order.status = 'Cancelled';
+            order.orderAmount = 0;
+            order.shippingCharge = 0;
+            order.couponDiscount = 0;
         }
 
-        // Save the updated order
         await order.save();
-
-        // Log refund details
-        console.log('Refund Details:', {
-            productTotalPrice,
-            refundShippingAmount,
-            refundCouponAmount,
-            totalRefundAmount: refundAmount,
-            updatedOrderAmount: order.orderAmount,
-            updatedShippingCharge: order.shippingCharge,
-            updatedCouponDiscount: order.couponDiscount
-        });
-
-        res.status(200).json({
-            success: true,
-            message: 'Product cancelled successfully',
-            order,
-            refundAmount
-        });
+        res.status(200).json({ success: true, message: 'Product cancelled successfully', order });
     } catch (error) {
         console.error('Cancel product error:', error);
-        res.status(500).json({ success: false, message: 'Error cancelling product', error: error.message });
+        res.status(500).json({ success: false, message: 'Error cancelling product' });
     }
 };
 
@@ -337,7 +278,6 @@ exports.requestReturn = async (req, res) => {
     try {
         const { id: orderId, productId } = req.params;
         const { reason } = req.body;
-        console.log('Return Product - Order ID:', orderId, 'Product ID:', productId, 'User ID:', req.user._id);
         const order = await Order.findOne({ _id: orderId, user: req.user._id })
             .populate('products.productId');
         if (!order) {
@@ -415,39 +355,33 @@ exports.handleReturnRequest = async (req, res) => {
             product.status = 'Returned';
             const refundAmount = product.totalPrice;
 
-            // Adjust order amount
-            order.orderAmount -= refundAmount;
+            const activeProducts = order.products.filter(p => p.status === 'Ordered');
+            const originalSubtotal = order.products.reduce((sum, p) => sum + p.totalPrice, 0);
+            const newSubtotal = activeProducts.reduce((sum, p) => sum + p.totalPrice, 0);
 
-            // Adjust coupon discount
-            if (order.couponDiscount > 0) {
-                const remainingProducts = order.products.filter(p => p.status !== 'Cancelled' && p.status !== 'Returned');
-                if (remainingProducts.length > 0) {
-                    const originalSubtotal = order.products.reduce((sum, p) => sum + p.totalPrice, 0);
-                    const newSubtotal = remainingProducts.reduce((sum, p) => sum + p.totalPrice, 0);
-                    order.couponDiscount = Math.round((order.couponDiscount * newSubtotal) / originalSubtotal);
-                } else {
-                    order.couponDiscount = 0;
-                }
+            let totalRefund = refundAmount;
+            if (order.couponDiscount > 0 && originalSubtotal > 0) {
+                const couponDiscountPerProduct = order.couponDiscount * (refundAmount / originalSubtotal);
+                totalRefund += couponDiscountPerProduct;
+                order.couponDiscount = activeProducts.length > 0 ? (order.couponDiscount * newSubtotal) / originalSubtotal : 0;
             }
+            order.orderAmount = newSubtotal + order.shippingCharge - order.couponDiscount;
 
-            // Adjust shipping charge
-            const remainingProducts = order.products.filter(p => p.status !== 'Cancelled' && p.status !== 'Returned');
-            order.shippingCharge = remainingProducts.length > 0 ? 50 : 0;
-
-            // Restock product
             const productDoc = await Product.findById(product.productId._id);
             if (productDoc) {
                 productDoc.stock += product.quantity;
                 await productDoc.save();
             }
 
-            // Update order status
-            const allReturned = remainingProducts.length === 0;
-            order.status = allReturned ? 'Returned' : 'Return Approved';
+            if (activeProducts.length === 0) {
+                order.status = 'Returned';
+                order.orderAmount = 0;
+                order.shippingCharge = 0;
+                order.couponDiscount = 0;
+            }
 
-            // Refund to wallet
-            if (refundAmount > 0 && order.paymentMethod !== 'cod') {
-                await refundToWallet(order._id, order.user, refundAmount, `Refund for approved return of product in order #${order._id}`);
+            if (order.paymentMethod !== 'cod' && totalRefund > 0) {
+                await refundToWallet(order._id, order.user, totalRefund, `Refund for approved return of product in order #${order._id}`);
             }
 
             returnDoc.status = 'Approved';

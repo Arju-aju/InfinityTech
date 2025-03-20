@@ -84,8 +84,8 @@ router.get('/contact', userController.loadContactPage);
 
 // Profile management
 router.get('/profile', auth, profileController.loadProfile);
-router.get('/edit-profile', profileController.getEditProfile);
-router.post('/edit-profile', profileController.postEditProfile);
+router.get('/edit-profile',auth, profileController.getEditProfile);
+router.post('/edit-profile',auth, profileController.postEditProfile);
 
 // Address Management
 router.get('/address', addressController.getAddress);

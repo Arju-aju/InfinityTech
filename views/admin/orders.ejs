@@ -1,233 +1,178 @@
-<!-- orders.ejs -->
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>InfinityTech Admin - Orders Management</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <style>
-        /* Existing CSS remains unchanged */
-        body {
-            background: linear-gradient(to bottom right, #1e1e2f, #2a2438) !important;
-        }
+<%- include('./partials/adminHeader.ejs') %>
 
-        :root {
-            --sidebar-width: 16rem;
-            --primary-bg: #1e1e2f;
-            --secondary-bg: #2a2438;
-            --content-bg: #2d2d44;
-            --accent-start: #d4af37;
-            --accent-end: #f9e076;
-            --text-color: #e5e7eb;
-        }
+<style>
+    :root {
+        --sidebar-width: 16rem;
+        --primary-bg: #1e1e2f;
+        --secondary-bg: #2a2438;
+        --content-bg: #2d2d44;
+        --accent-start: #d4af37;
+        --accent-end: #f9e076;
+        --text-color: #ffffff;
+    }
+    .pagination-container {
+        @apply mt-8 flex flex-col sm:flex-row items-center justify-between gap-4;
+    }
+    .pagination-button {
+        @apply relative inline-flex items-center px-3 py-2 glass-effect-dark text-sm text-[var(--text-color)] hover:bg-[var(--secondary-bg)]/50 transition-all duration-300;
+    }
+    .pagination-button.active {
+        @apply bg-[var(--accent-start)]/20 text-[var(--accent-start)];
+    }
+    .flash-message {
+        @apply px-4 py-2 rounded-lg mt-4 text-center glass-effect-dark;
+    }
+    .flash-success {
+        @apply bg-green-500/20 text-green-400 border-green-500/20;
+    }
+    .flash-error {
+        @apply bg-red-500/20 text-red-400 border-red-500/20;
+    }
+    tr:hover {
+        @apply bg-[var(--content-bg)]/50;
+    }
+    main {
+        margin-left: var(--sidebar-width, 16rem);
+        width: calc(100% - var(--sidebar-width, 16rem));
+        min-height: 100vh;
+    }
+    .sidebar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: var(--sidebar-width, 16rem);
+        z-index: 100;
+        animation: slideIn 0.5s ease-out forwards;
+    }
+    @keyframes slideIn {
+        from { transform: translateX(-100%); }
+        to { transform: translateX(0); }
+    }
+    @keyframes fadeInUp {
+        from { opacity: 0; transform: translateY(30px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    .animate-fade-in-up {
+        animation: fadeInUp 0.8s ease-out forwards;
+    }
+    .animation-delay-200 { animation-delay: 0.2s; }
+    .animation-delay-400 { animation-delay: 0.4s; }
+    .golden-button {
+        @apply bg-gradient-to-r from-[var(--accent-start)] to-[var(--accent-end)] text-white px-6 py-2 rounded-lg shadow-lg hover:scale-105 transition-all duration-300;
+    }
+    .glass-effect-dark {
+        @apply bg-[var(--content-bg)]/80 backdrop-blur-md border border-white/10;
+    }
+    .gradient-bg {
+        @apply bg-gradient-to-br from-[var(--primary-bg)] to-[var(--secondary-bg)];
+    }
+    .status-select {
+        @apply px-4 py-2 bg-[var(--content-bg)] border border-white/10 rounded-lg text-black focus:outline-none focus:ring-2 focus:ring-[var(--accent-start)] focus:border-transparent transition-all;
+    }
+    /* Ensure dropdown options are also black */
+    .status-select option {
+        color: #000000; /* Black text for options */
+    }
+</style>
 
-        .gradient-bg {
-            background: linear-gradient(to bottom right, var(--primary-bg), var(--secondary-bg)) !important;
-        }
+<div class="flex min-h-screen gradient-bg" style="background: linear-gradient(to bottom right, #1e1e2f, #2a2438) !important;">
+    <%- include('./partials/adminSidebar.ejs') %>
+    <main class="flex-1 p-4 lg:p-8">
+       
 
-        .glass-effect-dark {
-            background: rgba(45, 45, 68, 0.8);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .golden-button {
-            background: linear-gradient(to right, var(--accent-start), var(--accent-end));
-            color: white;
-            padding: 0.5rem 1rem;
-            border-radius: 0.5rem;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            transition: transform 0.3s ease;
-        }
-
-        .golden-button:hover {
-            transform: scale(1.05);
-        }
-
-        body {
-            font-family: sans-serif;
-            color: var(--text-color);
-            min-height: 100vh;
-            margin: 0;
-            padding: 0;
-        }
-
-        @keyframes gradientAnimation {
-            0% { background-position: 0% 0%; }
-            50% { background-position: 100% 100%; }
-            100% { background-position: 0% 0%; }
-        }
-
-        .animate-gradient {
-            background-size: 200% 200%;
-            animation: gradientAnimation 15s ease infinite;
-        }
-
-        @keyframes fadeInUp {
-            from { opacity: 0; transform: translateY(30px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .animate-fade-in-up {
-            animation: fadeInUp 0.8s ease-out forwards;
-        }
-
-        .animation-delay-200 { animation-delay: 0.2s; }
-        .animation-delay-400 { animation-delay: 0.4s; }
-
-        tr:hover {
-            background: rgba(45, 45, 68, 0.5);
-        }
-
-        .pagination-button {
-            display: inline-flex;
-            align-items: center;
-            padding: 0.5rem 1rem;
-            background: rgba(45, 45, 68, 0.8);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            font-size: 0.875rem;
-            color: var(--text-color);
-            transition: background 0.3s ease;
-        }
-
-        .pagination-button:hover {
-            background: var(--secondary-bg);
-        }
-
-        .pagination-button.active {
-            background: rgba(212, 175, 55, 0.8);
-            color: white;
-        }
-
-        main {
-            margin-left: var(--sidebar-width);
-            width: calc(100% - var(--sidebar-width));
-            min-height: 100vh;
-        }
-
-        .sidebar {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: var(--sidebar-width);
-            z-index: 100;
-            animation: slideIn 0.5s ease-out forwards;
-        }
-
-        @keyframes slideIn {
-            from { transform: translateX(-100%); }
-            to { transform: translateX(0); }
-        }
-    </style>
-</head>
-
-<body class="gradient-bg animate-gradient">
-    <!-- Sidebar -->
-    <div class="sidebar fixed top-0 left-0 h-full w-64 md:w-[var(--sidebar-width)] bg-[var(--primary-bg)] z-50 transition-transform duration-300 md:translate-x-0 -translate-x-full shadow-lg">
-        <div class="flex flex-col h-full text-[var(--text-color)]">
-            <div class="flex items-center justify-start p-6 border-b border-white/10">
-                <span class="text-2xl font-extrabold golden-button bg-clip-text text-transparent">InfinityTech</span>
-            </div>
-            
-            <nav class="flex-1 space-y-2 p-4 overflow-y-auto">
-                <% const navItems = [
-                    { href: '/admin/dashboard', icon: 'fa-home', label: 'Dashboard', active: (typeof path !== 'undefined' && path === '/admin/dashboard') },
-                    { href: '/admin/products', icon: 'fa-box', label: 'Products', active: (typeof path !== 'undefined' && path.includes('/admin/product')) },
-                    { href: '/admin/categories', icon: 'fa-tags', label: 'Categories', active: (typeof path !== 'undefined' && path.includes('/admin/categor')) },
-                    { href: '/admin/users', icon: 'fa-users', label: 'Customers', active: (typeof path !== 'undefined' && path === '/admin/users') },
-                    { href: '/admin/orders', icon: 'fa-shopping-bag', label: 'Orders', active: (typeof path !== 'undefined' && path === '/admin/orders') },
-                    { href: '/admin/return/requests', icon: 'fa-undo', label: 'Return Orders', active: (typeof path !== 'undefined' && path === '/admin/return/requests') },
-                    { href: '/admin/offers', icon: 'fa-percentage', label: 'Offer', active: (typeof path !== 'undefined' && path === '/admin/offers') },
-                    { href: '/admin/coupons', icon: 'fa-ticket-alt', label: 'Coupon', active: (typeof path !== 'undefined' && path === '/admin/coupons') },
-                    { href: '/admin/logout', icon: 'fa-sign-out-alt', label: 'Logout', active: (typeof path !== 'undefined' && path === '/admin/logout') }
-                ]; %>
-                <% navItems.forEach(item => { %>
-                    <a href="<%= item.href %>" class="flex items-center py-2.5 px-4 rounded transition duration-300 group <%= item.active ? 'golden-button text-white scale-105' : 'text-[var(--text-color)] hover:bg-[var(--secondary-bg)] hover:text-white hover:scale-105' %>">
-                        <i class="fas <%= item.icon %> w-6 transition-transform duration-300 group-hover:rotate-12"></i>
-                        <span class="ml-3"><%= item.label %></span>
-                    </a>
-                <% }); %>
-            </nav>
+        <!-- Header -->
+        <div class="flex justify-between items-center mb-8 animate-fade-in-up">
+            <h1 class="text-3xl font-extrabold bg-gradient-to-r from-[#d4af37] to-[#f9e076] bg-clip-text text-transparent tracking-tight">Orders Management</h1>
         </div>
-    </div>
 
-    <main class="flex-1 p-6">
-        <div class="glass-effect-dark p-6 rounded-xl shadow-lg animate-fade-in-up">
-            <!-- Breadcrumbs -->
-            <nav class="mb-6" aria-label="Breadcrumb">
-                <ol class="flex items-center space-x-2 text-sm text-gray-400">
-                    <li>
-                        <a href="/admin/dashboard" class="hover:text-[var(--accent-start)] transition-colors">
-                            <i class="fas fa-home mr-1"></i>Dashboard
-                        </a>
-                    </li>
-                    <li><i class="fas fa-chevron-right text-xs"></i></li>
-                    <li class="text-[var(--text-color)]">Orders Management</li>
-                </ol>
-            </nav>
-
-            <h1 class="text-4xl font-extrabold bg-gradient-to-r from-[#d4af37] to-[#f9e076] bg-clip-text text-transparent tracking-tight text-center mb-6">
-                Orders Management
-            </h1>
-            
-            <form id="filterForm" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 glass-effect-dark p-4 rounded-lg shadow animate-fade-in-up animation-delay-200">
-                <input type="text" name="search" placeholder="Search by Order ID or Customer"
-                    value="<%= filters?.search || '' %>"
-                    class="bg-[var(--content-bg)] text-[var(--text-color)] rounded-lg px-4 py-2 focus:ring-2 focus:ring-[var(--accent-start)] border border-white/10">
-                
-                <select name="status" class="bg-[var(--content-bg)] text-[var(--text-color)] rounded-lg px-4 py-2 focus:ring-2 focus:ring-[var(--accent-start)] border border-white/10">
-                    <option value="All">All Status</option>
-                    <option value="Pending" <%= filters?.status === 'Pending' ? 'selected' : '' %>>Pending</option>
-                    <option value="Processing" <%= filters?.status === 'Processing' ? 'selected' : '' %>>Processing</option>
-                    <option value="Shipped" <%= filters?.status === 'Shipped' ? 'selected' : '' %>>Shipped</option>
-                    <option value="Out for Delivery" <%= filters?.status === 'Out for Delivery' ? 'selected' : '' %>>Out for Delivery</option>
-                    <option value="Delivered" <%= filters?.status === 'Delivered' ? 'selected' : '' %>>Delivered</option>
-                    <option value="Cancelled" <%= filters?.status === 'Cancelled' ? 'selected' : '' %>>Cancelled</option>
-                </select>
-                
-                <div class="flex space-x-2">
-                    <input type="date" name="startDate" value="<%= filters?.startDate || '' %>"
-                        class="bg-[var(--content-bg)] text-[var(--text-color)] rounded-lg px-4 py-2 focus:ring-2 focus:ring-[var(--accent-start)] border border-white/10">
-                    <input type="date" name="endDate" value="<%= filters?.endDate || '' %>"
-                        class="bg-[var(--content-bg)] text-[var(--text-color)] rounded-lg px-4 py-2 focus:ring-2 focus:ring-[var(--accent-start)] border border-white/10">
+        <!-- Filter Section -->
+        <div class="glass-effect-dark rounded-xl shadow-xl border border-white/10 p-6 mb-6 animate-fade-in-up animation-delay-200">
+            <form action="/admin/orders" method="GET" class="flex flex-wrap gap-4">
+                <div class="flex-1 min-w-[250px]">
+                    <input type="text" name="search" value="<%= filters.search || '' %>" placeholder="Order ID or Customer"
+                        class="w-full px-4 py-2 bg-[var(--content-bg)] border border-white/10 rounded-lg text-[var(--text-color)] placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[var(--accent-start)] focus:border-transparent transition-all">
                 </div>
-                
-                <div class="flex space-x-2">
-                    <button type="submit" class="golden-button">Apply Filters</button>
-                    <button type="button" id="resetFilters" class="bg-[var(--secondary-bg)] hover:bg-[var(--content-bg)] text-[var(--text-color)] px-4 py-2 rounded-lg transition-all duration-300">Reset</button>
+                <div class="w-48">
+                    <select name="status" class="w-full status-select">
+                        <option value="All" <%= filters.status === 'All' || !filters.status ? 'selected' : '' %>>All</option>
+                        <option value="Pending" <%= filters.status === 'Pending' ? 'selected' : '' %>>Pending</option>
+                        <option value="Processing" <%= filters.status === 'Processing' ? 'selected' : '' %>>Processing</option>
+                        <option value="Shipped" <%= filters.status === 'Shipped' ? 'selected' : '' %>>Shipped</option>
+                        <option value="Out for Delivery" <%= filters.status === 'Out for Delivery' ? 'selected' : '' %>>Out for Delivery</option>
+                        <option value="Delivered" <%= filters.status === 'Delivered' ? 'selected' : '' %>>Delivered</option>
+                        <option value="Cancelled" <%= filters.status === 'Cancelled' ? 'selected' : '' %>>Cancelled</option>
+                    </select>
                 </div>
+                <div class="w-48">
+                    <input type="date" name="startDate" value="<%= filters.startDate || '' %>"
+                        class="w-full px-4 py-2 bg-[var(--content-bg)] border border-white/10 rounded-lg text-[var(--text-color)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-start)] focus:border-transparent transition-all">
+                </div>
+                <div class="w-48">
+                    <input type="date" name="endDate" value="<%= filters.endDate || '' %>"
+                        class="w-full px-4 py-2 bg-[var(--content-bg)] border border-white/10 rounded-lg text-[var(--text-color)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-start)] focus:border-transparent transition-all">
+                </div>
+                <button type="submit" class="golden-button flex items-center space-x-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                    <span>Apply Filters</span>
+                </button>
             </form>
-            
-            <div class="overflow-x-auto mt-6 animate-fade-in-up animation-delay-400">
-                <table class="w-full table-auto border-collapse text-[var(--text-color)] rounded-lg">
-                    <thead class="bg-[var(--secondary-bg)]">
-                        <tr>
-                            <th class="px-6 py-4">Order ID</th>
-                            <th class="px-6 py-4">Customer</th>
-                            <th class="px-6 py-4">Total Amount</th>
-                            <th class="px-6 py-4">Status</th>
-                            <th class="px-6 py-4">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <% if (orders.length > 0) { %>
-                            <% orders.forEach(order => { %>
-                                <tr class="hover:bg-[var(--content-bg)]/50 transition border-b border-white/10">
-                                    <td class="px-6 py-4"><%= order._id %></td>
-                                    <td class="px-6 py-4"><%= order.user.name %></td>
-                                    <td class="px-6 py-4">₹<%= order.orderAmount.toFixed(2) %></td>
-                                    <td class="px-6 py-4">
-                                        <% if (['Cancelled', 'Delivered'].includes(order.status)) { %>
-                                            <span class="<%= order.status === 'Cancelled' ? 'px-3 py-1 bg-red-500/20 text-red-300 border border-red-500/20 rounded-lg' : 'px-3 py-1 bg-green-500/20 text-green-300 border border-green-500/20 rounded-lg' %>">
-                                                <%= order.status %>
-                                            </span>
-                                        <% } else { %>
-                                            <select class="bg-[var(--content-bg)] text-[var(--text-color)] rounded-lg py-1 px-2 focus:ring-2 focus:ring-[var(--accent-start)] border border-white/10 status-select"
-                                                data-order-id="<%= order._ipioId %>">
+        </div>
+
+        <!-- Orders Table -->
+        <div class="glass-effect-dark rounded-xl shadow-xl border border-white/10 animate-fade-in-up animation-delay-400">
+            <div class="p-6">
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead>
+                            <tr class="text-[var(--text-color)] border-b border-white/10">
+                                <th class="px-6 py-3 text-left">Order ID</th>
+                                <th class="px-6 py-3 text-left">Customer</th>
+                                <th class="px-6 py-3 text-left">Date</th>
+                                <th class="px-6 py-3 text-left">Products</th>
+                                <th class="px-6 py-3 text-left">Total</th>
+                                <th class="px-6 py-3 text-left">Status</th>
+                                <th class="px-6 py-3 text-left">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-white/10">
+                            <% if (orders && orders.length > 0) { %>
+                                <% orders.forEach(order => { %>
+                                    <tr class="text-[var(--text-color)] hover:bg-[var(--content-bg)]/50 transition-colors">
+                                        <td class="px-6 py-4"><%= order._id.toString().slice(-6) %></td>
+                                        <td class="px-6 py-4"><%= order.user.name %> (<%= order.user.email %>)</td>
+                                        <td class="px-6 py-4"><%= new Date(order.createdAt).toLocaleDateString() %></td>
+                                        <td class="px-6 py-4">
+                                            <ul class="space-y-3">
+                                                <% order.products.forEach((product, index) => { %>
+                                                    <li class="flex items-center justify-between">
+                                                        <span>
+                                                            <%= product.productId.name %> (Qty: <%= product.quantity %>) - 
+                                                            <span class="<%= product.status === 'Cancelled' ? 'text-red-400' : product.status.includes('Return') ? 'text-yellow-400' : 'text-green-400' %>">
+                                                                <%= product.status %>
+                                                            </span>
+                                                        </span>
+                                                        <span class="space-x-2">
+                                                            <% if (['Pending', 'Processing'].includes(order.status) && product.status === 'Ordered') { %>
+                                                                <button class="text-red-400 hover:text-red-300 cancel-product-btn" 
+                                                                        data-order-id="<%= order._id %>" 
+                                                                        data-product-index="<%= index %>">Cancel</button>
+                                                            <% } %>
+                                                            <% if (order.status === 'Delivered' && product.status === 'Ordered') { %>
+                                                                <button class="text-yellow-400 hover:text-yellow-300 return-product-btn" 
+                                                                        data-order-id="<%= order._id %>" 
+                                                                        data-product-index="<%= index %>">Return</button>
+                                                            <% } %>
+                                                        </span>
+                                                    </li>
+                                                <% }); %>
+                                            </ul>
+                                        </td>
+                                        <td class="px-6 py-4">₹<%= order.orderAmount.toFixed(2) %></td>
+                                        <td class="px-6 py-4">
+                                            <select class="status-select" data-order-id="<%= order._id %>"
+                                                <%= order.status === 'Cancelled' ? 'disabled' : '' %>>
                                                 <option value="Pending" <%= order.status === 'Pending' ? 'selected' : '' %>>Pending</option>
                                                 <option value="Processing" <%= order.status === 'Processing' ? 'selected' : '' %>>Processing</option>
                                                 <option value="Shipped" <%= order.status === 'Shipped' ? 'selected' : '' %>>Shipped</option>
@@ -235,222 +180,341 @@
                                                 <option value="Delivered" <%= order.status === 'Delivered' ? 'selected' : '' %>>Delivered</option>
                                                 <option value="Cancelled" <%= order.status === 'Cancelled' ? 'selected' : '' %>>Cancelled</option>
                                             </select>
-                                        <% } %>
-                                    </td>
-                                    <td class="px-6 py-4">
-                                        <a href="/admin/viewdetails/<%= order._id %>" class="text-[var(--accent-start)] hover:text-[var(--accent-end)] transition">
-                                            <i class="fas fa-eye mr-2"></i>View Details
-                                        </a>
-                                    </td>
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <a href="/admin/orders/<%= order._id %>" class="text-[var(--accent-start)] hover:text-[var(--accent-end)] transition-colors">View</a>
+                                        </td>
+                                    </tr>
+                                <% }); %>
+                            <% } else { %>
+                                <tr>
+                                    <td colspan="7" class="px-6 py-4 text-center text-gray-400">No orders found</td>
                                 </tr>
-                            <% }) %>
-                        <% } else { %>
-                            <tr>
-                                <td colspan="5" class="px-6 py-4 text-center text-gray-400">No orders found.</td>
-                            </tr>
-                        <% } %>
-                    </tbody>
-                </table>
+                            <% } %>
+                        </tbody>
+                    </table>
+                </div>
 
-                <!-- Enhanced Pagination -->
-                <% if (pagination.totalPages > 0) { %>
-                    <div class="mt-8">
-                        <div class="flex flex-col items-center gap-4">
-                            <!-- Pagination Info -->
-                            <div class="text-sm text-gray-400">
-                                Showing <%= (pagination.currentPage - 1) * 10 + 1 %> - 
-                                <%= Math.min(pagination.currentPage * 10, pagination.totalOrders) %> 
-                                of <%= pagination.totalOrders %> orders
-                            </div>
-
-                            <!-- Pagination Controls -->
-                            <div class="flex items-center gap-2 flex-wrap justify-center">
-                                <!-- First Page -->
-                                <% if (pagination.currentPage > 1) { %>
-                                    <a href="?<%= new URLSearchParams({...filters, page: 1}).toString() %>"
-                                       class="pagination-button">
-                                        <i class="fas fa-angle-double-left mr-2"></i>First
-                                    </a>
-                                <% } %>
-
-                                <!-- Previous Page -->
-                                <% if (pagination.hasPrevPage) { %>
-                                    <a href="?<%= new URLSearchParams({...filters, page: pagination.currentPage - 1}).toString() %>"
-                                       class="pagination-button">
-                                        <i class="fas fa-angle-left mr-2"></i>Previous
-                                    </a>
-                                <% } %>
-
-                                <!-- Page Numbers -->
-                                <% 
-                                    const maxVisiblePages = 5;
-                                    let startPage = Math.max(1, pagination.currentPage - Math.floor(maxVisiblePages / 2));
-                                    let endPage = Math.min(pagination.totalPages, startPage + maxVisiblePages - 1);
-                                    if (endPage - startPage + 1 < maxVisiblePages) {
-                                        startPage = Math.max(1, endPage - maxVisiblePages + 1);
-                                    }
-                                %>
-                                <% for(let i = startPage; i <= endPage; i++) { %>
-                                    <a href="?<%= new URLSearchParams({...filters, page: i}).toString() %>"
-                                       class="pagination-button <%= pagination.currentPage === i ? 'active' : '' %>">
-                                        <%= i %>
-                                    </a>
-                                <% } %>
-
-                                <!-- Next Page -->
-                                <% if (pagination.hasNextPage) { %>
-                                    <a href="?<%= new URLSearchParams({...filters, page: pagination.currentPage + 1}).toString() %>"
-                                       class="pagination-button">
-                                        Next<i class="fas fa-angle-right ml-2"></i>
-                                    </a>
-                                <% } %>
-
-                                <!-- Last Page -->
-                                <% if (pagination.currentPage < pagination.totalPages) { %>
-                                    <a href="?<%= new URLSearchParams({...filters, page: pagination.totalPages}).toString() %>"
-                                       class="pagination-button">
-                                        Last<i class="fas fa-angle-double-right ml-2"></i>
-                                    </a>
-                                <% } %>
-                            </div>
-                        </div>
-                    </div>
+                <!-- Pagination -->
+                <% if (pagination.totalPages > 1) { %>
+                    <nav class="mt-6 flex justify-center">
+                        <ul class="flex flex-wrap gap-2">
+                            <li>
+                                <a href="/admin/orders?page=1&<%= new URLSearchParams(filters).toString() %>" 
+                                   class="pagination-button <%= pagination.currentPage === 1 ? 'opacity-50 pointer-events-none' : '' %>">First</a>
+                            </li>
+                            <% for(let i = Math.max(1, pagination.currentPage - 2); i <= Math.min(pagination.totalPages, pagination.currentPage + 2); i++) { %>
+                                <li>
+                                    <a href="/admin/orders?page=<%= i %>&<%= new URLSearchParams(filters).toString() %>" 
+                                       class="pagination-button <%= i === pagination.currentPage ? 'active' : '' %>"><%= i %></a>
+                                </li>
+                            <% } %>
+                            <li>
+                                <a href="/admin/orders?page=<%= pagination.totalPages %>&<%= new URLSearchParams(filters).toString() %>" 
+                                   class="pagination-button <%= pagination.currentPage === pagination.totalPages ? 'opacity-50 pointer-events-none' : '' %>">Last</a>
+                            </li>
+                        </ul>
+                    </nav>
                 <% } %>
             </div>
         </div>
     </main>
+</div>
 
-    <script>
-        async function updateStatus(selectElement) {
-            const orderId = selectElement.dataset.orderId;
-            const newStatus = selectElement.value;
-            const originalStatus = selectElement.querySelector('[selected]')?.value || selectElement.options[selectElement.selectedIndex].text;
+<!-- Cancellation Modal -->
+<div id="productCancellationModal" class="fixed inset-0 bg-gray-800 bg-opacity-75 flex items-center justify-center hidden z-50">
+    <div class="glass-effect-dark p-6 rounded-xl w-full max-w-lg">
+        <div class="flex justify-between items-center mb-6">
+            <h3 class="text-xl font-semibold text-[var(--text-color)]">Cancel Product</h3>
+            <button id="closeProductCancellationModal" class="text-[var(--text-color)] hover:text-gray-300">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <form id="productCancellationForm" class="space-y-6">
+            <input type="hidden" name="orderId" id="cancelOrderId">
+            <input type="hidden" name="productIndex" id="cancelProductIndex">
+            <div class="space-y-4">
+                <label class="flex items-center text-[var(--text-color)]">
+                    <input type="radio" name="reason" value="Customer request" class="w-5 h-5 text-[var(--accent-start)] focus:ring-[var(--accent-start)]">
+                    <span class="ml-3">Customer request</span>
+                </label>
+                <label class="flex items-center text-[var(--text-color)]">
+                    <input type="radio" name="reason" value="Out of stock" class="w-5 h-5 text-[var(--accent-start)] focus:ring-[var(--accent-start)]">
+                    <span class="ml-3">Out of stock</span>
+                </label>
+                <label class="flex items-center text-[var(--text-color)]">
+                    <input type="radio" name="reason" value="Shipping delay" class="w-5 h-5 text-[var(--accent-start)] focus:ring-[var(--accent-start)]">
+                    <span class="ml-3">Shipping delay</span>
+                </label>
+                <label class="flex items-center text-[var(--text-color)]">
+                    <input type="radio" name="reason" value="Other" class="w-5 h-5 text-[var(--accent-start)] focus:ring-[var(--accent-start)]" id="otherCancelReason">
+                    <span class="ml-3">Other</span>
+                </label>
+                <div id="otherCancelReasonContainer" class="hidden">
+                    <textarea id="otherCancelReasonText" class="w-full p-3 border border-gray-600 rounded-lg bg-[var(--content-bg)] text-[var(--text-color)] focus:ring-[var(--accent-start)] focus:border-[var(--accent-start)]" rows="3" placeholder="Please specify"></textarea>
+                </div>
+            </div>
+            <div class="flex justify-end space-x-4">
+                <button type="button" id="cancelProductCancellationModalBtn" class="golden-button px-4 py-2 bg-gray-600 hover:bg-gray-500">Close</button>
+                <button type="submit" class="golden-button px-4 py-2">Confirm Cancellation</button>
+            </div>
+        </form>
+    </div>
+</div>
 
-            try {
-                const response = await fetch(`/admin/orders/${orderId}/toggle-status`, {
-                    method: 'PATCH',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ status: newStatus }),
-                    credentials: 'include'
+<!-- Return Modal -->
+<div id="productReturnModal" class="fixed inset-0 bg-gray-800 bg-opacity-75 flex items-center justify-center hidden z-50">
+    <div class="glass-effect-dark p-6 rounded-xl w-full max-w-lg">
+        <div class="flex justify-between items-center mb-6">
+            <h3 class="text-xl font-semibold text-[var(--text-color)]">Return Product</h3>
+            <button id="closeProductReturnModal" class="text-[var(--text-color)] hover:text-gray-300">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <form id="productReturnForm" class="space-y-6">
+            <input type="hidden" name="orderId" id="returnOrderId">
+            <input type="hidden" name="productIndex" id="returnProductIndex">
+            <div class="space-y-4">
+                <label class="flex items-center text-[var(--text-color)]">
+                    <input type="radio" name="reason" value="Defective product" class="w-5 h-5 text-[var(--accent-start)] focus:ring-[var(--accent-start)]">
+                    <span class="ml-3">Defective product</span>
+                </label>
+                <label class="flex items-center text-[var(--text-color)]">
+                    <input type="radio" name="reason" value="Wrong item" class="w-5 h-5 text-[var(--accent-start)] focus:ring-[var(--accent-start)]">
+                    <span class="ml-3">Wrong item</span>
+                </label>
+                <label class="flex items-center text-[var(--text-color)]">
+                    <input type="radio" name="reason" value="Changed mind" class="w-5 h-5 text-[var(--accent-start)] focus:ring-[var(--accent-start)]">
+                    <span class="ml-3">Changed mind</span>
+                </label>
+                <label class="flex items-center text-[var(--text-color)]">
+                    <input type="radio" name="reason" value="Other" class="w-5 h-5 text-[var(--accent-start)] focus:ring-[var(--accent-start)]" id="otherReturnReason">
+                    <span class="ml-3">Other</span>
+                </label>
+                <div id="otherReturnReasonContainer" class="hidden">
+                    <textarea id="otherReturnReasonText" class="w-full p-3 border border-gray-600 rounded-lg bg-[var(--content-bg)] text-[var(--text-color)] focus:ring-[var(--accent-start)] focus:border-[var(--accent-start)]" rows="3" placeholder="Please specify"></textarea>
+                </div>
+            </div>
+            <div class="flex justify-end space-x-4">
+                <button type="button" id="cancelProductReturnModalBtn" class="golden-button px-4 py-2 bg-gray-600 hover:bg-gray-500">Close</button>
+                <button type="submit" class="golden-button px-4 py-2">Request Return</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<%- include('./partials/adminFooter.ejs') %>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const sidebar = document.querySelector('.sidebar');
+        const main = document.querySelector('main');
+        const updateHeight = () => {
+            const mainHeight = main.offsetHeight;
+            sidebar.style.height = `${Math.max(mainHeight, window.innerHeight)}px`;
+        };
+        updateHeight();
+        window.addEventListener('resize', updateHeight);
+
+        // Status Update
+        document.querySelectorAll('.status-select').forEach(select => {
+            select.addEventListener('change', async (e) => {
+                const orderId = e.target.dataset.orderId;
+                const newStatus = e.target.value;
+
+                const result = await Swal.fire({
+                    title: 'Update Order Status',
+                    text: `Are you sure you want to change the status to ${newStatus}?`,
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d4af37',
+                    cancelButtonColor: '#6b7280',
+                    confirmButtonText: 'Yes, Update'
                 });
 
-                const data = await response.json();
-                console.log('Server response:', data);
-
-                if (response.ok) {
-                    Swal.fire({
-                        icon: 'success',
-                        title: `Status updated to ${newStatus}`,
-                        toast: true,
-                        position: 'top-end',
-                        showConfirmButton: false,
-                        timer: 1500,
-                        background: '#1e1e2f',
-                        color: '#e5e7eb',
-                        confirmButtonColor: '#d4af37'
-                    });
-
-                    if (['Cancelled', 'Delivered'].includes(newStatus)) {
-                        const staticStatus = document.createElement('span');
-                        staticStatus.className = newStatus === 'Cancelled' 
-                            ? 'px-3 py-1 bg-red-500/20 text-red-300 border border-red-500/20 rounded-lg'
-                            : 'px-3 py-1 bg-green-500/20 text-green-300 border border-green-500/20 rounded-lg';
-                        staticStatus.textContent = newStatus;
-                        selectElement.parentNode.replaceChild(staticStatus, selectElement);
+                if (result.isConfirmed) {
+                    try {
+                        const response = await fetch(`/admin/orders/${orderId}/toggle-status`, {
+                            method: 'PATCH',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ status: newStatus })
+                        });
+                        const data = await response.json();
+                        if (data.success) {
+                            Swal.fire('Success', 'Order status updated successfully', 'success').then(() => window.location.reload());
+                        } else {
+                            throw new Error(data.message || 'Failed to update status');
+                        }
+                    } catch (error) {
+                        Swal.fire('Error', error.message, 'error');
+                        e.target.value = e.target.dataset.currentStatus;
                     }
                 } else {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Error',
-                        text: data.message || 'Failed to update order status',
-                        background: '#1e1e2f',
-                        color: '#e5e7eb',
-                        confirmButtonColor: '#d4af37'
-                    });
-                    selectElement.value = originalStatus;
-                }
-            } catch (error) {
-                console.error('Error updating status:', error);
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: 'An error occurred while updating the status',
-                    background: '#1e1e2f',
-                    color: '#e5e7eb',
-                    confirmButtonColor: '#d4af37'
-                });
-                selectElement.value = originalStatus;
-            }
-        }
-
-        document.addEventListener('DOMContentLoaded', () => {
-            const sidebar = document.querySelector('.sidebar');
-            const sidebarToggle = document.getElementById('sidebarToggle');
-            if (sidebarToggle) {
-                sidebarToggle.addEventListener('click', () => sidebar.classList.toggle('-translate-x-full'));
-            }
-
-            document.addEventListener('click', (e) => {
-                if (window.innerWidth < 768 && !sidebar.contains(e.target) && !sidebarToggle?.contains(e.target)) {
-                    sidebar.classList.add('-translate-x-full');
+                    e.target.value = e.target.dataset.currentStatus;
                 }
             });
-
-            const statusSelects = document.querySelectorAll('.status-select');
-            statusSelects.forEach(select => {
-                select.addEventListener('change', () => updateStatus(select));
-            });
-
-            document.getElementById('filterForm').addEventListener('submit', function(e) {
-                e.preventDefault();
-                const formData = new FormData(this);
-                formData.set('page', '1');
-                const params = new URLSearchParams(formData);
-                window.location.href = `/admin/orders?${params.toString()}`;
-            });
-
-            document.getElementById('resetFilters').addEventListener('click', () => {
-                window.location.href = '/admin/orders?page=1';
-            });
-
-            function debounce(func, wait) {
-                let timeout;
-                return function executedFunction(...args) {
-                    const later = () => {
-                        clearTimeout(timeout);
-                        func(...args);
-                    };
-                    clearTimeout(timeout);
-                    timeout = setTimeout(later, wait);
-                };
-            }
-
-            const searchInput = document.querySelector('input[name="search"]');
-            if (searchInput) {
-                searchInput.addEventListener('input', debounce(function(e) {
-                    const formData = new FormData(document.getElementById('filterForm'));
-                    formData.set('page', '1');
-                    const params = new URLSearchParams(formData);
-                    window.location.href = `/admin/orders?${params.toString()}`;
-                }, 500));
-            }
-
-            const main = document.querySelector('main');
-            const updateHeight = () => {
-                const mainHeight = main.offsetHeight;
-                sidebar.style.height = `${Math.max(mainHeight, window.innerHeight)}px`;
-            };
-            updateHeight();
-            window.addEventListener('resize', updateHeight);
-
-            const animateElements = () => {
-                const elements = document.querySelectorAll('.animate-fade-in-up');
-                elements.forEach((element, index) => {
-                    element.style.animationDelay = `${index * 0.2}s`;
-                });
-            };
-            animateElements();
+            select.dataset.currentStatus = select.value;
         });
-    </script>
-</body>
-</html>
+
+        // Modal Handling Functions
+        const openModal = (modal) => {
+            modal.classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        };
+
+        const closeModal = (modal, form, otherContainer) => {
+            modal.classList.add('hidden');
+            document.body.style.overflow = '';
+            form.reset();
+            if (otherContainer) otherContainer.classList.add('hidden');
+        };
+
+        // Cancellation Modal
+        const productCancellationModal = document.getElementById('productCancellationModal');
+        const productCancellationForm = document.getElementById('productCancellationForm');
+        const closeProductCancellationModalBtn = document.getElementById('closeProductCancellationModal');
+        const cancelProductCancellationModalBtn = document.getElementById('cancelProductCancellationModalBtn');
+        const otherCancelReason = document.getElementById('otherCancelReason');
+        const otherCancelReasonContainer = document.getElementById('otherCancelReasonContainer');
+        const cancelOrderIdInput = document.getElementById('cancelOrderId');
+        const cancelProductIndexInput = document.getElementById('cancelProductIndex');
+
+        document.querySelectorAll('.cancel-product-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const orderId = btn.dataset.orderId;
+                const productIndex = btn.dataset.productIndex;
+                cancelOrderIdInput.value = orderId;
+                cancelProductIndexInput.value = productIndex;
+                openModal(productCancellationModal);
+            });
+        });
+
+        closeProductCancellationModalBtn.addEventListener('click', () => closeModal(productCancellationModal, productCancellationForm, otherCancelReasonContainer));
+        cancelProductCancellationModalBtn.addEventListener('click', () => closeModal(productCancellationModal, productCancellationForm, otherCancelReasonContainer));
+        productCancellationModal.addEventListener('click', (e) => {
+            if (e.target === productCancellationModal) closeModal(productCancellationModal, productCancellationForm, otherCancelReasonContainer);
+        });
+
+        otherCancelReason.addEventListener('change', () => {
+            otherCancelReasonContainer.classList.toggle('hidden', !otherCancelReason.checked);
+        });
+
+        productCancellationForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(productCancellationForm);
+            const orderId = formData.get('orderId');
+            const productIndex = formData.get('productIndex');
+            let reason = formData.get('reason');
+            if (reason === 'Other') {
+                reason = document.getElementById('otherCancelReasonText').value.trim();
+                if (!reason) return Swal.fire('Error', 'Please specify a reason', 'error');
+            }
+            if (!reason) return Swal.fire('Error', 'Please select a reason', 'error');
+
+            closeModal(productCancellationModal, productCancellationForm, otherCancelReasonContainer);
+            const result = await Swal.fire({
+                title: 'Confirm Product Cancellation',
+                text: 'This will refund the proportional amount to the customer’s wallet!',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d4af37',
+                cancelButtonColor: '#6b7280',
+                confirmButtonText: 'Yes, Cancel Product'
+            });
+
+            if (result.isConfirmed) {
+                try {
+                    const response = await fetch(`/admin/orders/${orderId}/cancel-product`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ productIndex, reason })
+                    });
+                    const data = await response.json();
+                    if (data.success) {
+                        Swal.fire('Cancelled!', 'Product cancelled and amount refunded to wallet.', 'success').then(() => window.location.reload());
+                    } else {
+                        throw new Error(data.message || 'Product cancellation failed');
+                    }
+                } catch (error) {
+                    Swal.fire('Error', error.message, 'error');
+                }
+            }
+        });
+
+        // Return Modal
+        const productReturnModal = document.getElementById('productReturnModal');
+        const productReturnForm = document.getElementById('productReturnForm');
+        const closeProductReturnModalBtn = document.getElementById('closeProductReturnModal');
+        const cancelProductReturnModalBtn = document.getElementById('cancelProductReturnModalBtn');
+        const otherReturnReason = document.getElementById('otherReturnReason');
+        const otherReturnReasonContainer = document.getElementById('otherReturnReasonContainer');
+        const returnOrderIdInput = document.getElementById('returnOrderId');
+        const returnProductIndexInput = document.getElementById('returnProductIndex');
+
+        document.querySelectorAll('.return-product-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const orderId = btn.dataset.orderId;
+                const productIndex = btn.dataset.productIndex;
+                returnOrderIdInput.value = orderId;
+                returnProductIndexInput.value = productIndex;
+                openModal(productReturnModal);
+            });
+        });
+
+        closeProductReturnModalBtn.addEventListener('click', () => closeModal(productReturnModal, productReturnForm, otherReturnReasonContainer));
+        cancelProductReturnModalBtn.addEventListener('click', () => closeModal(productReturnModal, productReturnForm, otherReturnReasonContainer));
+        productReturnModal.addEventListener('click', (e) => {
+            if (e.target === productReturnModal) closeModal(productReturnModal, productReturnForm, otherReturnReasonContainer);
+        });
+
+        otherReturnReason.addEventListener('change', () => {
+            otherReturnReasonContainer.classList.toggle('hidden', !otherReturnReason.checked);
+        });
+
+        productReturnForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(productReturnForm);
+            const orderId = formData.get('orderId');
+            const productIndex = formData.get('productIndex');
+            let reason = formData.get('reason');
+            if (reason === 'Other') {
+                reason = document.getElementById('otherReturnReasonText').value.trim();
+                if (!reason) return Swal.fire('Error', 'Please specify a reason', 'error');
+            }
+            if (!reason) return Swal.fire('Error', 'Please select a reason', 'error');
+
+            closeModal(productReturnModal, productReturnForm, otherReturnReasonContainer);
+            const result = await Swal.fire({
+                title: 'Confirm Product Return',
+                text: 'This will submit a return request for approval!',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d4af37',
+                cancelButtonColor: '#6b7280',
+                confirmButtonText: 'Yes, Request Return'
+            });
+
+            if (result.isConfirmed) {
+                try {
+                    const response = await fetch(`/admin/orders/${orderId}/return-product`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ productIndex, reason })
+                    });
+                    const data = await response.json();
+                    if (data.success) {
+                        Swal.fire('Requested!', 'Return request submitted successfully.', 'success').then(() => window.location.reload());
+                    } else {
+                        throw new Error(data.message || 'Return request failed');
+                    }
+                } catch (error) {
+                    Swal.fire('Error', error.message, 'error');
+                }
+            }
+        });
+    });
+</script>

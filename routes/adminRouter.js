@@ -49,10 +49,13 @@ router.post('/products/:id/toggle-featured', admin.isAdmin, productController.to
 router.post('/softDeleteProduct/:id', admin.isAdmin, productController.softDeleteProduct);
 
 // Order Management
-router.get('/orders', admin.isAdmin, orderController.getOrders); // Existing route for order list
-router.get('/detailed-orders', admin.isAdmin, adminControllers.getDetailedOrders); // Distinct route for detailed orders
-router.patch('/orders/:orderId/toggle-status', admin.isAdmin, orderController.toggleOrderStatus);
-router.get('/viewdetails/:orderId', admin.isAdmin, orderController.viewOrderDetails);
+router.get('/orders', admin.isAdmin, orderController.getOrders); // List all orders
+router.get('/detailed-orders', admin.isAdmin, adminControllers.getDetailedOrders); // Detailed orders (unchanged)
+router.patch('/orders/:orderId/toggle-status', admin.isAdmin, orderController.toggleOrderStatus); // Toggle overall order status
+router.get('/orders/:orderId', admin.isAdmin, orderController.viewOrderDetails); // View order details (updated path)
+router.post('/orders/:orderId/cancel-product', admin.isAdmin, orderController.cancelProduct); // Cancel individual product
+router.post('/orders/:orderId/return-product', admin.isAdmin, orderController.returnProduct); // Request return for individual product
+router.post('/orders/:orderId/approve-return', admin.isAdmin, orderController.approveReturn); // Approve return for individual product
 
 // Offer Management
 router.get('/offers', admin.isAdmin, offerController.getAllOffers);
@@ -71,9 +74,9 @@ router.post('/editCoupon/:Id', admin.isAdmin, couponController.updateCoupon);
 router.get('/deleteCoupon/:Id', admin.isAdmin, couponController.deleteCoupon);
 
 // Return Request Management
-router.get('/return/requests', returnController.getReturnRequests);
-router.post('/return/approve/:id', returnController.approveReturnRequest);
-router.post('/return/reject/:id', returnController.rejectReturnRequest);
-router.get('/return/order-details/:id', returnController.getReturnRequestDetails);
+router.get('/return/requests', admin.isAdmin, returnController.getReturnRequests);
+router.post('/return/approve/:id', admin.isAdmin, returnController.approveReturnRequest);
+router.post('/return/reject/:id', admin.isAdmin, returnController.rejectReturnRequest);
+router.get('/return/order-details/:id', admin.isAdmin, returnController.getReturnRequestDetails);
 
 module.exports = router;

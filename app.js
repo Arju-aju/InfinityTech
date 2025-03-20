@@ -81,93 +81,93 @@ app.use((req, res, next) => {
 app.use(handleMulterError);
 
 // Helmet CSP configuration
-app.use(
-    helmet({
-        contentSecurityPolicy: {
-            directives: {
-                defaultSrc: ["'self'"],
-                scriptSrc: [
-                    "'self'",
-                    "'unsafe-inline'",
-                    "'unsafe-eval'",
-                    "https://cdn.jsdelivr.net",
-                    "https://unpkg.com",
-                    "https://cdn.tailwindcss.com",
-                    "https://code.jquery.com",
-                    "https://cdnjs.cloudflare.com",
-                    "https://checkout.razorpay.com",
-                    "https://api.razorpay.com",
-                    "https://www.google.com",
-                    "https://maps.googleapis.com"
-                ],
-                styleSrc: [
-                    "'self'",
-                    "'unsafe-inline'",
-                    "https://cdn.jsdelivr.net",
-                    "https://cdn.tailwindcss.com",
-                    "https://cdnjs.cloudflare.com",
-                    "https://unpkg.com",
-                    "https://fonts.googleapis.com"
-                ],
-                connectSrc: [
-                    "'self'",
-                    "'unsafe-inline'",  
-                    "http://localhost:3000", 
-                    "https://unpkg.com",
-                    "https://cdn.jsdelivr.net",
-                    "https://lumberjack.razorpay.com",
-                    "https://api.razorpay.com",
-                    "https://checkout.razorpay.com",
-                    "https://www.google.com",
-                    "https://maps.googleapis.com",
-                ],
-                frameSrc: [
-                    "'self'",
-                    "https://api.razorpay.com",
-                    "https://checkout.razorpay.com",
-                    "https://www.google.com",
-                    "https://maps.google.com",
+// app.use(
+//     helmet({
+//         contentSecurityPolicy: {
+//             directives: {
+//                 defaultSrc: ["'self'"],
+//                 scriptSrc: [
+//                     "'self'",
+//                     "'unsafe-inline'",
+//                     "'unsafe-eval'",
+//                     "https://cdn.jsdelivr.net",
+//                     "https://unpkg.com",
+//                     "https://cdn.tailwindcss.com",
+//                     "https://code.jquery.com",
+//                     "https://cdnjs.cloudflare.com",
+//                     "https://checkout.razorpay.com",
+//                     "https://api.razorpay.com",
+//                     "https://www.google.com",
+//                     "https://maps.googleapis.com"
+//                 ],
+//                 styleSrc: [
+//                     "'self'",
+//                     "'unsafe-inline'",
+//                     "https://cdn.jsdelivr.net",
+//                     "https://cdn.tailwindcss.com",
+//                     "https://cdnjs.cloudflare.com",
+//                     "https://unpkg.com",
+//                     "https://fonts.googleapis.com"
+//                 ],
+//                 connectSrc: [
+//                     "'self'",
+//                     "'unsafe-inline'",  
+//                     "http://localhost:3000", 
+//                     "https://unpkg.com",
+//                     "https://cdn.jsdelivr.net",
+//                     "https://lumberjack.razorpay.com",
+//                     "https://api.razorpay.com",
+//                     "https://checkout.razorpay.com",
+//                     "https://www.google.com",
+//                     "https://maps.googleapis.com",
+//                 ],
+//                 frameSrc: [
+//                     "'self'",
+//                     "https://api.razorpay.com",
+//                     "https://checkout.razorpay.com",
+//                     "https://www.google.com",
+//                     "https://maps.google.com",
                     
-                ],
-                imgSrc: [
-                    "'self'",
-                    "data:",
-                    "https:",
-                    "blob:",
-                    "https://maps.gstatic.com",
-                    "https://*.googleapis.com",
-                    "https://checkout.razorpay.com"
-                ],
-                fontSrc: [
-                    "'self'",
-                    "https://cdnjs.cloudflare.com",
-                    "https://fonts.gstatic.com",
-                    "data:"
-                ],
-                mediaSrc: ["'self'", "https:", "blob:", "https://*.amazonaws.com"],
-                objectSrc: ["'none'"],
-                formAction: [
-                    "'self'",
-                    "https://api.razorpay.com",
-                    "https://checkout.razorpay.com"
-                ],
-                upgradeInsecureRequests: []
-            }
-        },
-        crossOriginEmbedderPolicy: false,
-        crossOriginResourcePolicy: { policy: "cross-origin" },
-        dnsPrefetchControl: false,
-        frameguard: false,
-        hsts: {
-            maxAge: 15552000,
-            includeSubDomains: true,
-            preload: true
-        },
-        referrerPolicy: { policy: "strict-origin-when-cross-origin" },
-        xssFilter: true,
-        noSniff: true
-    })
-);
+//                 ],
+//                 imgSrc: [
+//                     "'self'",
+//                     "data:",
+//                     "https:",
+//                     "blob:",
+//                     "https://maps.gstatic.com",
+//                     "https://*.googleapis.com",
+//                     "https://checkout.razorpay.com"
+//                 ],
+//                 fontSrc: [
+//                     "'self'",
+//                     "https://cdnjs.cloudflare.com",
+//                     "https://fonts.gstatic.com",
+//                     "data:"
+//                 ],
+//                 mediaSrc: ["'self'", "https:", "blob:", "https://*.amazonaws.com"],
+//                 objectSrc: ["'none'"],
+//                 formAction: [
+//                     "'self'",
+//                     "https://api.razorpay.com",
+//                     "https://checkout.razorpay.com"
+//                 ],
+//                 upgradeInsecureRequests: []
+//             }
+//         },
+//         crossOriginEmbedderPolicy: false,
+//         crossOriginResourcePolicy: { policy: "cross-origin" },
+//         dnsPrefetchControl: false,
+//         frameguard: false,
+//         hsts: {
+//             maxAge: 15552000,
+//             includeSubDomains: true,
+//             preload: true
+//         },
+//         referrerPolicy: { policy: "strict-origin-when-cross-origin" },
+//         xssFilter: true,
+//         noSniff: true
+//     })
+// );
 
 // Routes
 app.use('/', userRouter);

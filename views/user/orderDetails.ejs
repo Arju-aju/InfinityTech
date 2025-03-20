@@ -9,6 +9,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
+        /* Existing styles remain unchanged */
         body {
             background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
             font-family: 'Poppins', sans-serif;
@@ -168,18 +169,18 @@
                             </div>
                             <div class="flex items-center space-x-6">
                                 <p class="text-xl font-semibold text-gray-800">₹<%= product.totalPrice.toFixed(2) %></p>
-                                <% if (['Pending', 'Processing'].includes(order.status) && product.status === 'Ordered') { %>
+                                <% if (order.products.length > 1 && ['Pending', 'Processing'].includes(order.status) && product.status === 'Ordered') { %>
                                     <button class="btn bg-red-600 text-white hover:bg-red-700 cancel-product-btn" 
                                             data-order-id="<%= order._id %>" 
                                             data-product-id="<%= product.productId._id %>">
                                         Cancel Item
                                     </button>
-                                <% } else if (['Pending', 'Processing'].includes(order.status) && product.status === 'Cancelled') { %>
+                                <% } else if (product.status === 'Cancelled') { %>
                                     <button class="btn bg-gray-400 text-white cursor-not-allowed" disabled>
                                         Cancelled
                                     </button>
                                 <% } %>
-                                <% if (order.status === 'Delivered' && product.status === 'Ordered') { %>
+                                <% if (order.products.length > 1 && order.status === 'Delivered' && product.status === 'Ordered') { %>
                                     <button class="btn bg-yellow-600 text-white hover:bg-yellow-700 return-product-btn" 
                                             data-order-id="<%= order._id %>" 
                                             data-product-id="<%= product.productId._id %>">
@@ -248,7 +249,7 @@
                             <span class="ml-3">Shipping time too long</span>
                         </label>
                         <label class="flex items-center text-gray-700">
-                            <input type="radio" name=" productCancellationReason" value="Other" class="w-5 h-5 text-indigo-600 focus:ring-indigo-500" id="otherCancellationReason">
+                            <input type="radio" name="cancellationReason" value="Other" class="w-5 h-5 text-indigo-600 focus:ring-indigo-500" id="otherCancellationReason">
                             <span class="ml-3">Other</span>
                         </label>
                         <div id="otherCancellationReasonContainer" class="hidden">
@@ -285,7 +286,7 @@
                             <span class="ml-3">Wrong item received</span>
                         </label>
                         <label class="flex items-center text-gray-700">
-                            <input type="radio" name="returnReason" value="Item doesn't match description" class="w-5 h-5 text-yellow-600ासाठीfocus:ring-yellow-500">
+                            <input type="radio" name="returnReason" value="Item doesn't match description" class="w-5 h-5 text-yellow-600 focus:ring-yellow-500">
                             <span class="ml-3">Item doesn't match description</span>
                         </label>
                         <label class="flex items-center text-gray-700">
@@ -405,7 +406,6 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            // Modal Elements
             const cancellationModal = document.getElementById('cancellationModal');
             const cancelOrderBtn = document.getElementById('cancelOrderBtn');
             const closeCancellationModalBtn = document.getElementById('closeCancellationModal');
@@ -440,7 +440,6 @@
             const productReturnOrderIdInput = document.getElementById('productReturnOrderId');
             const productReturnIdInput = document.getElementById('productReturnId');
 
-            // Modal Functions
             const openModal = (modal) => {
                 modal.style.display = 'block';
                 document.body.style.overflow = 'hidden';
@@ -453,7 +452,6 @@
                 if (otherContainer) otherContainer.classList.add('hidden');
             };
 
-            // Event Listeners for Modals
             if (cancelOrderBtn) {
                 cancelOrderBtn.addEventListener('click', () => openModal(cancellationModal));
             }
@@ -464,7 +462,6 @@
                 btn.addEventListener('click', () => {
                     const orderId = btn.getAttribute('data-order-id');
                     const productId = btn.getAttribute('data-product-id');
-                    console.log('Cancel Button Clicked - Order ID:', orderId, 'Product ID:', productId);
                     orderIdInput.value = orderId;
                     productIdInput.value = productId;
                     openModal(productCancellationModal);
@@ -474,14 +471,12 @@
                 btn.addEventListener('click', () => {
                     const orderId = btn.getAttribute('data-order-id');
                     const productId = btn.getAttribute('data-product-id');
-                    console.log('Return Button Clicked - Order ID:', orderId, 'Product ID:', productId);
                     productReturnOrderIdInput.value = orderId;
                     productReturnIdInput.value = productId;
                     openModal(productReturnModal);
                 });
             });
 
-            // Close Modal Event Listeners
             closeCancellationModalBtn.addEventListener('click', () => closeModal(cancellationModal, cancellationForm, otherCancellationReasonContainer));
             cancelCancellationModalBtn.addEventListener('click', () => closeModal(cancellationModal, cancellationForm, otherCancellationReasonContainer));
             cancellationModal.addEventListener('click', (e) => { if (e.target === cancellationModal) closeModal(cancellationModal, cancellationForm, otherCancellationReasonContainer); });
@@ -498,13 +493,11 @@
             cancelProductReturnModalBtn.addEventListener('click', () => closeModal(productReturnModal, productReturnForm, otherProductReturnReasonContainer));
             productReturnModal.addEventListener('click', (e) => { if (e.target === productReturnModal) closeModal(productReturnModal, productReturnForm, otherProductReturnReasonContainer); });
 
-            // Other Reason Toggle
             otherCancellationReason.addEventListener('change', () => otherCancellationReasonContainer.classList.toggle('hidden', !otherCancellationReason.checked));
             otherReturnReason.addEventListener('change', () => otherReturnReasonContainer.classList.toggle('hidden', !otherReturnReason.checked));
             otherProductCancellationReason.addEventListener('change', () => otherProductCancellationReasonContainer.classList.toggle('hidden', !otherProductCancellationReason.checked));
             otherProductReturnReason.addEventListener('change', () => otherProductReturnReasonContainer.classList.toggle('hidden', !otherProductReturnReason.checked));
 
-            // Form Submissions
             cancellationForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
                 const formData = new FormData(cancellationForm);
@@ -528,9 +521,7 @@
 
                 if (result.isConfirmed) {
                     try {
-                        const url = `/api/orders/<%= order._id %>/cancel`;
-                        console.log('Cancel Order URL:', url);
-                        const response = await fetch(url, {
+                        const response = await fetch(`/api/orders/${'<%= order._id %>'}/cancel`, {
                             method: 'PUT',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({ reason })
@@ -570,9 +561,7 @@
 
                 if (result.isConfirmed) {
                     try {
-                        const url = `/api/orders/<%= order._id %>/return`;
-                        console.log('Return Order URL:', url);
-                        const response = await fetch(url, {
+                        const response = await fetch(`/api/orders/${'<%= order._id %>'}/return`, {
                             method: 'PUT',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({ reason })
@@ -601,9 +590,7 @@
                 }
                 if (!reason) return Swal.fire('Error', 'Please select a reason', 'error');
 
-                console.log('Submitting Cancellation - Order ID:', orderId, 'Product ID:', productId, 'Reason:', reason);
                 closeModal(productCancellationModal, productCancellationForm, otherProductCancellationReasonContainer);
-
                 const result = await Swal.fire({
                     title: 'Confirm Product Cancellation',
                     text: "This action cannot be undone!",
@@ -616,21 +603,18 @@
 
                 if (result.isConfirmed) {
                     try {
-                        const url = `/api/orders/${orderId}/cancel-product/${productId}`;
-                        console.log('Cancel Product URL:', url);
-                        const response = await fetch(url, {
+                        const response = await fetch(`/api/orders/${orderId}/cancel-product/${productId}`, {
                             method: 'PUT',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({ reason })
                         });
-                        const data = await response.json();
                         if (response.ok) {
                             Swal.fire('Cancelled!', 'The product has been cancelled and the amount has been refunded to your wallet.', 'success').then(() => window.location.reload());
                         } else {
+                            const data = await response.json();
                             throw new Error(data.message || 'Product cancellation failed');
                         }
                     } catch (error) {
-                        console.error('Cancellation Error:', error);
                         Swal.fire('Error', error.message, 'error');
                     }
                 }
@@ -648,9 +632,7 @@
                 }
                 if (!reason) return Swal.fire('Error', 'Please select a reason', 'error');
 
-                console.log('Submitting Return - Order ID:', orderId, 'Product ID:', productId, 'Reason:', reason);
                 closeModal(productReturnModal, productReturnForm, otherProductReturnReasonContainer);
-
                 const result = await Swal.fire({
                     title: 'Confirm Product Return',
                     text: "This will request a return approval from the admin!",
@@ -663,21 +645,18 @@
 
                 if (result.isConfirmed) {
                     try {
-                        const url = `/api/orders/${orderId}/return-product/${productId}`;
-                        console.log('Return Product URL:', url);
-                        const response = await fetch(url, {
+                        const response = await fetch(`/api/orders/${orderId}/return-product/${productId}`, {
                             method: 'PUT',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({ reason })
                         });
-                        const data = await response.json();
                         if (response.ok) {
                             Swal.fire('Return Requested!', 'Your product return request has been submitted for admin approval.', 'success').then(() => window.location.reload());
                         } else {
+                            const data = await response.json();
                             throw new Error(data.message || 'Product return request failed');
                         }
                     } catch (error) {
-                        console.error('Return Error:', error);
                         Swal.fire('Error', error.message, 'error');
                     }
                 }
@@ -685,7 +664,6 @@
         });
     </script>
 
-    <!-- Footer -->
     <footer class="mt-12 text-center text-gray-600">
         <p>© <%= new Date().getFullYear() %> E-Shop. All rights reserved.</p>
     </footer>
