@@ -70,23 +70,7 @@
 </head>
 <body class="min-h-screen flex">
     <!-- Sidebar (Reused from wallet.ejs) -->
-    <div class="w-64 bg-white/10 text-white p-6 overflow-y-auto">
-        <div class="mb-10 text-center">
-            <img src="images/default-avatar.svg" alt="Profile" class="w-24 h-24 rounded-full mx-auto mb-4 object-cover">
-            <h2 class="text-xl font-semibold"><%= user.fname %> <%= user.lname %></h2>
-            <p class="text-white/70"><%= user.email %></p>
-        </div>
-        <nav>
-            <ul class="space-y-2">
-                <li><a href="/profile" class="block p-3 hover:bg-white/20"><i class="fas fa-user mr-3"></i>Profile</a></li>
-                <li><a href="/address" class="block p-3 hover:bg-white/20"><i class="fas fa-address-book mr-3"></i>Address Book</a></li>
-                <li><a href="/orders" class="block p-3 hover:bg-white/20"><i class="fas fa-shopping-cart mr-3"></i>Orders</a></li>
-                <li class="bg-white/20 rounded"><a href="/wallet" class="block p-3 hover:bg-white/30"><i class="fas fa-wallet mr-3"></i>Wallet</a></li>
-                <li><a href="/changePassword" class="block p-3 hover:bg-white/20"><i class="fas fa-key mr-3"></i>Password</a></li>
-                <li><a href="/logout" class="block p-3 hover:bg-white/20"><i class="fas fa-sign-out-alt mr-3"></i>Logout</a></li>
-            </ul>
-        </nav>
-    </div>
+    <%- include('../partials/profileSideBar')%>
 
     <!-- Main Content -->
     <main class="flex-1 container mx-auto px-4 py-8 space-y-8 mt-16 mb-16">

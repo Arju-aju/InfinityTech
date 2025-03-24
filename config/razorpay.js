@@ -12,7 +12,6 @@ exports.createRazorpayInstance = () => {
             key_secret: process.env.Test_Key_Secret,
         });
 
-        console.log('Razorpay instance created successfully with key_id:', process.env.Test_Key_ID);
         return instance;
     } catch (error) {
         console.error('Error creating Razorpay instance:', error.message, error.stack);

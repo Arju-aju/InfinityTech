@@ -7,8 +7,8 @@ const mongoose = require('mongoose');
 exports.getAllOffers = async (req, res) => {
     try {
         const offers = await Offer.find()
-            .populate('Categories', 'name') // Populate category names
-            .populate('Product', 'name');   // Populate product names
+            .populate('Categories', 'name')
+            .populate('Product', 'name');
 
         res.render('offer', {
             path: '/admin/offers',
@@ -49,20 +49,33 @@ exports.getAddOffer = async (req, res) => {
 // Create a new offer
 exports.postAddOffer = async (req, res) => {
     try {
+        console.log('Request Body:', req.body); // Debug log
         const { name, description, discountType, discountValue, maxDiscount, minimumAmount, startDate, endDate, product, category, offerType } = req.body;
 
-        if (!name || !discountType || !discountValue || !startDate || !endDate || !offerType) {
-            throw new Error('Please fill in all required fields');
+        // Check required fields and collect missing ones
+        const missingFields = [];
+        if (!name) missingFields.push('Offer Name');
+        if (!discountType) missingFields.push('Discount Type');
+        if (!discountValue) missingFields.push('Discount Value');
+        if (!startDate) missingFields.push('Start Date');
+        if (!endDate) missingFields.push('End Date');
+        if (!offerType) missingFields.push('Offer Type');
+
+        if (missingFields.length > 0) {
+            throw new Error(`Please fill in all required fields: ${missingFields.join(', ')}`);
         }
 
+        // Validate offer name length
         if (name.length < 3 || name.length > 30) {
             throw new Error('Offer name must be between 3 and 30 characters');
         }
 
+        // Validate discount type
         if (!['percentage', 'fixed'].includes(discountType)) {
             throw new Error('Invalid discount type');
         }
 
+        // Validate discount value
         const discountValueNum = parseFloat(discountValue);
         if (isNaN(discountValueNum) || discountValueNum < 0) {
             throw new Error('Discount value must be a positive number');
@@ -71,30 +84,34 @@ exports.postAddOffer = async (req, res) => {
             throw new Error('Percentage discount cannot exceed 100');
         }
 
+        // Validate minimum amount (optional field)
         const minimumAmountNum = parseFloat(minimumAmount || 0);
         if (isNaN(minimumAmountNum) || minimumAmountNum < 0) {
             throw new Error('Minimum amount must be a positive number');
         }
 
+        // Validate dates
         const startDateObj = new Date(startDate);
         const endDateObj = new Date(endDate);
         const currentDate = new Date();
+        currentDate.setHours(0, 0, 0, 0);
 
         if (isNaN(startDateObj.getTime()) || isNaN(endDateObj.getTime())) {
             throw new Error('Invalid date format');
         }
-        if (startDateObj < currentDate.setHours(0, 0, 0, 0)) {
+        if (startDateObj < currentDate) {
             throw new Error('Start date cannot be in the past');
         }
         if (endDateObj <= startDateObj) {
             throw new Error('End date must be after start date');
         }
 
+        // Handle product or category based on offerType
         let productArray = [];
         let categoryArray = [];
 
         if (offerType === 'product') {
-            if (!product) throw new Error('Please select a product');
+            if (!product) throw new Error('Please select at least one product');
             const productIdArray = Array.isArray(product) ? product : [product];
             for (const prodId of productIdArray) {
                 if (!mongoose.Types.ObjectId.isValid(prodId)) throw new Error(`Invalid product ID: ${prodId}`);
@@ -115,6 +132,7 @@ exports.postAddOffer = async (req, res) => {
             throw new Error('Invalid offer type');
         }
 
+        // Prepare offer data
         const offerData = {
             name,
             description: description || '',

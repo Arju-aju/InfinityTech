@@ -200,10 +200,8 @@
                 const errors = [];
                 const inputs = form.querySelectorAll('input, select');
                 
-                // Reset error styles
                 inputs.forEach(input => input.classList.remove('error-border'));
 
-                // Required fields
                 const requiredFields = {
                     name: 'Offer Name',
                     discountType: 'Discount Type',
@@ -216,7 +214,6 @@
                     requiredFields.offerType = 'Offer Type';
                 }
 
-                // Check for empty required fields
                 for (const [fieldName, fieldLabel] of Object.entries(requiredFields)) {
                     const input = form.querySelector(`[name="${fieldName}"]`);
                     if (!input.value.trim()) {
@@ -226,7 +223,6 @@
                     }
                 }
 
-                // Additional validations
                 const name = form.querySelector('[name="name"]').value.trim();
                 if (name && (name.length < 3 || name.length > 30)) {
                     errors.push('Offer Name must be between 3 and 30 characters');
@@ -271,7 +267,6 @@
                     isValid = false;
                 }
 
-                // Offer type specific validation (only when adding)
                 if (!<%= editing ? 'true' : 'false' %>) {
                     const offerType = form.querySelector('[name="offerType"]').value;
                     if (offerType === 'product') {
@@ -305,19 +300,37 @@
                 return isValid;
             }
 
-            // AJAX form submission with validation
+            // AJAX form submission with explicit URL-encoded data
             form.addEventListener('submit', async (e) => {
                 e.preventDefault();
 
                 if (!validateForm()) return;
 
-                const formData = new FormData(form);
+                // Serialize form data manually
+                const formData = new URLSearchParams();
+                const inputs = form.querySelectorAll('input, select');
+                inputs.forEach(input => {
+                    if (input.name) {
+                        if (input.type === 'checkbox') {
+                            formData.append(input.name, input.checked ? 'on' : 'off');
+                        } else if (input.multiple) {
+                            Array.from(input.selectedOptions).forEach(option => {
+                                formData.append(input.name, option.value);
+                            });
+                        } else {
+                            formData.append(input.name, input.value);
+                        }
+                    }
+                });
+
+                console.log('Form Data:', Object.fromEntries(formData)); // Debug log
 
                 try {
                     const response = await fetch(form.action, {
                         method: 'POST',
                         body: formData,
                         headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
                             'Accept': 'application/json'
                         }
                     });

@@ -191,15 +191,17 @@ exports.createRazorpayOrder = async (req, res) => {
 
 exports.verifyPayment = async (req, res) => {
   const session = await mongoose.startSession();
+  let transactionCommitted = false; 
   session.startTransaction();
   try {
-    const { razorpay_order_id, razorpay_payment_id, razorpay_signature, addressId, totalAmount, couponCode, couponDiscount } = req.body;
+    const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
 
+    // Verify Razorpay signature
     const body = razorpay_order_id + '|' + razorpay_payment_id;
     const expectedSignature = crypto.createHmac('sha256', process.env.Test_Key_Secret).update(body).digest('hex');
-
     if (expectedSignature !== razorpay_signature) throw new Error('Invalid payment signature');
 
+    // Find and update the order
     const order = await Order.findOne({ 'razorpayDetails.orderId': razorpay_order_id }).populate('products.productId');
     if (!order) throw new Error('Order not found');
 
@@ -208,11 +210,16 @@ exports.verifyPayment = async (req, res) => {
     order.razorpayDetails.paymentId = razorpay_payment_id;
     order.razorpayDetails.signature = razorpay_signature;
 
+    // Reduce stock and save order
     await reduceStock(order.products, session);
     await order.save({ session });
     await Cart.findOneAndDelete({ user: req.user._id }, { session });
 
+    // Commit the transaction
     await session.commitTransaction();
+    transactionCommitted = true;
+
+    // Send email after transaction
     await sendOrderConfirmationEmail(req.user.email, order);
 
     res.json({
@@ -221,7 +228,9 @@ exports.verifyPayment = async (req, res) => {
       redirectUrl: `/orders/${order._id}`
     });
   } catch (error) {
-    await session.abortTransaction();
+    if (!transactionCommitted) {
+      await session.abortTransaction();
+    }
     res.status(400).json({
       success: false,
       message: error.message,
@@ -329,6 +338,12 @@ exports.downloadInvoice = async (req, res) => {
     const { orderId } = req.params;
     console.log(`[INFO] Fetching invoice for orderId: ${orderId}`);
 
+    // Validate orderId
+    if (!mongoose.Types.ObjectId.isValid(orderId)) {
+      console.log(`[ERROR] Invalid orderId: ${orderId}`);
+      return res.status(400).render('404', { message: 'Invalid order ID' });
+    }
+
     const order = await Order.findById(orderId)
       .populate('products.productId')
       .populate('user', 'name email');
@@ -408,35 +423,25 @@ exports.downloadInvoice = async (req, res) => {
       .fillColor('#2D3748')
       .text('Bill To:', margins, 120);
 
-    // Handle address properly
     doc
       .fontSize(12)
       .fillColor('#4A5568')
       .text(`${order.user.name}`, margins, 140);
     
-    // Address lines
     let addressComponents = [];
     if (order.deliveryAddress.address) addressComponents.push(order.deliveryAddress.address);
     
-    // City, State, Pincode formatting
     let locationParts = [];
     if (order.deliveryAddress.city) locationParts.push(order.deliveryAddress.city);
     if (order.deliveryAddress.state) locationParts.push(order.deliveryAddress.state);
     if (order.deliveryAddress.pincode) locationParts.push(order.deliveryAddress.pincode);
     
-    // Show address line
     doc.text(addressComponents.join(', '), margins, 155);
-    
-    // Show city, state, pincode
     doc.text(locationParts.join(' , '), margins, 170);
-    
-    // Show email
     doc.text(`Email: ${order.user.email}`, margins, 185);
 
     // **Table Header**
     const tableTop = 220;
-    
-    // Define column widths proportionally
     const columnWidths = {
       item: Math.floor(contentWidth * 0.5),
       qty: Math.floor(contentWidth * 0.1),
@@ -444,7 +449,6 @@ exports.downloadInvoice = async (req, res) => {
       total: Math.floor(contentWidth * 0.2)
     };
     
-    // Calculate starting positions for each column
     const tableXPositions = {
       item: margins,
       qty: margins + columnWidths.item,
@@ -452,13 +456,11 @@ exports.downloadInvoice = async (req, res) => {
       total: margins + columnWidths.item + columnWidths.qty + columnWidths.price
     };
 
-    // Create header background
     doc
       .fillColor('#2D3748')
       .rect(margins, tableTop, contentWidth, 25)
       .fill();
 
-    // Add header text
     doc
       .fillColor('#FFFFFF')
       .fontSize(12)
@@ -472,7 +474,6 @@ exports.downloadInvoice = async (req, res) => {
     order.products.forEach((item, index) => {
       const productTotal = item.quantity * item.price;
 
-      // Alternating row backgrounds
       if (index % 2 === 0) {
         doc
           .fillColor('#F7FAFC')
@@ -500,13 +501,11 @@ exports.downloadInvoice = async (req, res) => {
     const subtotal = order.products.reduce((sum, item) => sum + item.quantity * item.price, 0);
     const totalBeforeDiscount = subtotal + order.shippingCharge;
     
-    // Create two-column layout for summary
     const summaryLabelWidth = 150;
     const summaryValueWidth = 100;
     const summaryRightX = pageWidth - margins - summaryValueWidth;
     const summaryLeftX = summaryRightX - summaryLabelWidth;
     
-    // Summary lines - properly aligned
     const summaryItems = [
       { label: 'Subtotal:', value: `${rupeeSymbol}${subtotal.toFixed(2)}` },
       { label: 'Shipping:', value: `${rupeeSymbol}${order.shippingCharge.toFixed(2)}` },
@@ -516,20 +515,17 @@ exports.downloadInvoice = async (req, res) => {
     
     let summaryY = summaryTop;
     summaryItems.forEach(item => {
-      // Label on left side
       doc
         .fontSize(12)
         .fillColor('#4A5568')
         .text(item.label, summaryLeftX, summaryY, { width: summaryLabelWidth, align: 'right' });
         
-      // Value on right side
       doc
         .text(item.value, summaryRightX, summaryY, { width: summaryValueWidth, align: 'right' });
         
-      summaryY += (item.label.includes('\n') ? 35 : 20); // Add extra space for multi-line labels
+      summaryY += (item.label.includes('\n') ? 35 : 20);
     });
 
-    // Total Amount box
     const totalBoxY = summaryY + 5;
     doc
       .fillColor('#2D3748')
@@ -542,7 +538,6 @@ exports.downloadInvoice = async (req, res) => {
       .text('Total Amount:', summaryLeftX + 10, totalBoxY + 9, { width: summaryLabelWidth - 10, align: 'left' })
       .text(`${rupeeSymbol}${order.orderAmount.toFixed(2)}`, summaryRightX, totalBoxY + 9, { width: summaryValueWidth, align: 'right' });
 
-    // **Footer**
     doc
       .fontSize(10)
       .fillColor('#718096')
@@ -555,7 +550,6 @@ exports.downloadInvoice = async (req, res) => {
     res.status(500).render('404', { message: 'Error generating invoice' });
   }
 };
-
 
 async function handleCODOrder(orderData, cart, session, res) {
   orderData.paymentStatus = 'pending';

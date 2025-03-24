@@ -8,11 +8,14 @@ const mongoose = require('mongoose');
 const transporter = nodemailer.createTransport({
     host: 'smtp.gmail.com',
     port: 587,
-    secure: false,
+    secure: false, // Use STARTTLS
     auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS,
     },
+    // Add debug option for better logging
+    debug: true, // Enable debug output
+    logger: true, // Log to console
 });
 
 const generateOtp = () => {
@@ -21,16 +24,21 @@ const generateOtp = () => {
 
 const sendVerificationEmail = async (email, otp) => {
     const mailOptions = {
-        from: process.env.EMAIL_USER,
+        from: `"InfinityTech" <${process.env.EMAIL_USER}>`, // Sender name
         to: email,
         subject: 'Email Verification OTP',
         text: `Your OTP for email verification is: ${otp}. Valid for 1 minute.`,
     };
     try {
+        console.log(`Attempting to send OTP ${otp} to ${email}`);
         await transporter.sendMail(mailOptions);
+        console.log(`Email successfully sent to ${email}`);
         return true;
     } catch (error) {
-        console.error('Error sending email:', error);
+        console.error(`Failed to send email to ${email}:`, error.message);
+        if (error.response) {
+            console.error('SMTP Response:', error.response);
+        }
         return false;
     }
 };
@@ -151,6 +159,7 @@ const loadSignup = async (req, res) => {
 const signup = async (req, res) => {
     try {
         const { name, email, phone, password, confirmPassword } = req.body;
+        console.log('Signup attempt:', { name, email, phone });
 
         if (!name || !/^[a-zA-Z][a-zA-Z\s]*$/.test(name)) {
             req.flash('error', 'Name must start with a letter and contain only letters and spaces');
@@ -201,14 +210,16 @@ const signup = async (req, res) => {
 
         const emailSent = await sendVerificationEmail(email, otp);
         if (!emailSent) {
-            req.flash('error', 'Failed to send verification email');
+            req.flash('error', 'Failed to send verification email. Please try again.');
+            console.log('Email sending failed, redirecting to /signup');
             return res.redirect('/signup');
         }
 
         req.flash('success', `OTP sent to ${email}`);
+        console.log('Email sent successfully, redirecting to /verifyOtp');
         return res.redirect('/verifyOtp');
     } catch (error) {
-        console.error('Signup error:', error);
+        console.error('Signup error:', error.message);
         req.flash('error', 'Server error during signup');
         return res.redirect('/signup');
     }
@@ -217,6 +228,7 @@ const signup = async (req, res) => {
 // Load Verify OTP Page
 const loadverifyOtp = async (req, res) => {
     try {
+        console.log('Loading verifyOtp, session tempUser:', req.session.tempUser);
         if (!req.session.tempUser) {
             req.flash('error', 'Session expired. Please sign up again');
             return res.redirect('/signup');
@@ -356,8 +368,6 @@ const loadHomePage = async (req, res) => {
             .sort({ createdAt: -1 })
             .limit(8);
 
-
-        // Updated query to use isFeatured field
         const featuredProducts = await Product.find({
             isDeleted: false,
             isListed: true,
@@ -365,7 +375,6 @@ const loadHomePage = async (req, res) => {
         })
             .sort({ createdAt: -1 }) 
             .limit(8);
-
 
         const topSellingProducts = await Product.find({
             isDeleted: false,

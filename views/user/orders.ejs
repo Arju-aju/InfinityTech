@@ -58,7 +58,7 @@
     </style>
 </head>
 <body class="flex">
-    <%- include('../partials/profileSideBar') %>
+    <%- include('../partials/profileSideBar', { userProfile: userProfile || { name: 'Guest', email: 'N/A' } }) %>
 
     <div class="container mx-auto px-4 py-8">
         <% if (typeof message !== 'undefined' && message) { %>
@@ -113,14 +113,14 @@
                                                         Status: <%= product.status || 'Unknown' %>
                                                     </p>
                                                 </div>
-                                                <% if (order.status && ['Pending', 'Processing'].includes(order.status) && product.status === 'Active') { %>
+                                                <% if (order.status && ['Pending', 'Processing'].includes(order.status) && product.status === 'Ordered') { %>
                                                     <button 
                                                         data-modal-target="cancelProductModal-<%= order._id %>-<%= index %>"
                                                         class="text-red-600 hover:text-red-800 text-xs font-medium ml-2">
                                                         Cancel
                                                     </button>
                                                 <% } %>
-                                                <% if (order.status === 'Delivered' && product.status === 'Active') { %>
+                                                <% if (order.status === 'Delivered' && product.status === 'Ordered') { %>
                                                     <button 
                                                         data-modal-target="returnProductModal-<%= order._id %>-<%= index %>"
                                                         class="text-yellow-600 hover:text-yellow-800 text-xs font-medium ml-2">
@@ -215,7 +215,7 @@
 
                         <% if (order.products && Array.isArray(order.products)) { %>
                             <% order.products.forEach((product, index) => { %>
-                                <% if (order.status && ['Pending', 'Processing'].includes(order.status) && product.status === 'Active') { %>
+                                <% if (order.status && ['Pending', 'Processing'].includes(order.status) && product.status === 'Ordered') { %>
                                     <div id="cancelProductModal-<%= order._id %>-<%= index %>" tabindex="-1" aria-hidden="true" class="fixed top-0 left-0 right-0 z-50 hidden w-full p-4 overflow-x-hidden overflow-y-auto md:inset-0 h-[calc(100%-1rem)] max-h-full">
                                         <div class="relative w-full max-w-md max-h-full">
                                             <div class="relative bg-white rounded-lg shadow-lg">
@@ -226,8 +226,7 @@
                                                     </button>
                                                 </div>
                                                 <div class="p-6">
-                                                    <form action="/orders/<%= order._id %>/cancel-product" method="POST">
-                                                        <input type="hidden" name="productIndex" value="<%= index %>">
+                                                    <form action="/orders/<%= order._id %>/cancel-product/<%= product.productId %>" method="POST">
                                                         <div class="mb-4">
                                                             <label for="reason-cancel-<%= order._id %>-<%= index %>" class="block text-sm font-medium text-gray-700">Reason</label>
                                                             <textarea id="reason-cancel-<%= order._id %>-<%= index %>" name="reason" rows="3" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md" required></textarea>
@@ -242,7 +241,7 @@
                                         </div>
                                     </div>
                                 <% } %>
-                                <% if (order.status === 'Delivered' && product.status === 'Active') { %>
+                                <% if (order.status === 'Delivered' && product.status === 'Ordered') { %>
                                     <div id="returnProductModal-<%= order._id %>-<%= index %>" tabindex="-1" aria-hidden="true" class="fixed top-0 left-0 right-0 z-50 hidden w-full p-4 overflow-x-hidden overflow-y-auto md:inset-0 h-[calc(100%-1rem)] max-h-full">
                                         <div class="relative w-full max-w-md max-h-full">
                                             <div class="relative bg-white rounded-lg shadow-lg">
@@ -253,8 +252,7 @@
                                                     </button>
                                                 </div>
                                                 <div class="p-6">
-                                                    <form action="/orders/<%= order._id %>/return-product" method="POST">
-                                                        <input type="hidden" name="productIndex" value="<%= index %>">
+                                                    <form action="/orders/<%= order._id %>/return-product/<%= product.productId %>" method="POST">
                                                         <div class="mb-4">
                                                             <label for="reason-return-<%= order._id %>-<%= index %>" class="block text-sm font-medium text-gray-700">Reason</label>
                                                             <textarea id="reason-return-<%= order._id %>-<%= index %>" name="reason" rows="3" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md" required></textarea>
@@ -367,9 +365,9 @@
                         }
                     },
                     prefill: {
-                        name: '<%= user.name %>',
-                        email: '<%= user.email %>',
-                        contact: '<%= user.phone || "9999999999" %>'
+                        name: '<%= userProfile.name || "Guest" %>',
+                        email: '<%= userProfile.email || "N/A" %>',
+                        contact: '<%= userProfile.phone || "9999999999" %>'
                     },
                     theme: { color: '#3b82f6' },
                     modal: {

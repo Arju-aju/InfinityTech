@@ -11,35 +11,30 @@
   <style>
     :root {
       --sidebar-width: 16rem;
-      --primary-bg: #1e1e2f; /* Dark blue-gray */
-      --secondary-bg: #2a2438; /* Deep purple-gray */
-      --content-bg: #2d2d44; /* Lighter dark blue for content */
-      --accent-start: #d4af37; /* Rich Gold */
-      --accent-end: #f9e076;   /* Light Yellow */
-      --text-color: #e5e7eb; /* Light gray for text */
+      --primary-bg: #1e1e2f;
+      --secondary-bg: #2a2438;
+      --content-bg: #2d2d44;
+      --accent-start: #d4af37;
+      --accent-end: #f9e076;
+      --text-color: #e5e7eb;
     }
 
-    /* Gradient Background */
     .gradient-bg {
       @apply bg-gradient-to-br from-[var(--primary-bg)] to-[var(--secondary-bg)] !important;
     }
 
-    /* Glass Effect */
     .glass-effect-dark {
       @apply bg-[var(--content-bg)]/80 backdrop-blur-md border border-white/10;
     }
 
-    /* Golden Yellow Gradient for Buttons */
     .golden-button {
       @apply bg-gradient-to-r from-[var(--accent-start)] to-[var(--accent-end)] text-white px-4 py-2 rounded-lg shadow-lg hover:scale-105 transition-all duration-300;
     }
 
-    /* Typography and Base Styles */
     body {
       @apply font-sans text-[var(--text-color)] min-h-screen m-0 p-0 bg-[var(--primary-bg)] !important;
     }
 
-    /* Custom Animations */
     @keyframes gradientAnimation {
       0% { background-position: 0% 0%; }
       50% { background-position: 100% 100%; }
@@ -89,7 +84,6 @@
       transform: scale(1.1);
     }
 
-    /* Sidebar Styling */
     .sidebar {
       position: fixed;
       top: 0;
@@ -139,7 +133,7 @@
   <div class="flex-1 ml-[var(--sidebar-width)] p-8">
     <!-- Header Section -->
     <div class="mb-8">
-      <h1 class="text-4xl font-extrabold bg-gradient-to-r from-[#d4af37] to-[#f9e076] bg-clip-text text-transparent tracking-tight t">Return Requests Management</h1>
+      <h1 class="text-4xl font-extrabold bg-gradient-to-r from-[#d4af37] to-[#f9e076] bg-clip-text text-transparent tracking-tight">Return Requests Management</h1>
     </div>
 
     <!-- Search and Filter Section -->
@@ -171,7 +165,7 @@
             <div class="flex justify-between items-start mb-4">
               <div>
                 <h3 class="text-lg font-semibold text-[var(--text-color)]">Request ID: <%= request._id.toString().substring(0, 8) %></h3>
-                <p class="text-sm text-gray-400">Order ID: <%= request.orderId.toString().substring(0, 8) %></p>
+                <p class="text-sm text-gray-400">Order ID: <%= request.orderId ? request.orderId.toString().substring(0, 8) : 'N/A' %></p>
               </div>
               <span class="status-pill px-3 py-1 rounded-full text-sm font-medium
                 <%= request.returnStatus === 'Pending' ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/20' :
@@ -190,7 +184,7 @@
             <!-- Comments -->
             <div class="mb-4">
               <h4 class="text-sm text-gray-400 mb-1">Comments</h4>
-              <p class="text-[var(--text-color)] text-sm"><%= request.comments %></p>
+              <p class="text-[var(--text-color)] text-sm"><%= request.comments || 'N/A' %></p>
             </div>
 
             <!-- Products -->
@@ -263,21 +257,18 @@
   <!-- JavaScript -->
   <script>
     document.addEventListener('DOMContentLoaded', function() {
-      // Sidebar Toggle for Mobile
       const sidebar = document.querySelector('.sidebar');
       const sidebarToggle = document.getElementById('sidebarToggle');
       if (sidebarToggle) {
         sidebarToggle.addEventListener('click', () => sidebar.classList.toggle('-translate-x-full'));
       }
 
-      // Close sidebar on outside click (mobile)
       document.addEventListener('click', (e) => {
         if (window.innerWidth < 768 && !sidebar.contains(e.target) && !sidebarToggle?.contains(e.target)) {
           sidebar.classList.add('-translate-x-full');
         }
       });
 
-      // Adjust Sidebar Height
       const main = document.querySelector('.flex-1');
       const updateHeight = () => {
         const mainHeight = main.offsetHeight;
@@ -286,7 +277,6 @@
       updateHeight();
       window.addEventListener('resize', updateHeight);
 
-      // Hover effect for cards
       document.querySelectorAll('.card').forEach(card => {
         card.addEventListener('mouseenter', () => {
           const indicator = card.querySelector('.priority-indicator');
@@ -298,7 +288,6 @@
         });
       });
 
-      // Loading animation and confirmation for action buttons
       document.querySelectorAll('.action-button').forEach(button => {
         button.dataset.originalHTML = button.innerHTML;
         button.addEventListener('click', async function(e) {

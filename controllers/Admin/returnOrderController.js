@@ -1,287 +1,227 @@
-const ReturnRequest = require('../../models/returnSchema');
+const Return = require('../../models/returnSchema');
 const Order = require('../../models/orderSchema');
-const Product = require('../../models/productSchema');
+const Wallet = require('../../models/walletSchema');
+const mongoose = require('mongoose');
 
+// Helper function to calculate refund amount with shipping and coupon distribution
+const calculateRefundAmount = (order, items) => {
+    const totalItemsPrice = order.products.reduce((sum, p) => sum + p.totalPrice, 0);
+    const couponDiscount = order.couponDiscount || 0;
+    const shippingCharge = order.shippingCharge || 0;
+    const totalOrderValue = totalItemsPrice + shippingCharge - couponDiscount;
+    
+    let refundAmount = 0;
+    const returningItemsCount = items.length;
+    const totalItemsCount = order.products.length;
 
-// Format price with INR symbol
-const formatPrice = (price) => {
-    return typeof price === 'number' ? `₹${price.toFixed(2)}` : '₹0.00';
-};
-
-// Format date to a readable string
-const formatDate = (date) => {
-    return new Date(date).toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
+    items.forEach(item => {
+        const product = order.products.find(p => p.productId.toString() === item.productId.toString());
+        if (product) {
+            const itemPrice = product.totalPrice;
+            const proportionalShipping = (itemPrice / totalItemsPrice) * shippingCharge;
+            const proportionalCoupon = (itemPrice / totalItemsPrice) * couponDiscount;
+            const itemRefund = itemPrice + (proportionalShipping / totalItemsCount) - (proportionalCoupon / totalItemsCount);
+            refundAmount += itemRefund;
+        }
     });
+
+    return Math.max(0, refundAmount); // Ensure refund is not negative
 };
 
-// Get status color for UI
-const getStatusColor = (status) => {
-    switch (status) {
-        case 'Pending': return 'bg-yellow-600';
-        case 'Approved': return 'bg-green-600';
-        case 'Rejected': return 'bg-red-600';
-        default: return 'bg-gray-600';
-    }
-};
-
-// Fetch all return requests
+// Get all return requests
 exports.getReturnRequests = async (req, res) => {
     try {
-        const returnRequests = await ReturnRequest.find()
-            .populate('orderId', '_id') // Minimal population to avoid overload
-            .populate('user', 'name')   // Adjust based on your user schema
-            .populate('items.productId', 'name price images')
-            .lean();
+        const returnRequests = await Return.find()
+            .populate({
+                path: 'orderId',
+                populate: { path: 'user', select: 'name email' }
+            })
+            .populate('items.productId');
 
-        const formattedRequests = returnRequests.map((request) => ({
-            _id: request._id,
-            orderId: request.orderId?._id || 'Unknown Order',
-            returnStatus: request.status || 'Pending',
-            reason: request.reason || 'No reason provided',
-            comments: 'No comments', // Static for now; adjust if dynamic
-            items: request.items.map((item) => ({
+        const formattedRequests = returnRequests.map(request => ({
+            ...request._doc,
+            orderId: request.orderId ? request.orderId._id : null,
+            items: request.items.map(item => ({
+                ...item._doc,
                 productDetails: {
-                    name: item.productId?.name || 'Unknown Product',
+                    name: item.productId?.name || 'Unknown',
                     price: item.productId?.price || 0,
-                    image: item.productId?.images?.[0] || '/images/placeholder-product.jpg',
+                    image: item.productId?.images[0] || '/default-image.jpg'
                 },
-                quantity: item.quantity || 0,
-                valid: true,
+                valid: !!item.productId
             })),
+            returnStatus: request.status
         }));
 
-        res.render('returnOrder', {
-            path:req.path,
-            returnRequests: formattedRequests,
-            formatPrice,
+        const formatPrice = price => `₹${price.toFixed(2)}`;
+
+        res.render('admin/returnOrder', { 
+            returnRequests: formattedRequests, 
+            path: '/admin/return/requests',
+            formatPrice
         });
     } catch (error) {
         console.error('Error fetching return requests:', error);
-        req.flash('error', 'Error fetching return requests');
-        res.status(500).render('error', { message: 'Server Error' });
+        res.status(500).render('admin/pageerror', { message: 'Failed to load return requests' });
     }
 };
 
-// Fetch details of a specific return request
+// Get specific return request details
 exports.getReturnRequestDetails = async (req, res) => {
     try {
         const returnId = req.params.id;
-        const returnRequest = await ReturnRequest.findById(returnId)
+        const returnRequest = await Return.findById(returnId)
             .populate({
                 path: 'orderId',
-                select: '_id user createdAt', // Include user and createdAt from Order
-                populate: {
-                    path: 'user', // Populate nested user field
-                    select: 'name email phone' // Fetch required user fields
-                }
+                populate: [
+                    { path: 'user', select: 'name email phone' },
+                    { path: 'products.productId' }
+                ]
             })
-            .populate('user', 'name email phone') // Direct user field in ReturnRequest (optional)
-            .populate('items.productId', 'name price images')
-            .lean();
+            .populate('items.productId');
 
-        if (!returnRequest) {
-            req.flash('error', 'Return request not found');
-            return res.redirect('/admin/return/requests');
-        }
+        if (!returnRequest) throw new Error('Return request not found');
 
         const formattedRequest = {
-            _id: returnRequest._id,
-            orderId: returnRequest.orderId || {}, // Ensure orderId is an object
-            returnStatus: returnRequest.status || 'Pending',
-            reason: returnRequest.reason || 'No reason provided',
-            comments: 'No comments', // Static for now
-            items: returnRequest.items.map((item) => ({
+            ...returnRequest._doc,
+            orderId: returnRequest.orderId ? returnRequest.orderId : null,
+            returnStatus: returnRequest.status || 'Pending', // Map status to returnStatus, fallback to 'Pending'
+            items: returnRequest.items.map(item => ({
+                ...item._doc,
                 productDetails: {
-                    name: item.productId?.name || 'Unknown Product',
+                    name: item.productId?.name || 'Unknown',
                     price: item.productId?.price || 0,
-                    image: item.productId?.images?.[0] || '/images/placeholder-product.jpg',
-                },
-                quantity: item.quantity || 0,
-                valid: true,
-            })),
+                    image: item.productId?.images[0] || '/default-image.jpg'
+                }
+            }))
         };
 
-        res.render('returnDetails', {
+        // Define helper functions
+        const formatDate = date => new Date(date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+        const formatPrice = price => `₹${price.toFixed(2)}`;
+        const getStatusColor = status => {
+            const safeStatus = (status || 'Pending').toLowerCase(); // Fallback to 'Pending' if status is undefined
+            switch (safeStatus) {
+                case 'pending': return 'status-pending';
+                case 'approved': return 'status-approved';
+                case 'rejected': return 'status-rejected';
+                default: return 'bg-gray-600 text-gray-200'; // Fallback for unexpected values
+            }
+        };
+
+        res.render('admin/returnDetails', {
             returnRequest: formattedRequest,
-            formatPrice,
             formatDate,
-            getStatusColor,
+            formatPrice,
+            getStatusColor
         });
     } catch (error) {
-        console.error('Error fetching return request details:', error);
-        req.flash('error', 'Error fetching return request details');
-        res.redirect('/admin/return/requests');
+        console.error('Error fetching return details:', error);
+        res.status(404).render('admin/pageerror', { message: 'Return request not found' });
     }
 };
 
-// Approve a return request
+// Approve return request
 exports.approveReturnRequest = async (req, res) => {
+    const session = await mongoose.startSession();
+    session.startTransaction();
     try {
         const returnId = req.params.id;
-        const returnDoc = await ReturnRequest.findById(returnId)
-            .populate('orderId')
-            .populate('items.productId', 'price');
-
-        if (!returnDoc) {
-            req.flash('error', 'Return request not found');
-            return res.redirect('/admin/return/requests');
+        const returnRequest = await Return.findById(returnId).populate('orderId');
+        if (!returnRequest) {
+            throw new Error('Return request not found');
         }
-        if (returnDoc.status !== 'Pending') {
-            req.flash('error', 'Cannot approve this request');
-            return res.redirect('/admin/return/requests');
+        if (returnRequest.status !== 'Pending') {
+            throw new Error('Return request already processed');
         }
 
-        const order = await Order.findById(returnDoc.orderId._id).populate('couponApplied');
+        if (!returnRequest.orderId) {
+            throw new Error('Associated order not found in return request');
+        }
+
+        const order = await Order.findById(returnRequest.orderId);
         if (!order) {
-            req.flash('error', 'Order not found');
-            return res.redirect('/admin/return/requests');
+            throw new Error('Order not found in database');
         }
 
-        // Calculate the refund amount for returned items
-        let refundAmount = 0;
-        let totalProductAmount = 0;
-
-        // Calculate total product amount in the order for proportion calculation
-        for (const product of order.products) {
-            totalProductAmount += product.price * product.quantity;
+        const refundAmount = calculateRefundAmount(order, returnRequest.items);
+        if (isNaN(refundAmount)) {
+            throw new Error('Invalid refund amount calculated');
         }
 
-        // Calculate the refund amount for returned items
-        for (const item of returnDoc.items) {
-            const product = item.productId;
-            refundAmount += product.price * item.quantity;
-        }
+        returnRequest.status = 'Approved';
+        returnRequest.refundedAmount = refundAmount;
 
-        // Adjust for coupon discount (if applied)
-        if (order.couponDiscount > 0) {
-            const totalOrderAmount = totalProductAmount;
-            const couponDiscount = order.couponDiscount || 0;
-            const discountProportion = refundAmount / totalOrderAmount;
-            const couponAdjustment = couponDiscount * discountProportion;
-            refundAmount -= couponAdjustment;
-        }
-
-        // Adjust for shipping charge (proportional to the returned items)
-        const shippingCharge = order.shippingCharge || 0;
-        const shippingProportion = refundAmount / totalProductAmount;
-        const shippingAdjustment = shippingCharge * shippingProportion;
-        refundAmount += shippingAdjustment;
-
-        // Ensure refund amount is not negative
-        if (refundAmount < 0) refundAmount = 0;
-
-        // Update product status in the order
-        let updated = false;
-        for (const item of returnDoc.items) {
-            const product = order.products.find((p) =>
-                p.productId.toString() === item.productId._id.toString()
-            );
-            if (product) {
-                console.log(`Found product: ${product.productId}, Current Status: ${product.status}`);
-                if (product.status === 'Return Requested') {
-                    product.status = 'Returned';
-                    updated = true;
-                    console.log(`Updated product ${product.productId} status to 'Returned'`);
-                }
-            } else {
-                console.log(`Product ${item.productId._id} not found in order ${order._id}`);
+        returnRequest.items.forEach(item => {
+            const productIndex = order.products.findIndex(p => p.productId.toString() === item.productId.toString());
+            if (productIndex === -1) {
+                throw new Error(`Product ${item.productId} not found in order`);
             }
-        }
-
-        // Mark the products array as modified
-        if (updated) {
-            order.markModified('products');
-            await order.save();
-            console.log('Order saved with updated product statuses');
-        } else {
-            console.log('No products updated in the order');
-        }
-
-        // Update return request status
-        returnDoc.status = 'Approved';
-        await returnDoc.save();
-
-        // Add refund amount to user's wallet
-        let wallet = await Wallet.findOne({ userId: returnDoc.user });
-        if (!wallet) {
-            wallet = new Wallet({
-                userId: returnDoc.user,
-                balance: 0,
-                transactions: []
-            });
-        }
-
-        wallet.balance += refundAmount;
-        wallet.transactions.push({
-            amount: refundAmount,
-            type: 'credit',
-            date: new Date(),
-            time: new Date(),
-            description: `Refund for return request #${returnDoc._id.toString().substring(0, 8)} (includes proportional shipping)`
+            order.products[productIndex].status = 'Returned';
         });
-        await wallet.save();
 
-        req.flash('success', `Return request approved successfully. ${formatPrice(refundAmount)} credited to wallet (includes proportional shipping).`);
+        order.orderAmount -= refundAmount;
+        if (order.orderAmount < 0) {
+            throw new Error('Order amount cannot be negative');
+        }
+
+        // Simplified status logic: Only set to 'Returned' if all products are returned
+        if (order.products.every(p => p.status === 'Returned')) {
+            order.status = 'Returned';
+        } // Else, leave the order status unchanged (e.g., 'Delivered' or 'Shipped')
+
+        const walletUpdate = await Wallet.findOneAndUpdate(
+            { userId: returnRequest.user },
+            {
+                $inc: { balance: refundAmount },
+                $push: {
+                    transactions: {
+                        amount: refundAmount,
+                        type: 'credit',
+                        description: `Refund for approved return #${returnId}`,
+                        date: new Date()
+                    }
+                }
+            },
+            { upsert: true, new: true, session }
+        );
+        if (!walletUpdate) {
+            throw new Error('Failed to update wallet');
+        }
+
+        await Promise.all([returnRequest.save({ session }), order.save({ session })]);
+        await session.commitTransaction();
         res.redirect('/admin/return/requests');
     } catch (error) {
-        console.error('Error approving return request:', error);
-        req.flash('error', 'Error approving return request');
-        res.redirect('/admin/return/requests');
+        await session.abortTransaction();
+        console.error('Error approving return:', error.stack);
+        res.status(500).render('admin/pageerror', { message: `Failed to approve return: ${error.message}` });
+    } finally {
+        session.endSession();
     }
 };
 
-// Reject a return request
+// Reject return request
 exports.rejectReturnRequest = async (req, res) => {
     try {
         const returnId = req.params.id;
-        const returnDoc = await ReturnRequest.findById(returnId).populate('orderId');
-        if (!returnDoc) {
-            req.flash('error', 'Return request not found');
-            return res.redirect('/admin/return/requests');
-        }
-        if (returnDoc.status !== 'Pending') {
-            req.flash('error', 'Cannot reject this request');
-            return res.redirect('/admin/return/requests');
+        const returnRequest = await Return.findById(returnId).populate('orderId');
+        if (!returnRequest || returnRequest.status !== 'Pending') {
+            throw new Error('Invalid return request or already processed');
         }
 
-        const order = await Order.findById(returnDoc.orderId?._id);
-        if (order) {
-            for (const item of returnDoc.items) {
-                const product = order.products.find((p) =>
-                    p.productId.equals(item.productId)
-                );
-                if (product && product.status === 'Return Requested') {
-                    product.status = 'Active'; // Revert to Active if rejected
-                }
-            }
-            await order.save();
-        }
-
-        returnDoc.status = 'Rejected';
-        await returnDoc.save();
-
-        req.flash('success', 'Return request rejected successfully');
-        res.redirect('/admin/return/requests');
-    } catch (error) {
-        console.error('Error rejecting return request:', error);
-        req.flash('error', 'Error rejecting return request');
-        res.redirect('/admin/return/requests');
-    }
-};
-
-exports.getTransactionHistory = async (req, res) => {
-    try {
-        const wallet = await Wallet.findOne({ userId: req.user._id });
-        res.render('user/transaction-history', { 
-            wallet, 
-            user: req.user 
+        const order = await Order.findById(returnRequest.orderId);
+        returnRequest.status = 'Rejected';
+        returnRequest.items.forEach(item => {
+            const productIndex = order.products.findIndex(p => p.productId.toString() === item.productId.toString());
+            if (productIndex !== -1) order.products[productIndex].status = 'Ordered';
         });
+
+        await Promise.all([returnRequest.save(), order.save()]);
+        res.redirect('/admin/return/requests');
     } catch (error) {
-        console.error(error);
-        res.status(500).send('Server Error');
+        console.error('Error rejecting return:', error);
+        res.status(400).render('admin/pageerror', { message: error.message });
     }
 };
 

@@ -9,7 +9,6 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        /* Existing styles remain unchanged */
         body {
             background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
             font-family: 'Poppins', sans-serif;
@@ -209,7 +208,7 @@
                         Return Entire Order
                     </button>
                 <% } %>
-                <a href="/api/orders/download-invoice/<%= order._id %>" class="btn bg-indigo-600 text-white hover:bg-indigo-700">
+                <a href="/orders/<%= order._id %>/invoice" class="btn bg-indigo-600 text-white hover:bg-indigo-700">
                     Download Invoice
                 </a>
             </div>

@@ -1,3 +1,4 @@
+// adminRouter.js
 const express = require('express');
 const router = express.Router();
 
@@ -21,8 +22,14 @@ router.post('/login', adminControllers.login);
 router.get('/dashboard', admin.isAdmin, adminControllers.loadDashboard);
 router.get('/logout', adminControllers.logout);
 
-router.get('/sales-report', admin.isAdmin, adminControllers.getSalesReport);
+// Sales Report Routes (API Endpoints Only)
+router.get('/sales-report/data', admin.isAdmin, adminControllers.getSalesReport);
+router.get('/sales-report/download', admin.isAdmin, adminControllers.downloadSalesReport);
 router.get('/top-sellers', admin.isAdmin, adminControllers.getTopSellers);
+router.get('/detailed-orders', admin.isAdmin, adminControllers.getDetailedOrders);
+
+// Coupon Application Route
+router.post('/apply-coupon', admin.isAdmin, adminControllers.applyCouponToOrder);
 
 // User Management Routes
 router.get('/users', admin.isAdmin, customerController.customerInfo);
@@ -49,13 +56,12 @@ router.post('/products/:id/toggle-featured', admin.isAdmin, productController.to
 router.post('/softDeleteProduct/:id', admin.isAdmin, productController.softDeleteProduct);
 
 // Order Management
-router.get('/orders', admin.isAdmin, orderController.getOrders); // List all orders
-router.get('/detailed-orders', admin.isAdmin, adminControllers.getDetailedOrders); // Detailed orders (unchanged)
-router.patch('/orders/:orderId/toggle-status', admin.isAdmin, orderController.toggleOrderStatus); // Toggle overall order status
-router.get('/orders/:orderId', admin.isAdmin, orderController.viewOrderDetails); 
-router.post('/orders/:orderId/cancel-product', admin.isAdmin, orderController.cancelProduct); 
-router.post('/orders/:orderId/return-product', admin.isAdmin, orderController.returnProduct); 
-router.post('/orders/:orderId/approve-return', admin.isAdmin, orderController.approveReturn); 
+router.get('/orders', admin.isAdmin, orderController.getOrders);
+router.patch('/orders/:orderId/toggle-status', admin.isAdmin, orderController.toggleOrderStatus);
+router.get('/orders/:orderId', admin.isAdmin, orderController.viewOrderDetails);
+router.post('/orders/:orderId/cancel-product', admin.isAdmin, orderController.cancelProduct);
+router.post('/orders/:orderId/return-product', admin.isAdmin, orderController.returnProduct);
+router.post('/orders/:orderId/approve-return', admin.isAdmin, orderController.approveReturn);
 
 // Offer Management
 router.get('/offers', admin.isAdmin, offerController.getAllOffers);

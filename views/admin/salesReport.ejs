@@ -1,0 +1,517 @@
+<%- include('./partials/adminHeader.ejs') %>
+
+<div class="flex min-h-screen gradient-bg animate-gradient">
+    <!-- Sidebar -->
+    <%- include('./partials/adminSidebar.ejs') %>
+
+    <!-- Main Content -->
+    <div class="flex-1 p-6" style="margin-left: var(--sidebar-width, 16rem);">
+        <div class="max-w-7xl mx-auto space-y-8">
+            <!-- Sales Report Header -->
+            <div class="bg-gradient-to-r from-[#d4af37] to-[#f9e076] p-6 rounded-xl relative overflow-hidden animate-fade-in-up">
+                <div class="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 1440 320\"%3E%3Cpath fill=\"rgba(255,255,255,0.1)\" fill-opacity=\"1\" d=\"M0,96L48,112C96,128,192,160,288,160C384,160,480,128,576,112C672,96,768,96,864,112C960,128,1056,160,1152,160C1248,160,1344,128,1392,112L1440,96L1440,0L1392,0C1344,0,1248,0,1152,0C1056,0,960,0,864,0C768,0,672,0,576,0C480,0,384,0,288,0C192,0,96,0,48,0L0,0Z\"%3E%3C/path%3E%3C/svg%3E')] bg-cover opacity-10"></div>
+                <h1 class="text-4xl font-bold text-white relative z-10">Sales Report</h1>
+                <p class="text-white/80 mt-2 relative z-10">Detailed sales analytics for InfinityTech</p>
+            </div>
+
+            <!-- Filter Section -->
+            <div class="glass-effect-dark rounded-xl p-6 animate-fade-in-up animation-delay-200">
+                <div class="flex flex-col md:flex-row justify-between items-center gap-4">
+                    <h2 class="text-2xl font-bold text-[var(--text-color)]">Filter Sales Data</h2>
+                    <div class="flex flex-wrap gap-4 items-center">
+                        <input type="date" id="startDate" 
+                               class="bg-[var(--content-bg)] text-[var(--text-color)] rounded-lg px-4 py-2 border border-white/10 focus:border-[#d4af37] focus:ring-2 focus:ring-[#d4af37]/20 transition-all duration-300">
+                        <span class="text-gray-400">to</span>
+                        <input type="date" id="endDate" 
+                               class="bg-[var(--content-bg)] text-[var(--text-color)] rounded-lg px-4 py-2 border border-white/10 focus:border-[#d4af37] focus:ring-2 focus:ring-[#d4af37]/20 transition-all duration-300">
+                        <select id="timeFrame" 
+                                class="bg-[var(--content-bg)] text-[var(--text-color)] rounded-lg px-4 py-2 border border-white/10 focus:border-[#d4af37] focus:ring-2 focus:ring-[#d4af37]/20 transition-all duration-300">
+                            <option value="daily">Daily</option>
+                            <option value="weekly">Weekly</option>
+                            <option value="monthly" selected>Monthly</option>
+                            <option value="yearly">Yearly</option>
+                            <option value="custom">Custom</option>
+                        </select>
+                        <button id="applyFilterButton" 
+                                class="bg-gradient-to-r from-[#d4af37] to-[#f9e076] text-white px-4 py-2 rounded-lg hover:-translate-y-1 hover:shadow-lg transition-all duration-300">Apply Filter</button>
+                        <button id="downloadReport" 
+                                class="bg-gradient-to-r from-[#d4af37] to-[#f9e076] text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:-translate-y-1 hover:shadow-lg transition-all duration-300">
+                            <i class="fas fa-download"></i> Download Report
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sales Summary and Chart -->
+            <div class="glass-effect-dark rounded-xl p-6 animate-fade-in-up animation-delay-400">
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
+                    <div class="glass-effect-dark p-4 rounded-xl">
+                        <p class="text-gray-400 text-sm">Total Sales</p>
+                        <p class="text-2xl font-bold text-[var(--text-color)]" id="totalSales">₹0</p>
+                    </div>
+                    <div class="glass-effect-dark p-4 rounded-xl">
+                        <p class="text-gray-400 text-sm">Total Orders</p>
+                        <p class="text-2xl font-bold text-[var(--text-color)]" id="totalOrders">0</p>
+                    </div>
+                    <div class="glass-effect-dark p-4 rounded-xl">
+                        <p class="text-gray-400 text-sm">Avg. Order Value</p>
+                        <p class="text-2xl font-bold text-[var(--text-color)]" id="avgOrderValue">₹0</p>
+                    </div>
+                    <div class="glass-effect-dark p-4 rounded-xl">
+                        <p class="text-gray-400 text-sm">Total Items Sold</p>
+                        <p class="text-2xl font-bold text-[var(--text-color)]" id="totalItems">0</p>
+                    </div>
+                    <div class="glass-effect-dark p-4 rounded-xl">
+                        <p class="text-gray-400 text-sm">Coupons Used</p>
+                        <p class="text-2xl font-bold text-[var(--text-color)]" id="totalCouponsUsed">0</p>
+                    </div>
+                    <div class="glass-effect-dark p-4 rounded-xl">
+                        <p class="text-gray-400 text-sm">Coupon Deductions</p>
+                        <p class="text-2xl font-bold text-[var(--text-color)]" id="couponDeductions">₹0</p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <div class="glass-effect-dark p-4 rounded-xl lg:col-span-2" style="min-height: 400px;">
+                        <canvas id="salesChart"></canvas>
+                    </div>
+                    <div class="glass-effect-dark p-4 rounded-xl" style="min-height: 400px;">
+                        <canvas id="paymentMethodChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Download Modal -->
+            <div id="downloadModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden flex items-center justify-center">
+                <div class="glass-effect-dark rounded-xl p-6 max-w-md w-full mx-4 transform transition-all duration-300 scale-95 opacity-0" id="modalContent">
+                    <div class="flex justify-between items-center mb-6">
+                        <h3 class="text-xl font-bold text-[var(--text-color)]">Download Sales Report</h3>
+                        <button id="closeModalBtn" class="text-gray-400 hover:text-white transition-colors">
+                            <i class="fas fa-times text-lg"></i>
+                        </button>
+                    </div>
+                    <p class="text-gray-400 mb-6">Choose your preferred format to download the sales report:</p>
+                    <div class="grid grid-cols-2 gap-4 mb-6">
+                        <button id="downloadPDFBtn" class="format-button bg-[var(--content-bg)] hover:bg-[var(--secondary-bg)] p-4 rounded-lg transition-all duration-300 group">
+                            <div class="flex flex-col items-center">
+                                <div class="w-12 h-12 bg-red-500/20 rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                                    <i class="fas fa-file-pdf text-red-500 text-xl"></i>
+                                </div>
+                                <span class="text-[var(--text-color)] font-medium">PDF Format</span>
+                                <span class="text-gray-400 text-sm">Download as PDF file</span>
+                            </div>
+                            <div class="download-progress hidden h-1 bg-red-500 mt-3 rounded-full"></div>
+                        </button>
+                        <button id="downloadExcelBtn" class="format-button bg-[var(--content-bg)] hover:bg-[var(--secondary-bg)] p-4 rounded-lg transition-all duration-300 group">
+                            <div class="flex flex-col items-center">
+                                <div class="w-12 h-12 bg-green-500/20 rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                                    <i class="fas fa-file-excel text-green-500 text-xl"></i>
+                                </div>
+                                <span class="text-[var(--text-color)] font-medium">Excel Format</span>
+                                <span class="text-gray-400 text-sm">Download as Excel file</span>
+                            </div>
+                            <div class="download-progress hidden h-1 bg-green-500 mt-3 rounded-full"></div>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<%- include('./partials/adminFooter.ejs') %>
+
+<script>
+    const initialSales = <%- initialSales %>;
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const startDateInput = document.getElementById('startDate');
+        const endDateInput = document.getElementById('endDate');
+        const today = new Date();
+        endDateInput.value = today.toISOString().split('T')[0];
+        startDateInput.value = new Date(today.setDate(today.getDate() - 30)).toISOString().split('T')[0];
+
+        startDateInput.addEventListener('change', validateDates);
+        endDateInput.addEventListener('change', validateDates);
+
+        loadInitialData();
+        document.getElementById('applyFilterButton').addEventListener('click', fetchSalesReport);
+        document.getElementById("downloadReport").addEventListener("click", openModal);
+        document.getElementById("closeModalBtn").addEventListener("click", closeModal);
+        document.getElementById("downloadPDFBtn").addEventListener("click", () => handleDownload('pdf'));
+        document.getElementById("downloadExcelBtn").addEventListener("click", () => handleDownload('excel'));
+    });
+
+    function validateDates() {
+        const startDate = new Date(document.getElementById('startDate').value);
+        const endDate = new Date(document.getElementById('endDate').value);
+        const today = new Date();
+        today.setHours(23, 59, 59, 999);
+
+        if (startDate > today || endDate > today) {
+            alert('Warning: Selected dates are in the future. There may be no data available.');
+        }
+        if (startDate > endDate) {
+            alert('Error: Start date cannot be later than end date.');
+            document.getElementById('startDate').value = document.getElementById('endDate').value;
+        }
+    }
+
+    function loadInitialData() {
+        const summary = initialSales.reduce((acc, curr) => ({
+            totalSales: acc.totalSales + curr.sales,
+            totalOrders: acc.totalOrders + curr.orders,
+            totalItems: acc.totalItems + curr.totalItems,
+            totalCouponsUsed: acc.totalCouponsUsed + curr.totalCouponsUsed,
+            couponDeductions: acc.couponDeductions + curr.couponDeductions
+        }), { totalSales: 0, totalOrders: 0, totalItems: 0, totalCouponsUsed: 0, couponDeductions: 0 });
+
+        document.getElementById('totalSales').textContent = `₹${summary.totalSales.toFixed(2)}`;
+        document.getElementById('totalOrders').textContent = summary.totalOrders;
+        document.getElementById('avgOrderValue').textContent = `₹${(summary.totalSales / summary.totalOrders || 0).toFixed(2)}`;
+        document.getElementById('totalItems').textContent = summary.totalItems;
+        document.getElementById('totalCouponsUsed').textContent = summary.totalCouponsUsed;
+        document.getElementById('couponDeductions').textContent = `₹${summary.couponDeductions.toFixed(2)}`;
+
+        updateSalesChart(initialSales);
+    }
+
+    async function fetchSalesReport() {
+        const startDate = document.getElementById('startDate').value;
+        const endDate = document.getElementById('endDate').value;
+        const timeFrame = document.getElementById('timeFrame').value;
+        try {
+            const response = await fetch(`/admin/sales-report/data?startDate=${startDate}&endDate=${endDate}&timeFrame=${timeFrame}`);
+            if (!response.ok) {
+                if (response.status === 401 || response.status === 403) {
+                    alert('Session expired. Please log in again.');
+                    window.location.href = '/admin/login';
+                    return;
+                }
+                throw new Error(`HTTP error! Status: ${response.status}`);
+            }
+            const result = await response.json();
+            if (result.success) {
+                updateDashboard(result.data);
+                updateSalesChart(result.data.salesData);
+                renderPaymentMethodChart(result.data.paymentMethodStats);
+            } else {
+                console.error('Failed to fetch sales report:', result.message);
+                alert('Failed to fetch sales report: ' + result.message);
+            }
+        } catch (error) {
+            console.error('Error fetching sales report:', error);
+            alert('An error occurred while fetching the sales report.');
+        }
+    }
+
+    function updateDashboard(data) {
+        const summary = data.summary;
+        document.getElementById('totalSales').textContent = `₹${summary.totalSales.toFixed(2)}`;
+        document.getElementById('totalOrders').textContent = summary.totalOrders;
+        document.getElementById('avgOrderValue').textContent = `₹${summary.avgOrderValue.toFixed(2)}`;
+        document.getElementById('totalItems').textContent = summary.totalItems;
+        document.getElementById('totalCouponsUsed').textContent = summary.totalCouponsUsed;
+        document.getElementById('couponDeductions').textContent = `₹${summary.couponDeductions.toFixed(2)}`;
+    }
+
+    let salesChart;
+    function updateSalesChart(data) {
+        const ctx = document.getElementById('salesChart').getContext('2d');
+        const labels = data.map(item => item.date);
+        const sales = data.map(item => item.sales);
+
+        if (salesChart) salesChart.destroy();
+        salesChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Sales',
+                    data: sales,
+                    backgroundColor: 'rgba(212, 175, 55, 0.3)',
+                    borderColor: '#d4af37',
+                    borderWidth: 3,
+                    pointBackgroundColor: '#fff',
+                    pointBorderColor: '#d4af37',
+                    pointBorderWidth: 2,
+                    pointRadius: 5,
+                    pointHoverRadius: 7,
+                    tension: 0.4,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { labels: { color: 'var(--text-color)', font: { size: 14 } } },
+                    tooltip: {
+                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                        titleFont: { size: 14 },
+                        bodyFont: { size: 12 },
+                        callbacks: { label: (context) => `₹${context.parsed.y.toFixed(2)}` }
+                    }
+                },
+                scales: {
+                    x: { title: { color: 'var(--text-color)', display: true, text: 'Date', font: { size: 14 } }, grid: { color: 'rgba(255, 255, 255, 0.1)' }, ticks: { color: 'var(--text-color)' } },
+                    y: { title: { color: 'var(--text-color)', display: true, text: 'Sales (₹)', font: { size: 14 } }, grid: { color: 'rgba(255, 255, 255, 0.1)' }, ticks: { color: 'var(--text-color)', callback: (value) => `₹${value}` } }
+                }
+            }
+        });
+    }
+
+    function renderPaymentMethodChart(paymentMethodStats) {
+        const ctx = document.getElementById('paymentMethodChart').getContext('2d');
+        const labels = paymentMethodStats.map(stat => stat._id);
+        const values = paymentMethodStats.map(stat => stat.count);
+
+        new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Payment Methods',
+                    data: values,
+                    backgroundColor: ['#d4af37', '#f9e076', '#10b981'],
+                    borderColor: ['#fff', '#fff', '#fff'],
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'top', labels: { color: 'var(--text-color)', font: { size: 14 } } },
+                    tooltip: {
+                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                        callbacks: {
+                            label: function(context) {
+                                const total = values.reduce((a, b) => a + b, 0);
+                                const percentage = ((context.raw / total) * 100).toFixed(2);
+                                return `${context.label}: ${context.raw} (${percentage}%)`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    async function downloadPDF() {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF({
+            orientation: 'portrait',
+            unit: 'mm',
+            format: 'a4'
+        });
+
+        doc.setFillColor(212, 175, 55);
+        doc.rect(0, 0, 210, 40, 'F');
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(20);
+        doc.text("InfinityTech Sales Report", 105, 20, { align: 'center' });
+        doc.setFontSize(12);
+        doc.text(`Date: ${new Date().toLocaleDateString()}`, 105, 30, { align: 'center' });
+
+        const salesData = await fetchSalesDataForDownload();
+        const orders = await fetchDetailedOrders();
+
+        doc.setTextColor(0, 0, 0);
+        doc.setFontSize(14);
+        doc.text("Summary", 10, 50);
+        doc.setLineWidth(0.5);
+        doc.line(10, 52, 200, 52);
+
+        const summaryData = [
+            ["Total Sales", `₹${salesData.reduce((sum, d) => sum + d.sales, 0).toFixed(2)}`],
+            ["Total Orders", salesData.reduce((sum, d) => sum + d.orders, 0)],
+            ["Total Items", salesData.reduce((sum, d) => sum + d.totalItems, 0)],
+            ["Coupons Used", salesData.reduce((sum, d) => sum + d.totalCouponsUsed, 0)],
+            ["Coupon Deductions", `₹${salesData.reduce((sum, d) => sum + d.couponDeductions, 0).toFixed(2)}`]
+        ];
+        doc.autoTable({
+            startY: 55,
+            body: summaryData,
+            theme: 'grid',
+            styles: { fontSize: 10, cellPadding: 2 },
+            columnStyles: { 0: { fontStyle: 'bold' } }
+        });
+
+        doc.addPage();
+        doc.setFillColor(212, 175, 55);
+        doc.rect(0, 0, 210, 20, 'F');
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(14);
+        doc.text("Detailed Orders", 105, 12, { align: 'center' });
+
+        const orderHeaders = [['Order ID', 'Date', 'Status', 'Amount', 'Items', 'Coupon', 'Customer']];
+        const orderRows = orders.map(order => [
+            order.orderId,
+            new Date(order.orderDate).toLocaleDateString(),
+            order.status,
+            `₹${order.orderAmount.toFixed(2)}`,
+            order.products.reduce((sum, p) => sum + p.quantity, 0),
+            order.couponApplied ? 'Yes' : 'No',
+            order.customerName || 'N/A'
+        ]);
+
+        doc.autoTable({
+            head: orderHeaders,
+            body: orderRows,
+            startY: 25,
+            theme: 'striped',
+            headStyles: { fillColor: [212, 175, 55], textColor: [255, 255, 255] },
+            styles: { fontSize: 8, cellPadding: 2 },
+            columnStyles: { 
+                0: { cellWidth: 30 },
+                1: { cellWidth: 25 },
+                2: { cellWidth: 20 },
+                3: { cellWidth: 25 },
+                4: { cellWidth: 20 },
+                5: { cellWidth: 20 },
+                6: { cellWidth: 50 }
+            }
+        });
+
+        const pageCount = doc.internal.getNumberOfPages();
+        for (let i = 1; i <= pageCount; i++) {
+            doc.setPage(i);
+            doc.setFontSize(8);
+            doc.setTextColor(100);
+            doc.text(`Page ${i} of ${pageCount}`, 195, 285, { align: 'right' });
+        }
+
+        doc.save("InfinityTech_Sales_Report.pdf");
+    }
+
+    async function downloadExcel() {
+        const salesData = await fetchSalesDataForDownload();
+        const orders = await fetchDetailedOrders();
+
+        const wb = XLSX.utils.book_new();
+        
+        const summaryWs = XLSX.utils.json_to_sheet([
+            { "Metric": "Total Sales", "Value": `₹${salesData.reduce((sum, d) => sum + d.sales, 0).toFixed(2)}` },
+            { "Metric": "Total Orders", "Value": salesData.reduce((sum, d) => sum + d.orders, 0) },
+            { "Metric": "Total Items", "Value": salesData.reduce((sum, d) => sum + d.totalItems, 0) },
+            { "Metric": "Coupons Used", "Value": salesData.reduce((sum, d) => sum + d.totalCouponsUsed, 0) },
+            { "Metric": "Coupon Deductions", "Value": `₹${salesData.reduce((sum, d) => sum + d.couponDeductions, 0).toFixed(2)}` }
+        ]);
+        XLSX.utils.book_append_sheet(wb, summaryWs, "Summary");
+
+        const orderWs = XLSX.utils.json_to_sheet(orders.map(order => ({
+            "Order ID": order.orderId,
+            "Date": new Date(order.orderDate).toLocaleDateString(),
+            "Status": order.status,
+            "Amount": order.orderAmount,
+            "Items": order.products.reduce((sum, p) => sum + p.quantity, 0),
+            "Coupon Applied": order.couponApplied ? 'Yes' : 'No',
+            "Customer": order.customerName || 'N/A'
+        })));
+        XLSX.utils.book_append_sheet(wb, orderWs, "Orders");
+
+        XLSX.writeFile(wb, "InfinityTech_Sales_Report.xlsx");
+    }
+
+    async function fetchSalesDataForDownload() {
+        const startDate = document.getElementById('startDate').value;
+        const endDate = document.getElementById('endDate').value;
+        const timeFrame = document.getElementById('timeFrame').value;
+        try {
+            const response = await fetch(`/admin/sales-report/data?startDate=${startDate}&endDate=${endDate}&timeFrame=${timeFrame}`);
+            if (!response.ok) {
+                if (response.status === 401 || response.status === 403) {
+                    alert('Session expired. Please log in again.');
+                    window.location.href = '/admin/login';
+                    return;
+                }
+                throw new Error('Failed to fetch sales data');
+            }
+            const result = await response.json();
+            if (!result.success) throw new Error(result.message || 'Error in sales data');
+            return result.data.salesData;
+        } catch (error) {
+            console.error('Error fetching sales data:', error);
+            throw error;
+        }
+    }
+
+    async function fetchDetailedOrders() {
+        const startDate = document.getElementById('startDate').value;
+        const endDate = document.getElementById('endDate').value;
+        try {
+            const response = await fetch(`/admin/detailed-orders?startDate=${startDate}&endDate=${endDate}`);
+            if (!response.ok) {
+                if (response.status === 401 || response.status === 403) {
+                    alert('Session expired. Please log in again.');
+                    window.location.href = '/admin/login';
+                    return;
+                }
+                const errorData = await response.json();
+                throw new Error(`Server responded with status ${response.status}: ${errorData.message || 'Unknown error'}`);
+            }
+            const orders = await response.json();
+            return orders.map(order => ({
+                orderId: order._id,
+                orderDate: order.orderDate,
+                status: order.status,
+                orderAmount: order.orderAmount,
+                products: order.products,
+                couponApplied: order.couponApplied,
+                customerName: order.userId?.name || 'N/A'
+            }));
+        } catch (error) {
+            console.error('Error fetching detailed orders:', error);
+            throw error;
+        }
+    }
+
+    function openModal() {
+        const modal = document.getElementById('downloadModal');
+        const modalContent = document.getElementById('modalContent');
+        modal.classList.remove('hidden');
+        modal.classList.add('show');
+        modalContent.classList.remove('scale-95', 'opacity-0');
+        modalContent.classList.add('scale-100', 'opacity-100');
+    }
+
+    function closeModal() {
+        const modal = document.getElementById('downloadModal');
+        const modalContent = document.getElementById('modalContent');
+        modalContent.classList.remove('scale-100', 'opacity-100');
+        modalContent.classList.add('scale-95', 'opacity-0');
+        setTimeout(() => {
+            modal.classList.remove('show');
+            modal.classList.add('hidden');
+        }, 300);
+    }
+
+    async function handleDownload(format) {
+        const button = document.querySelector(`#download${format === 'pdf' ? 'PDF' : 'Excel'}Btn`);
+        const progressBar = button.querySelector('.download-progress');
+        document.querySelectorAll('.format-button').forEach(btn => btn.disabled = true);
+        progressBar.classList.remove('hidden');
+        progressBar.style.width = '0%';
+        setTimeout(() => progressBar.style.width = '100%', 100);
+
+        try {
+            if (format === 'pdf') await downloadPDF();
+            else if (format === 'excel') await downloadExcel();
+            setTimeout(() => {
+                closeModal();
+                document.querySelectorAll('.format-button').forEach(btn => {
+                    btn.disabled = false;
+                    btn.querySelector('.download-progress').classList.add('hidden');
+                });
+            }, 1000);
+        } catch (error) {
+            console.error(`Error downloading ${format}:`, error);
+            alert(`Failed to download ${format.toUpperCase()} report: ${error.message}`);
+            document.querySelectorAll('.format-button').forEach(btn => {
+                btn.disabled = false;
+                btn.querySelector('.download-progress').classList.add('hidden');
+            });
+        }
+    }
+</script>

@@ -203,7 +203,6 @@
 <%- include('../partials/footer') %>
 
 <script>
-    // Line ~1014: Stock update function
     window.updateStockCount = async function(productId) {
         try {
             const response = await fetch(`/api/product/stock/${productId}`, {
@@ -259,35 +258,5 @@
         productIds.forEach(productId => window.updateStockCount(productId));
     });
 
-    // Optional: Add to Cart functionality (stub)
-    document.querySelectorAll('.add-to-cart-btn').forEach(btn => {
-        btn.addEventListener('click', async (e) => {
-            const productId = e.target.getAttribute('data-product-id');
-            try {
-                const response = await fetch('/api/cart/add', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ productId, quantity: 1 }),
-                    credentials: 'include'
-                });
-                const data = await response.json();
-                if (data.success) {
-                    window.updateHeaderCounts(); // Update cart count in header
-                    window.updateStockCount(productId); // Refresh stock
-                } else {
-                    console.error('Add to cart failed:', data.message);
-                }
-            } catch (error) {
-                console.error('Error adding to cart:', error);
-            }
-        });
-    });
-
-    // Optional: Buy Now functionality (stub)
-    document.querySelectorAll('.buy-now-btn').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-            const productId = e.target.getAttribute('data-product-id');
-            window.location.href = `/checkout?productId=${productId}`;
-        });
-    });
+    
 </script>

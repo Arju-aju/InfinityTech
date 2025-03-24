@@ -7,7 +7,7 @@ const productController = require('../controllers/user/productController');
 const addressController = require('../controllers/user/addressController');
 const cartController = require('../controllers/user/cartController');
 const checkoutController = require('../controllers/user/checkOutController');
-const orderController = require('../controllers/user/orderController');
+const orderController = require('../controllers/user/orderController'); 
 const passwordController = require('../controllers/user/password');
 const wishlist = require('../controllers/user/wishlistController');
 const walletController = require('../controllers/user/walletController');
@@ -17,7 +17,7 @@ const { isAuthenticated, isNotAuthenticated, auth } = require('../middleware/aut
 const passport = require('passport');
 
 // Authentication routes
-router.get('/signup', isAuthenticated, userController.loadSignup);
+router.get('/signup', userController.loadSignup);
 router.post('/signup', userController.signup);
 router.get('/login', isAuthenticated, userController.loadLogin);
 router.post('/login', isAuthenticated, userController.login);
@@ -69,7 +69,7 @@ router.post('/checkout/create-razorpay-order', auth, checkoutController.createRa
 router.post('/verify-payment', auth, checkoutController.verifyPayment);
 router.post('/checkout/pending-order', auth, checkoutController.savePendingOrder);
 router.patch('/retry-payment/:orderId', auth, checkoutController.retryPayment);
-router.get('/orders/:orderId/invoice', auth, checkoutController.downloadInvoice); // Updated route prefix
+router.get('/orders/:orderId/invoice', auth, checkoutController.downloadInvoice); // This is correct
 
 // Order routes
 router.get('/orders', auth, orderController.getOrdersList);
