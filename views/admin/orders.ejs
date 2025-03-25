@@ -8,17 +8,38 @@
         --content-bg: #2d2d44;
         --accent-start: #d4af37;
         --accent-end: #f9e076;
-        --text-color: #ffffff;
+        --text-color: #e5e7eb;
+        --secondary-button: #4b5563;
     }
+
+    .gradient-bg {
+        @apply bg-gradient-to-br from-[var(--primary-bg)] to-[var(--secondary-bg)] !important;
+    }
+
+    .glass-effect-dark {
+        @apply bg-[var(--content-bg)]/80 backdrop-blur-md border border-white/10;
+    }
+
+    .gradient-accent {
+        @apply bg-gradient-to-r from-[var(--accent-start)] to-[var(--accent-end)];
+    }
+
     .pagination-container {
-        @apply mt-8 flex flex-col sm:flex-row items-center justify-between gap-4;
+        @apply mt-8 flex justify-center items-center gap-4;
     }
+
     .pagination-button {
-        @apply relative inline-flex items-center px-3 py-2 glass-effect-dark text-sm text-[var(--text-color)] hover:bg-[var(--secondary-bg)]/50 transition-all duration-300;
+        @apply inline-flex items-center px-3 py-2 glass-effect-dark text-sm text-white hover:bg-[var(--secondary-bg)]/50 transition-all duration-300 border-r border-white/10;
     }
+
     .pagination-button.active {
-        @apply bg-[var(--accent-start)]/20 text-[var(--accent-start)];
+        @apply bg-gradient-to-r from-[var(--accent-start)] to-[var(--accent-end)] text-white border-none;
     }
+
+    .pagination-button:disabled {
+        @apply opacity-50 cursor-not-allowed hover:bg-[var(--content-bg)];
+    }
+
     .flash-message {
         @apply px-4 py-2 rounded-lg mt-4 text-center glass-effect-dark;
     }
@@ -28,14 +49,17 @@
     .flash-error {
         @apply bg-red-500/20 text-red-400 border-red-500/20;
     }
+
     tr:hover {
         @apply bg-[var(--content-bg)]/50;
     }
+
     main {
         margin-left: var(--sidebar-width, 16rem);
         width: calc(100% - var(--sidebar-width, 16rem));
         min-height: 100vh;
     }
+
     .sidebar {
         position: fixed;
         top: 0;
@@ -44,6 +68,7 @@
         z-index: 100;
         animation: slideIn 0.5s ease-out forwards;
     }
+
     @keyframes slideIn {
         from { transform: translateX(-100%); }
         to { transform: translateX(0); }
@@ -57,43 +82,41 @@
     }
     .animation-delay-200 { animation-delay: 0.2s; }
     .animation-delay-400 { animation-delay: 0.4s; }
+
     .golden-button {
-        @apply bg-gradient-to-r from-[var(--accent-start)] to-[var(--accent-end)] text-white px-6 py-2 rounded-lg shadow-lg hover:scale-105 transition-all duration-300;
+        @apply gradient-accent text-white px-6 py-2 rounded-lg shadow-lg hover:scale-105 transition-all duration-300;
     }
-    .glass-effect-dark {
-        @apply bg-[var(--content-bg)]/80 backdrop-blur-md border border-white/10;
-    }
-    .gradient-bg {
-        @apply bg-gradient-to-br from-[var(--primary-bg)] to-[var(--secondary-bg)];
-    }
+
     .status-select {
-        @apply px-4 py-2 bg-[var(--content-bg)] border border-white/10 rounded-lg text-black focus:outline-none focus:ring-2 focus:ring-[var(--accent-start)] focus:border-transparent transition-all;
+        @apply px-4 py-2 bg-[var(--content-bg)] border border-white/10 rounded-lg text-[var(--text-color)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-start)] focus:border-transparent transition-all;
     }
-    /* Ensure dropdown options are also black */
     .status-select option {
-        color: #000000; /* Black text for options */
+        color: #000000;
     }
 </style>
 
-<div class="flex min-h-screen gradient-bg" style="background: linear-gradient(to bottom right, #1e1e2f, #2a2438) !important;">
+<div class="flex min-h-screen gradient-bg">
     <%- include('./partials/adminSidebar.ejs') %>
     <main class="flex-1 p-4 lg:p-8">
-       
-
         <!-- Header -->
         <div class="flex justify-between items-center mb-8 animate-fade-in-up">
-            <h1 class="text-3xl font-extrabold bg-gradient-to-r from-[#d4af37] to-[#f9e076] bg-clip-text text-transparent tracking-tight">Orders Management</h1>
+            <h1 class="text-3xl font-extrabold bg-gradient-to-r from-[var(--accent-start)] to-[var(--accent-end)] bg-clip-text text-transparent tracking-tight">Orders Management</h1>
+            <button id="viewAllBtn" class="golden-button flex items-center space-x-2">
+                <span>View All</span>
+            </button>
         </div>
 
         <!-- Filter Section -->
-        <div class="glass-effect-dark rounded-xl shadow-xl border border-white/10 p-6 mb-6 animate-fade-in-up animation-delay-200">
+        <div class="glass-effect-dark rounded-xl shadow-xl p-6 mb-6 animate-fade-in-up animation-delay-200">
             <form action="/admin/orders" method="GET" class="flex flex-wrap gap-4">
                 <div class="flex-1 min-w-[250px]">
                     <input type="text" name="search" value="<%= filters.search || '' %>" placeholder="Order ID or Customer"
-                        class="w-full px-4 py-2 bg-[var(--content-bg)] border border-white/10 rounded-lg text-[var(--text-color)] placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[var(--accent-start)] focus:border-transparent transition-all">
+                        class="w-full px-4 py-2 bg-[var(--content-bg)] border border-white/10 rounded-lg text-[var(--text
+
+-color)] placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[var(--accent-start)] focus:border-transparent transition-all">
                 </div>
                 <div class="w-48">
-                    <select name="status" class="w-full status-select">
+                    <select name="status" class="w-full status-select bg-[var(--content-bg)] border border-white/10 rounded-lg text-[var(--text-color)]">
                         <option value="All" <%= filters.status === 'All' || !filters.status ? 'selected' : '' %>>All</option>
                         <option value="Pending" <%= filters.status === 'Pending' ? 'selected' : '' %>>Pending</option>
                         <option value="Processing" <%= filters.status === 'Processing' ? 'selected' : '' %>>Processing</option>
@@ -121,7 +144,7 @@
         </div>
 
         <!-- Orders Table -->
-        <div class="glass-effect-dark rounded-xl shadow-xl border border-white/10 animate-fade-in-up animation-delay-400">
+        <div class="glass-effect-dark rounded-xl shadow-xl animate-fade-in-up animation-delay-400">
             <div class="p-6">
                 <div class="overflow-x-auto">
                     <table class="w-full">
@@ -153,25 +176,13 @@
                                                                 <%= product.status %>
                                                             </span>
                                                         </span>
-                                                        <span class="space-x-2">
-                                                            <% if (['Pending', 'Processing'].includes(order.status) && product.status === 'Ordered') { %>
-                                                                <button class="text-red-400 hover:text-red-300 cancel-product-btn" 
-                                                                        data-order-id="<%= order._id %>" 
-                                                                        data-product-index="<%= index %>">Cancel</button>
-                                                            <% } %>
-                                                            <% if (order.status === 'Delivered' && product.status === 'Ordered') { %>
-                                                                <button class="text-yellow-400 hover:text-yellow-300 return-product-btn" 
-                                                                        data-order-id="<%= order._id %>" 
-                                                                        data-product-index="<%= index %>">Return</button>
-                                                            <% } %>
-                                                        </span>
                                                     </li>
                                                 <% }); %>
                                             </ul>
                                         </td>
                                         <td class="px-6 py-4">₹<%= order.orderAmount.toFixed(2) %></td>
                                         <td class="px-6 py-4">
-                                            <select class="status-select" data-order-id="<%= order._id %>"
+                                            <select class="status-select bg-[var(--content-bg)] border border-white/10 rounded-lg text-[var(--text-color)]" data-order-id="<%= order._id %>"
                                                 <%= order.status === 'Cancelled' ? 'disabled' : '' %>>
                                                 <option value="Pending" <%= order.status === 'Pending' ? 'selected' : '' %>>Pending</option>
                                                 <option value="Processing" <%= order.status === 'Processing' ? 'selected' : '' %>>Processing</option>
@@ -197,110 +208,69 @@
 
                 <!-- Pagination -->
                 <% if (pagination.totalPages > 1) { %>
-                    <nav class="mt-6 flex justify-center">
-                        <ul class="flex flex-wrap gap-2">
-                            <li>
-                                <a href="/admin/orders?page=1&<%= new URLSearchParams(filters).toString() %>" 
-                                   class="pagination-button <%= pagination.currentPage === 1 ? 'opacity-50 pointer-events-none' : '' %>">First</a>
-                            </li>
-                            <% for(let i = Math.max(1, pagination.currentPage - 2); i <= Math.min(pagination.totalPages, pagination.currentPage + 2); i++) { %>
-                                <li>
-                                    <a href="/admin/orders?page=<%= i %>&<%= new URLSearchParams(filters).toString() %>" 
-                                       class="pagination-button <%= i === pagination.currentPage ? 'active' : '' %>"><%= i %></a>
-                                </li>
+                    <div class="pagination-container">
+                        <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+                            <!-- Previous Button -->
+                            <% if (pagination.hasPrevPage) { %>
+                                <a href="/admin/orders?page=<%= pagination.currentPage - 1 %>&limit=9&<%= new URLSearchParams(filters).toString() %>" 
+                                   class="pagination-button rounded-l-md">
+                                    <span class="sr-only">Previous</span>
+                                    <i class="fas fa-chevron-left"></i>
+                                </a>
+                            <% } else { %>
+                                <span class="pagination-button rounded-l-md opacity-50 cursor-not-allowed">
+                                    <i class="fas fa-chevron-left"></i>
+                                </span>
                             <% } %>
-                            <li>
-                                <a href="/admin/orders?page=<%= pagination.totalPages %>&<%= new URLSearchParams(filters).toString() %>" 
-                                   class="pagination-button <%= pagination.currentPage === pagination.totalPages ? 'opacity-50 pointer-events-none' : '' %>">Last</a>
-                            </li>
-                        </ul>
-                    </nav>
+                            
+                            <!-- Page Numbers -->
+                            <% let startPage = Math.max(1, pagination.currentPage - 2); %>
+                            <% let endPage = Math.min(pagination.totalPages, startPage + 4); %>
+                            <% startPage = Math.max(1, endPage - 4); %>
+
+                            <% if (startPage > 1) { %>
+                                <a href="/admin/orders?page=1&limit=9&<%= new URLSearchParams(filters).toString() %>" 
+                                   class="pagination-button">1</a>
+                                <% if (startPage > 2) { %>
+                                    <span class="pagination-button">...</span>
+                                <% } %>
+                            <% } %>
+                                
+                            <% for(let i = startPage; i <= endPage; i++) { %>
+                                <a href="/admin/orders?page=<%= i %>&limit=9&<%= new URLSearchParams(filters).toString() %>" 
+                                   class="pagination-button <%= pagination.currentPage === i ? 'active' : '' %>">
+                                    <%= i %>
+                                </a>
+                            <% } %>
+                            
+                            <% if (endPage < pagination.totalPages) { %>
+                                <% if (endPage < pagination.totalPages - 1) { %>
+                                    <span class="pagination-button">...</span>
+                                <% } %>
+                                <a href="/admin/orders?page=<%= pagination.totalPages %>&limit=9&<%= new URLSearchParams(filters).toString() %>" 
+                                   class="pagination-button">
+                                    <%= pagination.totalPages %>
+                                </a>
+                            <% } %>
+                            
+                            <!-- Next Button -->
+                            <% if (pagination.hasNextPage) { %>
+                                <a href="/admin/orders?page=<%= pagination.currentPage + 1 %>&limit=9&<%= new URLSearchParams(filters).toString() %>" 
+                                   class="pagination-button rounded-r-md">
+                                    <span class="sr-only">Next</span>
+                                    <i class="fas fa-chevron-right"></i>
+                                </a>
+                            <% } else { %>
+                                <span class="pagination-button rounded-r-md opacity-50 cursor-not-allowed">
+                                    <i class="fas fa-chevron-right"></i>
+                                </span>
+                            <% } %>
+                        </nav>
+                    </div>
                 <% } %>
             </div>
         </div>
     </main>
-</div>
-
-<!-- Cancellation Modal -->
-<div id="productCancellationModal" class="fixed inset-0 bg-gray-800 bg-opacity-75 flex items-center justify-center hidden z-50">
-    <div class="glass-effect-dark p-6 rounded-xl w-full max-w-lg">
-        <div class="flex justify-between items-center mb-6">
-            <h3 class="text-xl font-semibold text-[var(--text-color)]">Cancel Product</h3>
-            <button id="closeProductCancellationModal" class="text-[var(--text-color)] hover:text-gray-300">
-                <i class="fas fa-times"></i>
-            </button>
-        </div>
-        <form id="productCancellationForm" class="space-y-6">
-            <input type="hidden" name="orderId" id="cancelOrderId">
-            <input type="hidden" name="productIndex" id="cancelProductIndex">
-            <div class="space-y-4">
-                <label class="flex items-center text-[var(--text-color)]">
-                    <input type="radio" name="reason" value="Customer request" class="w-5 h-5 text-[var(--accent-start)] focus:ring-[var(--accent-start)]">
-                    <span class="ml-3">Customer request</span>
-                </label>
-                <label class="flex items-center text-[var(--text-color)]">
-                    <input type="radio" name="reason" value="Out of stock" class="w-5 h-5 text-[var(--accent-start)] focus:ring-[var(--accent-start)]">
-                    <span class="ml-3">Out of stock</span>
-                </label>
-                <label class="flex items-center text-[var(--text-color)]">
-                    <input type="radio" name="reason" value="Shipping delay" class="w-5 h-5 text-[var(--accent-start)] focus:ring-[var(--accent-start)]">
-                    <span class="ml-3">Shipping delay</span>
-                </label>
-                <label class="flex items-center text-[var(--text-color)]">
-                    <input type="radio" name="reason" value="Other" class="w-5 h-5 text-[var(--accent-start)] focus:ring-[var(--accent-start)]" id="otherCancelReason">
-                    <span class="ml-3">Other</span>
-                </label>
-                <div id="otherCancelReasonContainer" class="hidden">
-                    <textarea id="otherCancelReasonText" class="w-full p-3 border border-gray-600 rounded-lg bg-[var(--content-bg)] text-[var(--text-color)] focus:ring-[var(--accent-start)] focus:border-[var(--accent-start)]" rows="3" placeholder="Please specify"></textarea>
-                </div>
-            </div>
-            <div class="flex justify-end space-x-4">
-                <button type="button" id="cancelProductCancellationModalBtn" class="golden-button px-4 py-2 bg-gray-600 hover:bg-gray-500">Close</button>
-                <button type="submit" class="golden-button px-4 py-2">Confirm Cancellation</button>
-            </div>
-        </form>
-    </div>
-</div>
-
-<!-- Return Modal -->
-<div id="productReturnModal" class="fixed inset-0 bg-gray-800 bg-opacity-75 flex items-center justify-center hidden z-50">
-    <div class="glass-effect-dark p-6 rounded-xl w-full max-w-lg">
-        <div class="flex justify-between items-center mb-6">
-            <h3 class="text-xl font-semibold text-[var(--text-color)]">Return Product</h3>
-            <button id="closeProductReturnModal" class="text-[var(--text-color)] hover:text-gray-300">
-                <i class="fas fa-times"></i>
-            </button>
-        </div>
-        <form id="productReturnForm" class="space-y-6">
-            <input type="hidden" name="orderId" id="returnOrderId">
-            <input type="hidden" name="productIndex" id="returnProductIndex">
-            <div class="space-y-4">
-                <label class="flex items-center text-[var(--text-color)]">
-                    <input type="radio" name="reason" value="Defective product" class="w-5 h-5 text-[var(--accent-start)] focus:ring-[var(--accent-start)]">
-                    <span class="ml-3">Defective product</span>
-                </label>
-                <label class="flex items-center text-[var(--text-color)]">
-                    <input type="radio" name="reason" value="Wrong item" class="w-5 h-5 text-[var(--accent-start)] focus:ring-[var(--accent-start)]">
-                    <span class="ml-3">Wrong item</span>
-                </label>
-                <label class="flex items-center text-[var(--text-color)]">
-                    <input type="radio" name="reason" value="Changed mind" class="w-5 h-5 text-[var(--accent-start)] focus:ring-[var(--accent-start)]">
-                    <span class="ml-3">Changed mind</span>
-                </label>
-                <label class="flex items-center text-[var(--text-color)]">
-                    <input type="radio" name="reason" value="Other" class="w-5 h-5 text-[var(--accent-start)] focus:ring-[var(--accent-start)]" id="otherReturnReason">
-                    <span class="ml-3">Other</span>
-                </label>
-                <div id="otherReturnReasonContainer" class="hidden">
-                    <textarea id="otherReturnReasonText" class="w-full p-3 border border-gray-600 rounded-lg bg-[var(--content-bg)] text-[var(--text-color)] focus:ring-[var(--accent-start)] focus:border-[var(--accent-start)]" rows="3" placeholder="Please specify"></textarea>
-                </div>
-            </div>
-            <div class="flex justify-end space-x-4">
-                <button type="button" id="cancelProductReturnModalBtn" class="golden-button px-4 py-2 bg-gray-600 hover:bg-gray-500">Close</button>
-                <button type="submit" class="golden-button px-4 py-2">Request Return</button>
-            </div>
-        </form>
-    </div>
 </div>
 
 <%- include('./partials/adminFooter.ejs') %>
@@ -360,161 +330,11 @@
             select.dataset.currentStatus = select.value;
         });
 
-        // Modal Handling Functions
-        const openModal = (modal) => {
-            modal.classList.remove('hidden');
-            document.body.style.overflow = 'hidden';
-        };
-
-        const closeModal = (modal, form, otherContainer) => {
-            modal.classList.add('hidden');
-            document.body.style.overflow = '';
-            form.reset();
-            if (otherContainer) otherContainer.classList.add('hidden');
-        };
-
-        // Cancellation Modal
-        const productCancellationModal = document.getElementById('productCancellationModal');
-        const productCancellationForm = document.getElementById('productCancellationForm');
-        const closeProductCancellationModalBtn = document.getElementById('closeProductCancellationModal');
-        const cancelProductCancellationModalBtn = document.getElementById('cancelProductCancellationModalBtn');
-        const otherCancelReason = document.getElementById('otherCancelReason');
-        const otherCancelReasonContainer = document.getElementById('otherCancelReasonContainer');
-        const cancelOrderIdInput = document.getElementById('cancelOrderId');
-        const cancelProductIndexInput = document.getElementById('cancelProductIndex');
-
-        document.querySelectorAll('.cancel-product-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                const orderId = btn.dataset.orderId;
-                const productIndex = btn.dataset.productIndex;
-                cancelOrderIdInput.value = orderId;
-                cancelProductIndexInput.value = productIndex;
-                openModal(productCancellationModal);
-            });
-        });
-
-        closeProductCancellationModalBtn.addEventListener('click', () => closeModal(productCancellationModal, productCancellationForm, otherCancelReasonContainer));
-        cancelProductCancellationModalBtn.addEventListener('click', () => closeModal(productCancellationModal, productCancellationForm, otherCancelReasonContainer));
-        productCancellationModal.addEventListener('click', (e) => {
-            if (e.target === productCancellationModal) closeModal(productCancellationModal, productCancellationForm, otherCancelReasonContainer);
-        });
-
-        otherCancelReason.addEventListener('change', () => {
-            otherCancelReasonContainer.classList.toggle('hidden', !otherCancelReason.checked);
-        });
-
-        productCancellationForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const formData = new FormData(productCancellationForm);
-            const orderId = formData.get('orderId');
-            const productIndex = formData.get('productIndex');
-            let reason = formData.get('reason');
-            if (reason === 'Other') {
-                reason = document.getElementById('otherCancelReasonText').value.trim();
-                if (!reason) return Swal.fire('Error', 'Please specify a reason', 'error');
-            }
-            if (!reason) return Swal.fire('Error', 'Please select a reason', 'error');
-
-            closeModal(productCancellationModal, productCancellationForm, otherCancelReasonContainer);
-            const result = await Swal.fire({
-                title: 'Confirm Product Cancellation',
-                text: 'This will refund the proportional amount to the customer’s wallet!',
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#d4af37',
-                cancelButtonColor: '#6b7280',
-                confirmButtonText: 'Yes, Cancel Product'
-            });
-
-            if (result.isConfirmed) {
-                try {
-                    const response = await fetch(`/admin/orders/${orderId}/cancel-product`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ productIndex, reason })
-                    });
-                    const data = await response.json();
-                    if (data.success) {
-                        Swal.fire('Cancelled!', 'Product cancelled and amount refunded to wallet.', 'success').then(() => window.location.reload());
-                    } else {
-                        throw new Error(data.message || 'Product cancellation failed');
-                    }
-                } catch (error) {
-                    Swal.fire('Error', error.message, 'error');
-                }
-            }
-        });
-
-        // Return Modal
-        const productReturnModal = document.getElementById('productReturnModal');
-        const productReturnForm = document.getElementById('productReturnForm');
-        const closeProductReturnModalBtn = document.getElementById('closeProductReturnModal');
-        const cancelProductReturnModalBtn = document.getElementById('cancelProductReturnModalBtn');
-        const otherReturnReason = document.getElementById('otherReturnReason');
-        const otherReturnReasonContainer = document.getElementById('otherReturnReasonContainer');
-        const returnOrderIdInput = document.getElementById('returnOrderId');
-        const returnProductIndexInput = document.getElementById('returnProductIndex');
-
-        document.querySelectorAll('.return-product-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                const orderId = btn.dataset.orderId;
-                const productIndex = btn.dataset.productIndex;
-                returnOrderIdInput.value = orderId;
-                returnProductIndexInput.value = productIndex;
-                openModal(productReturnModal);
-            });
-        });
-
-        closeProductReturnModalBtn.addEventListener('click', () => closeModal(productReturnModal, productReturnForm, otherReturnReasonContainer));
-        cancelProductReturnModalBtn.addEventListener('click', () => closeModal(productReturnModal, productReturnForm, otherReturnReasonContainer));
-        productReturnModal.addEventListener('click', (e) => {
-            if (e.target === productReturnModal) closeModal(productReturnModal, productReturnForm, otherReturnReasonContainer);
-        });
-
-        otherReturnReason.addEventListener('change', () => {
-            otherReturnReasonContainer.classList.toggle('hidden', !otherReturnReason.checked);
-        });
-
-        productReturnForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const formData = new FormData(productReturnForm);
-            const orderId = formData.get('orderId');
-            const productIndex = formData.get('productIndex');
-            let reason = formData.get('reason');
-            if (reason === 'Other') {
-                reason = document.getElementById('otherReturnReasonText').value.trim();
-                if (!reason) return Swal.fire('Error', 'Please specify a reason', 'error');
-            }
-            if (!reason) return Swal.fire('Error', 'Please select a reason', 'error');
-
-            closeModal(productReturnModal, productReturnForm, otherReturnReasonContainer);
-            const result = await Swal.fire({
-                title: 'Confirm Product Return',
-                text: 'This will submit a return request for approval!',
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#d4af37',
-                cancelButtonColor: '#6b7280',
-                confirmButtonText: 'Yes, Request Return'
-            });
-
-            if (result.isConfirmed) {
-                try {
-                    const response = await fetch(`/admin/orders/${orderId}/return-product`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ productIndex, reason })
-                    });
-                    const data = await response.json();
-                    if (data.success) {
-                        Swal.fire('Requested!', 'Return request submitted successfully.', 'success').then(() => window.location.reload());
-                    } else {
-                        throw new Error(data.message || 'Return request failed');
-                    }
-                } catch (error) {
-                    Swal.fire('Error', error.message, 'error');
-                }
-            }
+        // View All Button
+        document.getElementById('viewAllBtn').addEventListener('click', () => {
+            const url = new URL(window.location.href);
+            url.searchParams.set('limit', 'all');
+            window.location.href = url.toString();
         });
     });
 </script>

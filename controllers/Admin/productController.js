@@ -7,7 +7,7 @@ const path = require('path');
 const loadProduct = async (req, res) => {
     try {
         let page = Math.max(1, parseInt(req.query.page) || 1);
-        const limit = 10;
+        const limit = 7;
         const { search, category, priceRange, stock, sortBy = '-createdAt', status } = req.query;
 
         let filterQuery = {};

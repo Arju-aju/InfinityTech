@@ -69,7 +69,8 @@ router.post('/checkout/create-razorpay-order', auth, checkoutController.createRa
 router.post('/verify-payment', auth, checkoutController.verifyPayment);
 router.post('/checkout/pending-order', auth, checkoutController.savePendingOrder);
 router.patch('/retry-payment/:orderId', auth, checkoutController.retryPayment);
-router.get('/orders/:orderId/invoice', auth, checkoutController.downloadInvoice); // This is correct
+router.get('/orders/:orderId/invoice', auth, checkoutController.downloadInvoice);
+router.post('/apply-coupon', auth, checkoutController.applyCoupon); // New route for applying coupons
 
 // Order routes
 router.get('/orders', auth, orderController.getOrdersList);

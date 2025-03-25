@@ -1,30 +1,34 @@
 <%- include("partials/header") %>
 
-<div class="min-h-screen flex flex-col">
-    <div class="max-w-7xl mx-auto px-4 sm:px-9 lg:px-9">
-        <h2 class="text-3xl font-bold text-center mb-8">Your Wishlist</h2>
-    
+<div class="min-h-screen flex flex-col bg-gray-50 pt-24">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <h2 class="text-4xl font-bold text-center mb-12 text-gray-800 tracking-tight">Your Wishlist</h2>
+        
         <% if (wishlistItems.length === 0) { %>
-            <div>
-                <p class="text-center text-gray-500">Your wishlist is empty.</p>
+            <div class="flex flex-col items-center justify-center h-64 bg-white rounded-xl shadow-md">
+                <p class="text-lg text-gray-500 font-medium">Your wishlist is empty.</p>
+                <a href="/shop" class="mt-4 inline-block px-6 py-2 bg-yellow-400 text-gray-900 font-semibold rounded-full hover:bg-yellow-500 transition-all duration-300">Start Shopping</a>
             </div>
         <% } else { %>
-            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-9">
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
                 <% wishlistItems.forEach(item => { %>
-                    <div class="bg-white shadow-lg rounded-xl overflow-hidden transform transition duration-300 hover:scale-105">
-                        <img src="<%= item.product.images[0] %>" alt="<%= item.product.name %>" class="w-full h-48 object-cover">
+                    <div class="bg-white shadow-lg rounded-xl overflow-hidden transform transition-all duration-300 hover:scale-105 hover:shadow-2xl">
+                        <div class="relative">
+                            <img src="<%= item.product.images[0] %>" alt="<%= item.product.name %>" class="w-full h-56 object-cover transition-transform duration-300 hover:scale-110">
+                            <div class="absolute inset-0 bg-gradient-to-t from-gray-900/20 to-transparent opacity-0 hover:opacity-100 transition-opacity duration-300"></div>
+                        </div>
                         <div class="p-6">
-                            <h3 class="text-xl font-semibold"><%= item.product.name %></h3>
+                            <h3 class="text-xl font-semibold text-gray-800 truncate"><%= item.product.name %></h3>
                             <p class="text-gray-700 mt-2 text-lg font-medium">₹<%= item.product.price %></p>
-                            <div class="mt-4 flex justify-between">
+                            <div class="mt-6 flex justify-between space-x-4">
                                 <button 
                                     onclick="addToCart('<%= item.product._id %>')" 
-                                    class="flex-1 mr-2 bg-gray-200 hover:bg-gray-300 text-gray-800 py-2 px-3 rounded-md text-sm font-medium transition duration-200">
+                                    class="flex-1 bg-yellow-400 text-gray-900 py-2 px-4 rounded-full font-semibold text-sm hover:bg-yellow-500 transition-all duration-300 transform hover:scale-105">
                                     Add to Cart
                                 </button>
                                 <button 
                                     onclick="confirmRemoveFromWishlist('<%= item._id %>', '<%= item.product.name %>')" 
-                                    class="flex-1 ml-2 bg-primary hover:bg-primary-dark text-white py-2 px-3 rounded-md text-sm font-medium transition duration-200">
+                                    class="flex-1 bg-gray-800 text-white py-2 px-4 rounded-full font-semibold text-sm hover:bg-gray-900 transition-all duration-300 transform hover:scale-105">
                                     ❌ Remove
                                 </button>
                             </div>
@@ -40,8 +44,6 @@
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <script>
-    
-
     function addToCart(productId) {
         showNotification('Adding to cart...', 'info');
     
@@ -152,7 +154,4 @@
             showNotification('Failed to remove item. Please try again.', 'error');
         });
     }
-
-    // Remove any erroneous API calls to '/api/user/wishlist/products'
-    // If this was here, it’s removed now since the page is server-rendered
 </script>

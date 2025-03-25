@@ -8,14 +8,13 @@ const mongoose = require('mongoose');
 const transporter = nodemailer.createTransport({
     host: 'smtp.gmail.com',
     port: 587,
-    secure: false, // Use STARTTLS
+    secure: false,
     auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS,
     },
-    // Add debug option for better logging
-    debug: true, // Enable debug output
-    logger: true, // Log to console
+    debug: true,
+    logger: true,
 });
 
 const generateOtp = () => {
@@ -24,7 +23,7 @@ const generateOtp = () => {
 
 const sendVerificationEmail = async (email, otp) => {
     const mailOptions = {
-        from: `"InfinityTech" <${process.env.EMAIL_USER}>`, // Sender name
+        from: `"InfinityTech" <${process.env.EMAIL_USER}>`,
         to: email,
         subject: 'Email Verification OTP',
         text: `Your OTP for email verification is: ${otp}. Valid for 1 minute.`,
@@ -36,32 +35,11 @@ const sendVerificationEmail = async (email, otp) => {
         return true;
     } catch (error) {
         console.error(`Failed to send email to ${email}:`, error.message);
-        if (error.response) {
-            console.error('SMTP Response:', error.response);
-        }
+        if (error.response) console.error('SMTP Response:', error.response);
         return false;
     }
 };
 
-// Check if user is blocked
-const checkUserBlockedStatus = async (user, req, res) => {
-    try {
-        if (user.isBlocked) {
-            console.log(`User ${user.email} is blocked`);
-            req.session.destroy((err) => {
-                if (err) console.error('Session destroy error:', err);
-                res.redirect('/login?error=blocked');
-            });
-            return true;
-        }
-        return false;
-    } catch (error) {
-        console.error('Error in checkUserBlockedStatus:', error);
-        throw error;
-    }
-};
-
-// Page not found
 const pageNotFound = async (req, res) => {
     try {
         res.render('page-404');
@@ -70,7 +48,6 @@ const pageNotFound = async (req, res) => {
     }
 };
 
-// Load Login Page
 const loadLogin = async (req, res) => {
     try {
         res.render('user/login', {
@@ -84,7 +61,6 @@ const loadLogin = async (req, res) => {
     }
 };
 
-// Login
 const login = async (req, res) => {
     try {
         const { email, password } = req.body;
@@ -104,11 +80,6 @@ const login = async (req, res) => {
             return res.redirect('/login');
         }
 
-        if (password.length < 6) {
-            req.flash('error', 'Password must be at least 6 characters');
-            return res.redirect('/login');
-        }
-
         const user = await User.findOne({ email: email.toLowerCase() });
         if (!user) {
             req.flash('error', 'Invalid email or password');
@@ -116,7 +87,7 @@ const login = async (req, res) => {
         }
 
         if (user.isBlocked) {
-            req.flash('error', 'Your account has been blocked. Please contact support');
+            req.flash('error', 'Your account has been blocked');
             return res.redirect('/login');
         }
 
@@ -137,13 +108,12 @@ const login = async (req, res) => {
         return res.redirect('/');
 
     } catch (error) {
-        console.error(`Login error for email ${req.body.email}: ${error.message}`);
-        req.flash('error', 'An unexpected error occurred. Please try again.');
+        console.error(`Login error for email ${req.body.email}:`, error);
+        req.flash('error', 'An unexpected error occurred');
         return res.redirect('/login');
     }
 };
 
-// Load Signup Page
 const loadSignup = async (req, res) => {
     try {
         res.render('user/signup', {
@@ -155,52 +125,55 @@ const loadSignup = async (req, res) => {
     }
 };
 
-// Handle Signup Submit
 const signup = async (req, res) => {
     try {
         const { name, email, phone, password, confirmPassword } = req.body;
-        console.log('Signup attempt:', { name, email, phone });
 
-        if (!name || !/^[a-zA-Z][a-zA-Z\s]*$/.test(name)) {
-            req.flash('error', 'Name must start with a letter and contain only letters and spaces');
-            return res.redirect('/signup');
-        }
+        const errors = {};
 
-        if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-            req.flash('error', 'Please enter a valid email address');
-            return res.redirect('/signup');
-        }
+        if (!name || !name.trim()) errors.name = 'Name is required';
+        else if (!/^[a-zA-Z][a-zA-Z\s]*$/.test(name.trim())) errors.name = 'Name must start with a letter and contain only letters and spaces';
+        else if (name.trim().length < 2) errors.name = 'Name must be at least 2 characters long';
 
-        if (!phone || !/^[6-9]\d{9}$/.test(phone)) {
-            req.flash('error', 'Phone number must start with 6-9 and be 10 digits');
-            return res.redirect('/signup');
-        }
+        if (!email || !email.trim()) errors.email = 'Email is required';
+        else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) errors.email = 'Invalid email format';
 
-        if (!password || password.length < 6) {
-            req.flash('error', 'Password must be at least 6 characters');
-            return res.redirect('/signup');
-        }
+        if (!phone || !phone.trim()) errors.phone = 'Phone number is required';
+        else if (!/^[6-9]\d{9}$/.test(phone.trim())) errors.phone = 'Phone number must start with 6-9 and be 10 digits';
 
-        if (password !== confirmPassword) {
-            req.flash('error', 'Passwords do not match');
-            return res.redirect('/signup');
+        if (!password) errors.password = 'Password is required';
+        else if (password.length < 8) errors.password = 'Password must be at least 8 characters';
+        else if (!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/.test(password))
+            errors.password = 'Password must contain uppercase, lowercase, number, and special character';
+
+        if (!confirmPassword) errors.confirmPassword = 'Confirm password is required';
+        else if (password !== confirmPassword) errors.confirmPassword = 'Passwords do not match';
+
+        if (Object.keys(errors).length > 0) {
+            return res.status(400).json({ success: false, errors, message: 'Validation failed' });
         }
 
         const existingUser = await User.findOne({ email: email.toLowerCase() });
         if (existingUser) {
-            req.flash('error', 'Email is already registered');
-            return res.redirect('/signup');
+            errors.email = 'Email already registered';
+            return res.status(400).json({ success: false, errors, message: 'Email already exists' });
+        }
+
+        const existingPhone = await User.findOne({ phone: phone.trim() });
+        if (existingPhone) {
+            errors.phone = 'Phone number already registered';
+            return res.status(400).json({ success: false, errors, message: 'Phone already exists' });
         }
 
         const otp = generateOtp();
-        console.log(`Generated OTP for ${email} during signup: ${otp}`);
+        console.log(`Generated OTP for ${email}: ${otp}`);
         const otpExpiry = new Date(Date.now() + 1 * 60 * 1000);
         const hashedPassword = await bcrypt.hash(password, 10);
 
         req.session.tempUser = {
             name: name.trim(),
             email: email.toLowerCase(),
-            phone,
+            phone: phone.trim(),
             password: hashedPassword,
             otp,
             otpExpiry,
@@ -208,29 +181,29 @@ const signup = async (req, res) => {
             isBlocked: false,
         };
 
-        const emailSent = await sendVerificationEmail(email, otp);
+        const emailSent = await sendVerificationEmail(email.toLowerCase(), otp);
         if (!emailSent) {
-            req.flash('error', 'Failed to send verification email. Please try again.');
-            console.log('Email sending failed, redirecting to /signup');
-            return res.redirect('/signup');
+            console.error(`Failed to send OTP to ${email}`);
+            return res.status(500).json({ success: false, message: 'Failed to send verification email' });
         }
 
-        req.flash('success', `OTP sent to ${email}`);
-        console.log('Email sent successfully, redirecting to /verifyOtp');
-        return res.redirect('/verifyOtp');
+        console.log(`OTP sent successfully to ${email}`);
+        return res.status(200).json({
+            success: true,
+            message: `OTP sent to ${email}`,
+            redirect: '/verifyOtp'
+        });
+
     } catch (error) {
-        console.error('Signup error:', error.message);
-        req.flash('error', 'Server error during signup');
-        return res.redirect('/signup');
+        console.error('Signup error:', error);
+        return res.status(500).json({ success: false, message: 'Server error during signup', error: error.message });
     }
 };
 
-// Load Verify OTP Page
 const loadverifyOtp = async (req, res) => {
     try {
-        console.log('Loading verifyOtp, session tempUser:', req.session.tempUser);
         if (!req.session.tempUser) {
-            req.flash('error', 'Session expired. Please sign up again');
+            console.error('No tempUser in session for verifyOtp page');
             return res.redirect('/signup');
         }
         res.render('verifyOtp', {
@@ -243,25 +216,26 @@ const loadverifyOtp = async (req, res) => {
     }
 };
 
-// Verify OTP
 const verifyOtp = async (req, res) => {
     try {
         const { otp } = req.body;
         const tempUser = req.session.tempUser;
 
         if (!tempUser) {
-            req.flash('error', 'Session expired. Please sign up again');
-            return res.redirect('/signup');
+            console.error('No tempUser in session');
+            return res.status(400).json({ success: false, message: 'Session expired. Please sign up again', redirect: '/signup' });
         }
 
-        if (otp !== tempUser.otp) {
-            req.flash('error', 'Invalid OTP');
-            return res.redirect('/verifyOtp');
+        console.log(`Verifying OTP for ${tempUser.email}. Entered: ${otp}, Stored: ${tempUser.otp}`);
+
+        if (!otp || otp.trim() !== tempUser.otp) {
+            console.log('Invalid OTP entered');
+            return res.status(400).json({ success: false, message: 'Invalid OTP' });
         }
 
         if (new Date() > new Date(tempUser.otpExpiry)) {
-            req.flash('error', 'OTP has expired');
-            return res.redirect('/verifyOtp');
+            console.log('OTP expired');
+            return res.status(400).json({ success: false, message: 'OTP has expired' });
         }
 
         const newUser = new User({
@@ -274,6 +248,8 @@ const verifyOtp = async (req, res) => {
         });
 
         await newUser.save();
+        console.log(`User ${newUser.email} saved successfully`);
+
         delete req.session.tempUser;
 
         req.session.user = {
@@ -283,46 +259,61 @@ const verifyOtp = async (req, res) => {
             isVerified: true,
         };
 
-        req.flash('success', `Welcome ${newUser.name}! Your email has been verified`);
-        return res.redirect('/');
+        return res.status(200).json({
+            success: true,
+            message: `Welcome ${newUser.name}! Your account has been created successfully`,
+            redirect: '/'
+        });
+
     } catch (error) {
         console.error('OTP verification error:', error);
-        req.flash('error', 'Server error during verification');
-        return res.redirect('/verifyOtp');
+        return res.status(500).json({ success: false, message: 'Server error during verification', error: error.message });
     }
 };
 
-// Resend OTP
 const resendOtp = async (req, res) => {
     try {
         const tempUser = req.session.tempUser;
         if (!tempUser) {
-            req.flash('error', 'Session expired. Please sign up again');
-            return res.redirect('/signup');
+            console.error('No tempUser in session for resendOtp');
+            return res.status(400).json({ 
+                success: false, 
+                message: 'Session expired. Please sign up again', 
+                redirect: '/signup' 
+            });
         }
 
         const otp = generateOtp();
-        console.log(`Resent OTP for ${tempUser.email}: ${otp}`);
+        console.log(`Generated new OTP for ${tempUser.email}: ${otp}`);
         tempUser.otp = otp;
         tempUser.otpExpiry = new Date(Date.now() + 1 * 60 * 1000);
         req.session.tempUser = tempUser;
 
+        console.log(`Attempting to resend OTP to ${tempUser.email}`);
         const emailSent = await sendVerificationEmail(tempUser.email, otp);
         if (!emailSent) {
-            req.flash('error', 'Failed to resend OTP');
-            return res.redirect('/verifyOtp');
+            console.error(`Failed to resend OTP to ${tempUser.email}`);
+            return res.status(500).json({ 
+                success: false, 
+                message: 'Failed to resend OTP. Please try again.' 
+            });
         }
 
-        req.flash('success', `New OTP sent to ${tempUser.email}`);
-        return res.redirect('/verifyOtp');
+        console.log(`OTP resent successfully to ${tempUser.email}`);
+        return res.status(200).json({ 
+            success: true, 
+            message: `New OTP sent to ${tempUser.email}` 
+        });
     } catch (error) {
-        console.error('Resend OTP error:', error);
-        req.flash('error', 'Server error during OTP resend');
-        return res.redirect('/verifyOtp');
+        console.error('Resend OTP error:', error.message);
+        return res.status(500).json({ 
+            success: false, 
+            message: 'Server error during OTP resend', 
+            error: error.message 
+        });
     }
 };
 
-// Logout
 const logout = async (req, res) => {
     try {
         req.session.destroy((err) => {
@@ -338,19 +329,11 @@ const logout = async (req, res) => {
     }
 };
 
-// Load Home Page (Updated Featured Products Query)
 const loadHomePage = async (req, res) => {
     try {
         if (req.session.user) {
             const user = await User.findById(req.session.user._id);
-
-            if (!user) {
-                console.log('User not found, destroying session');
-                req.session.destroy(() => res.redirect('/login?error=session_expired'));
-                return;
-            }
-            if (user.isBlocked) {
-                console.log('User is blocked, destroying session');
+            if (!user || user.isBlocked) {
                 req.session.destroy(() => res.redirect('/login?error=blocked'));
                 return;
             }
@@ -364,30 +347,22 @@ const loadHomePage = async (req, res) => {
             isListed: true,
             isDeleted: false,
             createdAt: { $gte: sevenDaysAgo },
-        })
-            .sort({ createdAt: -1 })
-            .limit(8);
+        }).sort({ createdAt: -1 }).limit(8);
 
         const featuredProducts = await Product.find({
             isDeleted: false,
             isListed: true,
             isFeatured: true
-        })
-            .sort({ createdAt: -1 }) 
-            .limit(8);
+        }).sort({ createdAt: -1 }).limit(8);
 
         const topSellingProducts = await Product.find({
             isDeleted: false,
-        })
-            .sort({ salesCount: -1 })
-            .limit(8);
+        }).sort({ salesCount: -1 }).limit(8);
 
         const dealProducts = await Product.find({
             isDeleted: false,
             discountPercentage: { $gt: 0 },
-        })
-            .sort({ discountPercentage: -1 })
-            .limit(8);
+        }).sort({ discountPercentage: -1 }).limit(8);
 
         res.render('user/home', {
             user: req.session.user || null,
@@ -403,7 +378,6 @@ const loadHomePage = async (req, res) => {
     }
 };
 
-// Static Pages
 const loadAboutPage = async (req, res) => {
     try {
         res.render('user/about', {
@@ -426,23 +400,18 @@ const loadContactPage = async (req, res) => {
     }
 };
 
-// Handle Google Callback
 const handleGoogleCallback = async (req, res) => {
     try {
         if (!req.user) {
-            console.log('Google auth failed - possible blocked user');
-            req.flash('error', 'Authentication failed: Your account may be blocked. Please contact support.');
+            req.flash('error', 'Authentication failed');
             return res.redirect('/login');
         }
 
         const user = await User.findById(req.user._id);
         if (!user || user.isBlocked) {
-            console.log(`Blocked user detected in callback: ${req.user?.email}`);
             req.logout((err) => {
-                if (err) {
-                    console.error('Logout error:', err);
-                }
-                req.flash('error', 'Your account has been blocked. Please contact support.');
+                if (err) console.error('Logout error:', err);
+                req.flash('error', 'Your account has been blocked');
                 res.redirect('/login');
             });
             return;
@@ -460,7 +429,7 @@ const handleGoogleCallback = async (req, res) => {
 
     } catch (error) {
         console.error('Google callback error:', error);
-        req.flash('error', 'Authentication failed. Please try again.');
+        req.flash('error', 'Authentication failed');
         return res.redirect('/login');
     }
 };
@@ -482,12 +451,11 @@ const sendOTPForPasswordChange = async (req, res) => {
         const user = await User.findOne({ email });
 
         if (!user) {
-            req.flash('error', 'User not found with this email');
+            req.flash('error', 'User not found');
             return res.redirect('/changePassword');
         }
 
-        const otp = Math.floor(100000 + Math.random() * 900000).toString();
-        console.log(`Generated OTP for password change for ${email}: ${otp}`);
+        const otp = generateOtp();
         user.resetPasswordOTP = {
             code: otp,
             expiresAt: Date.now() + 10 * 60 * 1000,
@@ -496,11 +464,11 @@ const sendOTPForPasswordChange = async (req, res) => {
 
         await sendVerificationEmail(email, otp);
 
-        req.flash('success', 'OTP sent to your registered email');
+        req.flash('success', 'OTP sent to your email');
         return res.redirect('/changePassword');
     } catch (error) {
         console.error('Error sending OTP:', error);
-        req.flash('error', 'Server error. Please try again later.');
+        req.flash('error', 'Server error');
         return res.redirect('/changePassword');
     }
 };
@@ -515,20 +483,8 @@ const changePassword = async (req, res) => {
         }
 
         const user = await User.findOne({ email });
-
-        if (!user) {
-            req.flash('error', 'User not found');
-            return res.redirect('/changePassword');
-        }
-
-        if (!user.resetPasswordOTP || user.resetPasswordOTP.code !== otp || user.resetPasswordOTP.expiresAt < Date.now()) {
+        if (!user || !user.resetPasswordOTP || user.resetPasswordOTP.code !== otp || user.resetPasswordOTP.expiresAt < Date.now()) {
             req.flash('error', 'Invalid or expired OTP');
-            return res.redirect('/changePassword');
-        }
-
-        const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
-        if (!passwordRegex.test(newPassword)) {
-            req.flash('error', 'Password does not meet complexity requirements');
             return res.redirect('/changePassword');
         }
 
@@ -541,7 +497,7 @@ const changePassword = async (req, res) => {
         return res.redirect('/changePassword');
     } catch (error) {
         console.error('Error changing password:', error);
-        req.flash('error', 'Server error. Please try again later.');
+        req.flash('error', 'Server error');
         return res.redirect('/changePassword');
     }
 };
