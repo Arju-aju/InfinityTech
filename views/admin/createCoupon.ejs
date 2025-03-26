@@ -186,23 +186,23 @@
             <form method="post" action="/admin/addCoupon" id="couponForm" class="space-y-8" novalidate>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div class="space-y-2">
-                        <label class="block text-sm font-medium">Coupon Name</label>
-                        <input value="<%= oldValue.name || '' %>" type="text" name="name" class="w-full bg-[var(--content-bg)] border border-white/10 px-4 py-3 rounded-lg focus:ring-2 focus:ring-[var(--accent-start)] focus:border-transparent transition-all" placeholder="Enter coupon name">
+                        <label class="block text-sm font-medium text-white">Coupon Name</label>
+                        <input value="<%= oldValue.name || '' %>" type="text" name="name" class="w-full bg-[var(--content-bg)] border border-white/10 px-4 py-3 text-white rounded-lg focus:ring-2 focus:ring-[var(--accent-start)] focus:border-transparent transition-all" placeholder="Enter coupon name">
                         <span class="error-text">Coupon name is required</span>
                     </div>
 
                     <div class="space-y-2">
                         <label class="block text-sm font-medium flex items-center justify-between">
                             Coupon Code
-                            <span class="ml-2 text-xs bg-[var(--accent-start)]/20 text-[var(--accent-start)] px-2 py-1 rounded">UPPERCASE</span>
+                            <span class="ml-2 text-xs bg-[var(--accent-start)]/20 text-[var(--accent-start)] text-white py-1 rounded">UPPERCASE</span>
                         </label>
-                        <input value="<%= oldValue.code || '' %>" type="text" name="code" class="w-full bg-[var(--content-bg)] border border-white/10 px-4 py-3 rounded-lg uppercase focus:ring-2 focus:ring-[var(--accent-start)] focus:border-transparent transition-all" placeholder="Auto-generated code" readonly>
+                        <input value="<%= oldValue.code || '' %>" type="text" name="code" class="w-full bg-[var(--content-bg)] border border-white/10 px-4 py-3 text-white rounded-lg uppercase focus:ring-2 focus:ring-[var(--accent-start)] focus:border-transparent transition-all" placeholder="Auto-generated code" readonly>
                         <span class="error-text">Coupon code is required</span>
                     </div>
 
                     <div class="space-y-2">
-                        <label class="block text-sm font-medium">Offer Type</label>
-                        <select name="offerType" class="w-full bg-[var(--content-bg)] border border-white/10 px-4 py-3 rounded-lg focus:ring-2 focus:ring-[var(--accent-start)] focus:border-transparent transition-all">
+                        <label class="block text-sm font-medium text-white">Offer Type</label>
+                        <select name="offerType" class="w-full bg-[var(--content-bg)] border border-white/10 px-4 py-3 rounded-lg focus:ring-2 text-white focus:ring-[var(--accent-start)] focus:border-transparent transition-all">
                             <option value="<%= oldValue.offerType || '' %>"><%= oldValue.offerType || 'Select Offer Type' %></option>
                             <option value="percentage">Percentage</option>
                             <option value="flat">Flat</option>
@@ -211,32 +211,32 @@
                     </div>
 
                     <div class="space-y-2">
-                        <label class="block text-sm font-medium">Offer Value</label>
-                        <input value="<%= oldValue.offerValue || '' %>" type="number" name="offerValue" min="1" max="100" class="w-full bg-[var(--content-bg)] border border-white/10 px-4 py-3 rounded-lg focus:ring-2 focus:ring-[var(--accent-start)] focus:border-transparent transition-all" placeholder="Enter offer value">
+                        <label class="block text-sm font-medium text-white">Offer Value</label>
+                        <input value="<%= oldValue.offerValue || '' %>" type="number" name="offerValue" min="1" max="100" class="w-full bg-[var(--content-bg)] text-white border border-white/10 px-4 py-3 rounded-lg focus:ring-2 focus:ring-[var(--accent-start)] focus:border-transparent transition-all" placeholder="Enter offer value">
                         <span class="error-text">Offer value must be between 1 and 100</span>
                     </div>
 
                     <div class="space-y-2">
-                        <label class="block text-sm font-medium">Minimum Purchase Amount</label>
-                        <input value="<%= oldValue.minimumPrice || '' %>" type="number" name="minimumPrice" min="0" class="w-full bg-[var(--content-bg)] border border-white/10 px-4 py-3 rounded-lg focus:ring-2 focus:ring-[var(--accent-start)] focus:border-transparent transition-all" placeholder="Enter minimum amount">
+                        <label class="block text-sm font-medium text-white">Minimum Purchase Amount</label>
+                        <input value="<%= oldValue.minimumPrice || '' %>" type="number" name="minimumPrice" min="0" class="w-full bg-[var(--content-bg)] border text-white border-white/10 px-4 py-3 rounded-lg focus:ring-2 focus:ring-[var(--accent-start)] focus:border-transparent transition-all" placeholder="Enter minimum amount">
                         <span class="error-text">Minimum amount must be 0 or greater</span>
                     </div>
 
                     <div class="space-y-2">
-                        <label class="block text-sm font-medium">Expiry Date</label>
-                        <input value="<%= oldValue.expiredOn || '' %>" type="text" name="expiredOn" class="flatpickr-input w-full bg-[var(--content-bg)] border border-white/10 px-4 py-3 rounded-lg focus:ring-2 focus:ring-[var(--accent-start)] focus:border-transparent transition-all" placeholder="Select expiry date">
+                        <label class="block text-sm font-medium text-white">Expiry Date</label>
+                        <input value="<%= oldValue.expiredOn || '' %>" type="text" name="expiredOn" class="flatpickr-input w-full bg-[var(--content-bg)] border text-white border-white/10 px-4 py-3 rounded-lg focus:ring-2 focus:ring-[var(--accent-start)] focus:border-transparent transition-all" placeholder="Select expiry date">
                         <span class="error-text">Expiry date is required</span>
                     </div>
 
                     <div class="space-y-2">
-                        <label class="block text-sm font-medium">Usage Limit</label>
-                        <input value="<%= oldValue.usageLimit || '' %>" type="number" name="usageLimit" min="1" class="w-full bg-[var(--content-bg)] border border-white/10 px-4 py-3 rounded-lg focus:ring-2 focus:ring-[var(--accent-start)] focus:border-transparent transition-all" placeholder="Enter usage limit">
+                        <label class="block text-sm font-medium text-white">Usage Limit</label>
+                        <input value="<%= oldValue.usageLimit || '' %>" type="number" name="usageLimit" min="1" class="w-full bg-[var(--content-bg)] border border-white/10 px-4 text-white py-3 rounded-lg focus:ring-2 focus:ring-[var(--accent-start)] focus:border-transparent transition-all" placeholder="Enter usage limit">
                         <span class="error-text">Usage limit must be 1 or greater</span>
                     </div>
 
                     <div class="space-y-2">
-                        <label class="block text-sm font-medium">Usage Per User</label>
-                        <input value="<%= oldValue.usagePerUserLimit || '' %>" type="number" name="usagePerUserLimit" min="1" class="w-full bg-[var(--content-bg)] border border-white/10 px-4 py-3 rounded-lg focus:ring-2 focus:ring-[var(--accent-start)] focus:border-transparent transition-all" placeholder="Enter per user limit" value="1">
+                        <label class="block text-sm font-medium text-white">Usage Per User</label>
+                        <input value="<%= oldValue.usagePerUserLimit || '' %>" type="number" name="usagePerUserLimit" min="1" class="w-full bg-[var(--content-bg)] border text-white border-white/10 px-4 py-3 rounded-lg focus:ring-2 focus:ring-[var(--accent-start)] focus:border-transparent transition-all" placeholder="Enter per user limit" value="1">
                         <span class="error-text">Usage per user must be 1 or greater</span>
                     </div>
                 </div>
@@ -246,7 +246,7 @@
                         <input type="checkbox" name="isActive" checked>
                         <span class="toggle-slider"></span>
                     </label>
-                    <span class="text-sm font-medium">Active Status</span>
+                    <span class="text-sm font-medium text-white">Active Status</span>
                 </div>
 
                 <button type="submit" class="glass-effect bg-gradient-to-r from-[#d4af37] to-[#f9e076] text-white px-4 py-2 rounded-lg hover:scale-105 transition-all duration-300 mt-4 w-full py-4 font-medium">Create Coupon</button>
