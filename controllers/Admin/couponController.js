@@ -280,28 +280,41 @@ exports.updateCoupon = [
     }
 ];
 
-// Delete coupon
+// Delete coupon (Updated to handle both GET and DELETE)
 exports.deleteCoupon = async (req, res) => {
     try {
         const couponId = req.params.Id;
         const coupon = await Coupon.findById(couponId);
 
         if (!coupon) {
+            if (req.method === 'DELETE') {
+                return res.status(404).json({ message: 'Coupon not found' });
+            }
             req.flash('error', 'Coupon not found');
             return res.redirect('/admin/coupons');
         }
 
         if (coupon.couponUsed > 0) {
+            if (req.method === 'DELETE') {
+                return res.status(400).json({ message: 'Cannot delete coupon that has been used' });
+            }
             req.flash('error', 'Cannot delete coupon that has been used');
             return res.redirect('/admin/coupons');
         }
 
         await Coupon.findByIdAndDelete(couponId);
+
+        if (req.method === 'DELETE') {
+            return res.status(200).json({ message: 'Coupon deleted successfully', redirect: '/admin/coupons' });
+        }
         req.flash('success', 'Coupon deleted successfully');
         res.redirect('/admin/coupons');
 
     } catch (error) {
         console.error('Error in deleteCoupon:', error);
+        if (req.method === 'DELETE') {
+            return res.status(500).json({ message: 'An unexpected error occurred while deleting the coupon' });
+        }
         req.flash('error', 'An unexpected error occurred while deleting the coupon');
         res.redirect('/admin/coupons');
     }

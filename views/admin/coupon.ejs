@@ -180,28 +180,36 @@
 
         if (result.isConfirmed) {
           try {
-            // Use the same protocol as the page
             const deleteUrl = `${baseUrl}/admin/deleteCoupon/${couponId}`;
             const response = await fetch(deleteUrl, {
-              method: 'GET',
+              method: 'DELETE', // Changed to DELETE to match backend
+              headers: { 'Content-Type': 'application/json' },
               credentials: 'include' // Include cookies for session/flash messages
             });
 
-            if (response.redirected) {
-              // Follow the redirect manually to reload the page
-              window.location.href = response.url;
-            } else if (!response.ok) {
-              throw new Error(`Server error: ${response.status}`);
-            } else {
-              // Unexpected case: reload anyway
-              window.location.reload();
+            if (!response.ok) {
+              const errorData = await response.json();
+              throw new Error(errorData.message || 'Failed to delete coupon');
             }
+
+            const data = await response.json();
+            Swal.fire({
+              icon: 'success',
+              title: 'Deleted!',
+              text: 'Coupon has been deleted.',
+              confirmButtonColor: '#d4af37',
+              background: '#1e1e2f',
+              color: '#e5e7eb',
+              timer: 1500
+            }).then(() => {
+              window.location.href = data.redirect || '/admin/coupons';
+            });
           } catch (error) {
             console.error('Error deleting coupon:', error);
             Swal.fire({
               icon: 'error',
               title: 'Error',
-              text: 'Failed to delete coupon. Please try again.',
+              text: error.message || 'Failed to delete coupon. Please try again.',
               confirmButtonColor: '#d4af37',
               background: '#1e1e2f',
               color: '#e5e7eb'

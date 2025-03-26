@@ -78,6 +78,7 @@ router.post('/addCoupon', admin.isAdmin, couponController.postCreateCoupon);
 router.get('/editCoupon/:Id', admin.isAdmin, couponController.getEditCouponForm);
 router.post('/editCoupon/:Id', admin.isAdmin, couponController.updateCoupon);
 router.get('/deleteCoupon/:Id', admin.isAdmin, couponController.deleteCoupon);
+router.delete('/deleteCoupon/:Id', admin.isAdmin, couponController.deleteCoupon);
 
 // Return Request Management
 router.get('/return/requests', admin.isAdmin, returnController.getReturnRequests);
