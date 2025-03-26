@@ -37,10 +37,15 @@
         transition: opacity 0.3s ease;
     }
     .error-text {
-        color: #ff4444;
+        color: #ff4444; 
         font-size: 0.875rem;
-        margin-top: 0.25rem;
+        margin-top: 0.5rem; 
         display: none;
+    }
+    .text-white-spaced {
+        color: #ffffff; 
+        letter-spacing: 0.025em; 
+        padding: 0.25rem 0;
     }
 </style>
 
@@ -74,25 +79,25 @@
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div class="space-y-6">
                             <div>
-                                <label for="name" class="block text-sm font-medium text-[var(--text-color)] mb-2">Product Name*</label>
+                                <label for="name" class="block text-sm font-medium text-white-spaced mb-2">Product Name*</label>
                                 <input type="text" id="name" name="name" required 
                                        class="w-full px-4 py-3 rounded-lg bg-[var(--content-bg)] border border-white/10 text-[var(--text-color)] placeholder-gray-500 focus:border-[#d4af37] focus:ring-2 focus:ring-[#d4af37]/20 transition-all duration-300 hover:bg-[var(--secondary-bg)]">
                                 <p id="nameError" class="error-text">Product name is required</p>
                             </div>
                             <div>
-                                <label for="brand" class="block text-sm font-medium text-[var(--text-color)] mb-2">Brand*</label>
+                                <label for="brand" class="block text-sm font-medium text-white-spaced mb-2">Brand*</label>
                                 <input type="text" id="brand" name="brand" required 
                                        class="w-full px-4 py-3 rounded-lg bg-[var(--content-bg)] border border-white/10 text-[var(--text-color)] placeholder-gray-500 focus:border-[#d4af37] focus:ring-2 focus:ring-[#d4af37]/20 transition-all duration-300 hover:bg-[var(--secondary-bg)]">
                                 <p id="brandError" class="error-text">Brand is required</p>
                             </div>
                             <div>
-                                <label for="description" class="block text-sm font-medium text-[var(--text-color)] mb-2">Description*</label>
+                                <label for="description" class="block text-sm font-medium text-white-spaced mb-2">Description*</label>
                                 <textarea id="description" name="description" required rows="4" 
                                           class="w-full px-4 py-3 rounded-lg bg-[var(--content-bg)] border border-white/10 text-[var(--text-color)] placeholder-gray-500 focus:border-[#d4af37] focus:ring-2 focus:ring-[#d4af37]/20 transition-all duration-300 hover:bg-[var(--secondary-bg)]"></textarea>
                                 <p id="descriptionError" class="error-text">Description is required</p>
                             </div>
                             <div>
-                                <label for="category" class="block text-sm font-medium text-[var(--text-color)] mb-2">Category*</label>
+                                <label for="category" class="block text-sm font-medium text-white-spaced mb-2">Category*</label>
                                 <select id="category" name="category" required 
                                         class="w-full px-4 py-3 rounded-lg bg-[var(--content-bg)] border border-white/10 text-[var(--text-color)] focus:border-[#d4af37] focus:ring-2 focus:ring-[#d4af37]/20 transition-all duration-300 hover:bg-[var(--secondary-bg)]">
                                     <option value="">Select a category</option>
@@ -104,20 +109,20 @@
                             </div>
                             <div class="grid grid-cols-2 gap-4">
                                 <div>
-                                    <label for="price" class="block text-sm font-medium text-[var(--text-color)] mb-2">Price (₹)*</label>
+                                    <label for="price" class="block text-sm font-medium text-white-spaced mb-2">Price (₹)*</label>
                                     <input type="number" id="price" name="price" required min="0" step="0.01" 
                                            class="w-full px-4 py-3 rounded-lg bg-[var(--content-bg)] border border-white/10 text-[var(--text-color)] placeholder-gray-500 focus:border-[#d4af37] focus:ring-2 focus:ring-[#d4af37]/20 transition-all duration-300 hover:bg-[var(--secondary-bg)]">
                                     <p id="priceError" class="error-text">Price must be a positive number</p>
                                 </div>
                                 <div>
-                                    <label for="discountPercentage" class="block text-sm font-medium text-[var(--text-color)] mb-2">Discount (%)</label>
-                                    <input type="number" id="discountPercentage" name="discountPercentage" min="0" max="100" step="0.1" 
+                                    <label for="productOffer" class="block text-sm font-medium text-white-spaced mb-2">Discount (%)</label>
+                                    <input type="number" id="productOffer" name="productOffer" min="0" max="100" step="0.1" 
                                            class="w-full px-4 py-3 rounded-lg bg-[var(--content-bg)] border border-white/10 text-[var(--text-color)] placeholder-gray-500 focus:border-[#d4af37] focus:ring-2 focus:ring-[#d4af37]/20 transition-all duration-300 hover:bg-[var(--secondary-bg)]">
                                     <p id="discountError" class="error-text">Discount must be between 0 and 100</p>
                                 </div>
                             </div>
                             <div>
-                                <label for="stock" class="block text-sm font-medium text-[var(--text-color)] mb-2">Stock Quantity*</label>
+                                <label for="stock" class="block text-sm font-medium text-white-spaced mb-2">Stock Quantity*</label>
                                 <input type="number" id="stock" name="stock" required min="0" 
                                        class="w-full px-4 py-3 rounded-lg bg-[var(--content-bg)] border border-white/10 text-[var(--text-color)] placeholder-gray-500 focus:border-[#d4af37] focus:ring-2 focus:ring-[#d4af37]/20 transition-all duration-300 hover:bg-[var(--secondary-bg)]">
                                 <p id="stockError" class="error-text">Stock must be a positive integer</p>
@@ -125,28 +130,28 @@
                         </div>
                         <div class="space-y-6">
                             <div class="glass-effect p-6 rounded-lg">
-                                <h3 class="text-lg font-medium text-[var(--text-color)] mb-4">Specifications</h3>
+                                <h3 class="text-lg font-medium text-white-spaced mb-4">Specifications</h3>
                                 <div class="space-y-4">
                                     <div>
-                                        <label for="processor" class="block text-sm font-medium text-[var(--text-color)] mb-2">Processor*</label>
+                                        <label for="processor" class="block text-sm font-medium text-white-spaced mb-2">Processor*</label>
                                         <input type="text" id="processor" name="specifications[processor]" required 
                                                class="w-full px-4 py-3 rounded-lg bg-[var(--content-bg)] border border-white/10 text-[var(--text-color)] placeholder-gray-500 focus:border-[#d4af37] focus:ring-2 focus:ring-[#d4af37]/20 transition-all duration-300 hover:bg-[var(--secondary-bg)]">
                                         <p id="processorError" class="error-text">Processor is required</p>
                                     </div>
                                     <div>
-                                        <label for="ram" class="block text-sm font-medium text-[var(--text-color)] mb-2">RAM*</label>
+                                        <label for="ram" class="block text-sm font-medium text-white-spaced mb-2">RAM*</label>
                                         <input type="text" id="ram" name="specifications[ram]" required 
                                                class="w-full px-4 py-3 rounded-lg bg-[var(--content-bg)] border border-white/10 text-[var(--text-color)] placeholder-gray-500 focus:border-[#d4af37] focus:ring-2 focus:ring-[#d4af37]/20 transition-all duration-300 hover:bg-[var(--secondary-bg)]">
                                         <p id="ramError" class="error-text">RAM is required</p>
                                     </div>
                                     <div>
-                                        <label for="storage" class="block text-sm font-medium text-[var(--text-color)] mb-2">Storage*</label>
+                                        <label for="storage" class="block text-sm font-medium text-white-spaced mb-2">Storage*</label>
                                         <input type="text" id="storage" name="specifications[storage]" required 
                                                class="w-full px-4 py-3 rounded-lg bg-[var(--content-bg)] border border-white/10 text-[var(--text-color)] placeholder-gray-500 focus:border-[#d4af37] focus:ring-2 focus:ring-[#d4af37]/20 transition-all duration-300 hover:bg-[var(--secondary-bg)]">
                                         <p id="storageError" class="error-text">Storage is required</p>
                                     </div>
                                     <div>
-                                        <label for="graphics" class="block text-sm font-medium text-[var(--text-color)] mb-2">Graphics*</label>
+                                        <label for="graphics" class="block text-sm font-medium text-white-spaced mb-2">Graphics*</label>
                                         <input type="text" id="graphics" name="specifications[graphics]" required 
                                                class="w-full px-4 py-3 rounded-lg bg-[var(--content-bg)] border border-white/10 text-[var(--text-color)] placeholder-gray-500 focus:border-[#d4af37] focus:ring-2 focus:ring-[#d4af37]/20 transition-all duration-300 hover:bg-[var(--secondary-bg)]">
                                         <p id="graphicsError" class="error-text">Graphics is required</p>
@@ -154,23 +159,23 @@
                                 </div>
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-[var(--text-color)] mb-2">Product Images* (Max 5 images)</label>
+                                <label class="block text-sm font-medium text-white-spaced mb-2">Product Images* (Max 5 images)</label>
                                 <input type="file" id="images" name="images" multiple accept="image/*" 
                                        class="w-full px-4 py-3 rounded-lg bg-[var(--content-bg)] border border-white/10 text-[var(--text-color)] focus:border-[#d4af37] focus:ring-2 focus:ring-[#d4af37]/20 transition-all duration-300 hover:bg-[var(--secondary-bg)]">
                                 <div id="imagePreviewContainer" class="mt-4 grid grid-cols-2 sm:grid-cols-3 gap-4"></div>
                                 <p id="imageError" class="error-text">Please upload 1-5 images</p>
                             </div>
                             <div class="glass-effect p-4 rounded-lg">
-                                <p class="text-[var(--text-color)] text-sm mb-2">Price Summary:</p>
-                                <div class="flex justify-between text-[var(--text-color)]">
+                                <p class="text-white-spaced text-sm mb-2">Price Summary:</p>
+                                <div class="flex justify-between text-white-spaced">
                                     <span>Original Price:</span>
                                     <span id="originalPrice">₹0.00</span>
                                 </div>
-                                <div class="flex justify-between text-[var(--text-color)] mt-1">
+                                <div class="flex justify-between text-white-spaced mt-2">
                                     <span>Discount:</span>
                                     <span id="discountAmount">₹0.00</span>
                                 </div>
-                                <div class="flex justify-between text-[var(--text-color)] mt-1 font-medium">
+                                <div class="flex justify-between text-white-spaced mt-2 font-medium">
                                     <span>Final Price:</span>
                                     <span id="finalPrice">₹0.00</span>
                                 </div>
@@ -197,7 +202,7 @@
 // DOM Elements
 const form = document.getElementById('addProductForm');
 const priceInput = document.getElementById('price');
-const discountInput = document.getElementById('discountPercentage');
+const discountInput = document.getElementById('productOffer');
 const originalPrice = document.getElementById('originalPrice');
 const discountAmount = document.getElementById('discountAmount');
 const finalPrice = document.getElementById('finalPrice');
@@ -213,7 +218,7 @@ const validationFields = {
     category: { input: document.getElementById('category'), error: document.getElementById('categoryError'), validate: val => val !== '' },
     price: { input: document.getElementById('price'), error: document.getElementById('priceError'), validate: val => !isNaN(val) && parseFloat(val) >= 0 },
     stock: { input: document.getElementById('stock'), error: document.getElementById('stockError'), validate: val => !isNaN(val) && parseInt(val) >= 0 },
-    discountPercentage: { input: document.getElementById('discountPercentage'), error: document.getElementById('discountError'), validate: val => val === '' || (!isNaN(val) && parseFloat(val) >= 0 && parseFloat(val) <= 100) },
+    productOffer: { input: document.getElementById('productOffer'), error: document.getElementById('discountError'), validate: val => val === '' || (!isNaN(val) && parseFloat(val) >= 0 && parseFloat(val) <= 100) },
     processor: { input: document.getElementById('processor'), error: document.getElementById('processorError'), validate: val => val.trim().length > 0 },
     ram: { input: document.getElementById('ram'), error: document.getElementById('ramError'), validate: val => val.trim().length > 0 },
     storage: { input: document.getElementById('storage'), error: document.getElementById('storageError'), validate: val => val.trim().length > 0 },

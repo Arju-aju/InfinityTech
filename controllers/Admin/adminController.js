@@ -9,9 +9,6 @@ const PDFDocument = require('pdfkit');
 const ExcelJS = require('exceljs');
 const QuickChart = require('quickchart-js');
 
-// Note: No need to import 'fetch' as it's built into Node.js 18+
-// If using Node.js < 18.19.0, run with --experimental-fetch
-
 const pageerror = async (req, res) => {
     res.render('admin-error');
 };
@@ -82,9 +79,17 @@ const applyCouponToOrder = async (req, res) => {
 
         order.offerApplied = discount;
         order.couponApplied = coupon._id;
+        order.couponDiscount = discount;
+        order.couponCode = coupon.code;
         await order.save();
 
         coupon.couponUsed += 1;
+        const userIndex = coupon.users.findIndex(u => u.userId.toString() === order.user.toString());
+        if (userIndex >= 0) {
+            coupon.users[userIndex].usageCount += 1;
+        } else {
+            coupon.users.push({ userId: order.user, usageCount: 1 });
+        }
         await coupon.save();
 
         res.json({ success: true, message: "Coupon applied successfully", discount });
@@ -117,8 +122,10 @@ const loadDashboard = async (req, res) => {
                     orders: { $sum: 1 },
                     sales: { $sum: "$orderAmount" },
                     totalItems: { $sum: { $sum: "$products.quantity" } },
-                    totalCouponsUsed: { $sum: { $cond: [{ $ne: ["$couponApplied", null] }, 1, 0] } },
-                    couponDeductions: { $sum: "$offerApplied" }
+                    totalCouponsUsed: {
+                        $sum: { $cond: { if: { $and: [{ $ne: ["$couponCode", null] }, { $ne: ["$couponCode", ""] }] }, then: 1, else: 0 } }
+                    },
+                    couponDeductions: { $sum: "$couponDiscount" }
                 }
             },
             { $sort: { _id: 1 } },
@@ -129,13 +136,22 @@ const loadDashboard = async (req, res) => {
             { $group: { _id: null, totalCoupons: { $sum: 1 }, activeCoupons: { $sum: { $cond: ["$isActive", 1, 0] } } } }
         ]);
 
+        const recentOrders = await Order.find({})
+            .sort({ orderDate: -1 })
+            .limit(5)
+            .populate('user', 'name email') // Updated to include email
+            .lean()
+            .select('orderDate orderAmount paymentMethod status user');
+        console.log('Recent Orders:', recentOrders); // Debugging
+
         res.render('adminDashboard', {
             path: req.path,
             userCount,
             totalOrders,
             totalSales,
             initialSales: JSON.stringify(initialSales),
-            couponStats: JSON.stringify(couponStats[0] || { totalCoupons: 0, activeCoupons: 0 })
+            couponStats: JSON.stringify(couponStats[0] || { totalCoupons: 0, activeCoupons: 0 }),
+            recentOrders: JSON.stringify(recentOrders)
         });
     } catch (error) {
         console.error("Dashboard error:", error);
@@ -187,8 +203,10 @@ const getSalesReport = async (req, res) => {
                     orders: { $sum: 1 },
                     sales: { $sum: "$orderAmount" },
                     totalItems: { $sum: { $sum: "$products.quantity" } },
-                    totalCouponsUsed: { $sum: { $cond: [{ $ne: ["$couponApplied", null] }, 1, 0] } },
-                    couponDeductions: { $sum: "$offerApplied" }
+                    totalCouponsUsed: {
+                        $sum: { $cond: { if: { $and: [{ $ne: ["$couponCode", null] }, { $ne: ["$couponCode", ""] }] }, then: 1, else: 0 } }
+                    },
+                    couponDeductions: { $sum: "$couponDiscount" }
                 }
             },
             { $project: { date: "$_id", orders: 1, sales: 1, totalItems: 1, totalCouponsUsed: 1, couponDeductions: 1, _id: 0 } },
@@ -235,7 +253,6 @@ const downloadSalesReport = async (req, res) => {
             default: dateFormat = { $dateToString: { format: "%Y-%m-%d", date: "$orderDate" } };
         }
 
-        // Fetch Data
         const salesData = await Order.aggregate([
             { $match: { orderDate: { $gte: start, $lte: end }, status: "Delivered" } },
             {
@@ -244,8 +261,10 @@ const downloadSalesReport = async (req, res) => {
                     orders: { $sum: 1 },
                     sales: { $sum: "$orderAmount" },
                     totalItems: { $sum: { $sum: "$products.quantity" } },
-                    totalCouponsUsed: { $sum: { $cond: [{ $ne: ["$couponApplied", null] }, 1, 0] } },
-                    couponDeductions: { $sum: "$offerApplied" }
+                    totalCouponsUsed: {
+                        $sum: { $cond: { if: { $and: [{ $ne: ["$couponCode", null] }, { $ne: ["$couponCode", ""] }] }, then: 1, else: 0 } }
+                    },
+                    couponDeductions: { $sum: "$couponDiscount" }
                 }
             },
             { $project: { date: "$_id", orders: 1, sales: 1, totalItems: 1, totalCouponsUsed: 1, couponDeductions: 1, _id: 0 } },
@@ -306,7 +325,7 @@ const downloadSalesReport = async (req, res) => {
         ]);
 
         const locationData = await Order.aggregate([
-            { $match: { orderDate: { $gte: start, $lte: end } } }, // Fixed typo from 'MosquitoorderDate'
+            { $match: { orderDate: { $gte: start, $lte: end } } },
             { $group: { _id: "$shippingAddress.city", sales: { $sum: "$orderAmount" }, orders: { $sum: 1 } } },
             { $sort: { sales: -1 } },
             { $limit: 5 }
@@ -316,21 +335,16 @@ const downloadSalesReport = async (req, res) => {
         const newCustomers = await User.countDocuments({ createdAt: { $gte: start, $lte: end } });
         const returningCustomers = totalCustomers - newCustomers;
 
-        // Updated chartGenerator using native fetch
         const chartGenerator = async (config) => {
             const chart = new QuickChart();
             chart.setConfig(config);
             chart.setWidth(600);
             chart.setHeight(400);
             const url = chart.getUrl();
-            console.log('Fetching chart from:', url); // Debug log
-            const response = await fetch(url); // Native fetch
-            if (!response.ok) {
-                throw new Error(`Failed to fetch chart image: ${response.statusText}`);
-            }
-            const arrayBuffer = await response.arrayBuffer(); // Native fetch uses arrayBuffer()
-            const buffer = Buffer.from(arrayBuffer); // Convert to Buffer for pdfkit/exceljs
-            return buffer;
+            const response = await fetch(url);
+            if (!response.ok) throw new Error(`Failed to fetch chart image: ${response.statusText}`);
+            const arrayBuffer = await response.arrayBuffer();
+            return Buffer.from(arrayBuffer);
         };
 
         if (format === 'pdf') {
@@ -339,7 +353,6 @@ const downloadSalesReport = async (req, res) => {
             res.setHeader('Content-Disposition', `attachment; filename=sales-report-${startDate}-to-${endDate}.pdf`);
             doc.pipe(res);
 
-            // Cover Page
             doc.fontSize(25).font('Helvetica-Bold').fillColor('#2c3e50').text('E-Commerce Sales Report', { align: 'center' });
             doc.moveDown(2);
             doc.fontSize(14).font('Helvetica').fillColor('#34495e').text('InfinityTech', { align: 'center' });
@@ -348,10 +361,9 @@ const downloadSalesReport = async (req, res) => {
             doc.text(`Generated On: ${new Date().toLocaleString()}`, { align: 'center' });
             doc.text(`Prepared By: ${req.session.admin.email}`, { align: 'center' });
             doc.moveDown(2);
-            doc.fontSize(10).text(`Report Summary: Sales totaled ₹${summary.totalSales.toFixed(2)} with ${summary.totalOrders} orders. Coupon usage increased by ${summary.totalCouponsUsed} instances.`, { align: 'center' });
+            doc.fontSize(10).text(`Report Summary: Sales totaled ₹${summary.totalSales.toFixed(2)} with ${summary.totalOrders} orders.`, { align: 'center' });
             doc.addPage();
 
-            // Table of Contents
             doc.fontSize(18).font('Helvetica-Bold').fillColor('#2c3e50').text('Table of Contents', 50);
             doc.moveDown(1);
             doc.fontSize(12).font('Helvetica').fillColor('#34495e')
@@ -363,7 +375,6 @@ const downloadSalesReport = async (req, res) => {
                 .text('6. Customer & Location Insights', 50, doc.y + 100).text('9', 500, doc.y + 100, { align: 'right' });
             doc.addPage();
 
-            // 1. Sales Overview
             doc.fontSize(18).font('Helvetica-Bold').text('1. Sales Overview', 50);
             doc.moveDown(1);
             doc.fontSize(12).font('Helvetica')
@@ -381,7 +392,6 @@ const downloadSalesReport = async (req, res) => {
             doc.image(salesChart, 50, doc.y + 20, { width: 500 });
             doc.addPage();
 
-            // 2. Discounts & Coupons
             doc.fontSize(18).font('Helvetica-Bold').text('2. Discounts & Coupons', 50);
             doc.moveDown(1);
             doc.fontSize(12).font('Helvetica')
@@ -395,7 +405,6 @@ const downloadSalesReport = async (req, res) => {
             });
             doc.addPage();
 
-            // 3. Payment Breakdown
             doc.fontSize(18).font('Helvetica-Bold').text('3. Payment Breakdown', 50);
             doc.moveDown(1);
             paymentData.forEach((method, i) => {
@@ -410,7 +419,6 @@ const downloadSalesReport = async (req, res) => {
             doc.image(paymentChart, 50, doc.y + 20, { width: 500 });
             doc.addPage();
 
-            // 4. Top-Selling Insights
             doc.fontSize(18).font('Helvetica-Bold').text('4. Top-Selling Insights', 50);
             doc.moveDown(1);
             doc.fontSize(12).font('Helvetica').text('Top Products:', 50);
@@ -425,7 +433,6 @@ const downloadSalesReport = async (req, res) => {
             doc.image(productChart, 50, doc.y + 20, { width: 500 });
             doc.addPage();
 
-            // 5. Order & Delivery Status
             doc.fontSize(18).font('Helvetica-Bold').text('5. Order & Delivery Status', 50);
             doc.moveDown(1);
             orderStatus.forEach((status, i) => {
@@ -433,7 +440,6 @@ const downloadSalesReport = async (req, res) => {
             });
             doc.addPage();
 
-            // 6. Customer & Location Insights
             doc.fontSize(18).font('Helvetica-Bold').text('6. Customer & Location Insights', 50);
             doc.moveDown(1);
             doc.fontSize(12).font('Helvetica').text('Top Sales by City:', 50);
@@ -450,7 +456,6 @@ const downloadSalesReport = async (req, res) => {
             workbook.creator = req.session.admin.email;
             workbook.created = new Date();
 
-            // Sheet 1: Sales Overview
             const salesSheet = workbook.addWorksheet('Sales Overview');
             salesSheet.mergeCells('A1:F1');
             salesSheet.getCell('A1').value = 'E-Commerce Sales Report';
@@ -476,7 +481,6 @@ const downloadSalesReport = async (req, res) => {
             });
             salesSheet.addImage(salesChartImg, 'A12:F20');
 
-            // Sheet 2: Discounts & Coupons
             const couponSheet = workbook.addWorksheet('Discounts & Coupons');
             couponSheet.addRow(['Total Coupons Used', summary.totalCouponsUsed]);
             couponSheet.addRow(['Total Discounts Applied (%)', (summary.couponDeductions / summary.totalSales * 100 || 0).toFixed(2)]);
@@ -486,7 +490,6 @@ const downloadSalesReport = async (req, res) => {
             couponsUsed.forEach(c => couponSheet.addRow([c.code, `${c.offerValue}${c.offerType === 'percentage' ? '%' : '₹'}`]));
             couponSheet.columns.forEach(col => col.width = 20);
 
-            // Sheet 3: Payment Breakdown
             const paymentSheet = workbook.addWorksheet('Payment Breakdown');
             paymentSheet.addRow(['Payment Method', 'Orders', 'Amount (₹)']).font = { bold: true };
             paymentData.forEach(p => paymentSheet.addRow([p._id, p.count, p.amount.toFixed(2)]));
@@ -502,7 +505,6 @@ const downloadSalesReport = async (req, res) => {
             });
             paymentSheet.addImage(paymentChartImg, 'A7:F15');
 
-            // Sheet 4: Top-Selling Insights
             const topSheet = workbook.addWorksheet('Top-Selling Insights');
             topSheet.addRow(['Top Products']).font = { bold: true };
             topSheet.addRow(['Name', 'Units Sold', 'Revenue (₹)']).font = { bold: true };
@@ -521,13 +523,11 @@ const downloadSalesReport = async (req, res) => {
             });
             topSheet.addImage(productChartImg, 'A10:F20');
 
-            // Sheet 5: Order & Delivery Status
             const orderSheet = workbook.addWorksheet('Order & Delivery Status');
             orderSheet.addRow(['Status', 'Count', 'Amount (₹)']).font = { bold: true };
             orderStatus.forEach(s => orderSheet.addRow([s._id, s.count, s.amount.toFixed(2)]));
             orderSheet.columns.forEach(col => col.width = 15);
 
-            // Sheet 6: Customer & Location Insights
             const locationSheet = workbook.addWorksheet('Customer & Location');
             locationSheet.addRow(['City', 'Orders', 'Sales (₹)']).font = { bold: true };
             locationData.forEach(l => locationSheet.addRow([l._id, l.orders, l.sales.toFixed(2)]));
@@ -562,7 +562,7 @@ const getTopSellers = async (req, res) => {
             { $group: { _id: "$products.productId", value: { $sum: "$products.totalPrice" }, quantity: { $sum: "$products.quantity" } } },
             { $lookup: { from: "products", localField: "_id", foreignField: "_id", as: "product" } },
             { $unwind: "$product" },
-            { $project: { name: "$product.name", value: 1, quantity: 1, image: "$product.image" } },
+            { $project: { name: "$product.name", value: 1, quantity: 1 } },
             { $sort: { value: -1 } },
             { $limit: 10 }
         ]);
@@ -600,7 +600,7 @@ const getDetailedOrders = async (req, res) => {
 
         const orders = await Order.find({
             orderDate: { $gte: start, $lte: end }
-        }).populate('userId', 'name').lean();
+        }).populate('user', 'name email').lean();
 
         res.status(200).json({ success: true, data: orders });
     } catch (error) {

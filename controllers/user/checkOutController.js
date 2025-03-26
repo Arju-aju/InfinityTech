@@ -31,15 +31,14 @@ exports.renderCheckout = async (req, res) => {
     const shippingCharge = subtotal > 500 ? 0 : 50;
     const totalAmount = subtotal + shippingCharge;
 
-    // Fetch available coupons with corrected query
     const coupons = await Coupon.find({
       isActive: true,
       expiredOn: { $gte: new Date() },
       $or: [
-        { users: { $not: { $elemMatch: { userId } } } }, // User hasn't used the coupon yet
+        { users: { $not: { $elemMatch: { userId } } } },
         {
           $and: [
-            { users: { $elemMatch: { userId } } }, // User exists in the array
+            { users: { $elemMatch: { userId } } },
             {
               $expr: {
                 $lt: [
@@ -159,6 +158,7 @@ exports.initiateCheckout = async (req, res) => {
       paymentMethod,
       couponCode: couponCode || null,
       couponDiscount,
+      couponApplied: couponCode ? true : null, // Set couponApplied based on couponCode
       status: 'Pending',
       paymentStatus: 'pending'
     };
@@ -246,11 +246,13 @@ exports.createRazorpayOrder = async (req, res) => {
         paymentStatus: 'pending',
         couponCode: couponCode || null,
         couponDiscount: couponDiscount || 0,
+        couponApplied: couponCode ? true : null, // Set couponApplied based on couponCode
         razorpayDetails: { orderId: razorpayOrder.id }
       });
     } else {
       order.paymentStatus = 'pending';
       order.razorpayDetails.orderId = razorpayOrder.id;
+      if (couponCode) order.couponApplied = true; // Update couponApplied if couponCode exists
       await order.save();
     }
 
@@ -597,6 +599,9 @@ exports.applyCoupon = async (req, res) => {
 async function handleCODOrder(orderData, cart, session, res) {
   orderData.paymentStatus = 'pending';
   orderData.status = 'Processing';
+  if (orderData.couponCode) {
+    orderData.couponApplied = true; // Set couponApplied to true if couponCode exists
+  }
 
   const order = await Order.create([orderData], { session });
   await reduceStock(order[0].products, session);
@@ -619,6 +624,9 @@ async function handleWalletOrder(orderData, cart, userId, session, res) {
 
   orderData.paymentStatus = 'paid';
   orderData.status = 'Processing';
+  if (orderData.couponCode) {
+    orderData.couponApplied = true; // Set couponApplied to true if couponCode exists
+  }
 
   const order = await Order.create([orderData], { session });
 
@@ -641,6 +649,9 @@ async function handleWalletOrder(orderData, cart, userId, session, res) {
 }
 
 async function handleRazorpayOrder(orderData, cart, session, res) {
+  if (orderData.couponCode) {
+    orderData.couponApplied = true; // Set couponApplied to true if couponCode exists
+  }
   const order = await Order.create([orderData], { session });
   await session.commitTransaction();
 

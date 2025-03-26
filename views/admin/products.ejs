@@ -1,4 +1,3 @@
-<!-- products.ejs -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -68,7 +67,8 @@
         }
 
         .pagination-button {
-            @apply inline-flex items-center px-3 py-2 glass-effect-dark text-sm text-white hover:bg-[var(--secondary-bg)] transition-all duration-300 border-r border-white/10;
+            @apply inline-flex items-center px-4 py-2 glass-effect-dark text-sm text-white hover:bg-[var(--secondary-bg)] transition-all duration-300 border-r border-white/10;
+            letter-spacing: 0.025em; /* Added for proper spacing */
         }
 
         .pagination-button.active {
@@ -97,6 +97,12 @@
         @keyframes slideIn {
             from { transform: translateX(-100%); }
             to { transform: translateX(0); }
+        }
+
+        .text-white-spaced {
+            color: #ffffff; /* Explicit white color */
+            letter-spacing: 0.025em; /* Slight letter spacing for readability */
+            padding: 0.25rem 0; /* Vertical padding for spacing */
         }
     </style>
 </head>
@@ -258,15 +264,15 @@
                         <table class="min-w-full divide-y divide-white/10">
                             <thead>
                                 <tr class="bg-[var(--secondary-bg)]">
-                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-[var(--text-color)] uppercase tracking-wider">Product</th>
-                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-[var(--text-color)] uppercase tracking-wider">Category</th>
-                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-[var(--text-color)] uppercase tracking-wider">Stock</th>
-                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-[var(--text-color)] uppercase tracking-wider">Price</th>
-                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-[var(--text-color)] uppercase tracking-wider">Discount</th>
-                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-[var(--text-color)] uppercase tracking-wider">Status</th>
-                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-[var(--text-color)] uppercase tracking-wider">Listing</th>
-                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-[var(--text-color)] uppercase tracking-wider">Featured</th>
-                                    <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-[var(--text-color)] uppercase tracking-wider">Actions</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-white-spaced uppercase tracking-wider">Product</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-white-spaced uppercase tracking-wider">Category</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-white-spaced uppercase tracking-wider">Stock</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-white-spaced uppercase tracking-wider">Price</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-white-spaced uppercase tracking-wider">Discount</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-white-spaced uppercase tracking-wider">Status</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-white-spaced uppercase tracking-wider">Listing</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-white-spaced uppercase tracking-wider">Featured</th>
+                                    <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-white-spaced uppercase tracking-wider">Actions</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-white/10 bg-[var(--content-bg)]/80">
@@ -343,68 +349,68 @@
                     </div>
                 </div>
 
-            <!-- Pagination -->
-            <div class="pagination-container">
-                <% if (pagination.totalPages > 1) { %>
-                    <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
-                        <!-- Previous Button -->
-                        <% if (pagination.hasPrevPage) { %>
-                            <a href="/admin/products?page=<%= pagination.currentPage - 1 %>&limit=<%= pagination.limit %>" 
-                            class="pagination-button rounded-l-md">
-                                <span class="sr-only">Previous</span>
-                                <i class="fas fa-chevron-left"></i>
-                            </a>
-                        <% } else { %>
-                            <span class="pagination-button rounded-l-md opacity-50 cursor-not-allowed">
-                                <i class="fas fa-chevron-left"></i>
-                            </span>
-                        <% } %>
-                        
-                        <!-- Page Numbers -->
-                        <% let startPage = Math.max(1, pagination.currentPage - 2); %>
-                        <% let endPage = Math.min(pagination.totalPages, startPage + 4); %>
-                        <% startPage = Math.max(1, endPage - 4); %>
-
-                        <% if (startPage > 1) { %>
-                            <a href="/admin/products?page=1&limit=<%= pagination.limit %>" 
-                            class="pagination-button">1</a>
-                            <% if (startPage > 2) { %>
-                                <span class="pagination-button">...</span>
+                <!-- Pagination -->
+                <div class="pagination-container">
+                    <% if (pagination.totalPages > 1) { %>
+                        <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+                            <!-- Previous Button -->
+                            <% if (pagination.hasPrevPage) { %>
+                                <a href="/admin/products?page=<%= pagination.currentPage - 1 %>&limit=<%= pagination.limit %>" 
+                                   class="pagination-button rounded-l-md">
+                                    <span class="sr-only">Previous</span>
+                                    <i class="fas fa-chevron-left"></i>
+                                </a>
+                            <% } else { %>
+                                <span class="pagination-button rounded-l-md opacity-50 cursor-not-allowed">
+                                    <i class="fas fa-chevron-left"></i>
+                                </span>
                             <% } %>
-                        <% } %>
                             
-                        <% for(let i = startPage; i <= endPage; i++) { %>
-                            <a href="/admin/products?page=<%= i %>&limit=<%= pagination.limit %>" 
-                            class="pagination-button <%= pagination.currentPage === i ? 'active' : '' %>">
-                                <%= i %>
-                            </a>
-                        <% } %>
-                        
-                        <% if (endPage < pagination.totalPages) { %>
-                            <% if (endPage < pagination.totalPages - 1) { %>
-                                <span class="pagination-button">...</span>
+                            <!-- Page Numbers -->
+                            <% let startPage = Math.max(1, pagination.currentPage - 2); %>
+                            <% let endPage = Math.min(pagination.totalPages, startPage + 4); %>
+                            <% startPage = Math.max(1, endPage - 4); %>
+
+                            <% if (startPage > 1) { %>
+                                <a href="/admin/products?page=1&limit=<%= pagination.limit %>" 
+                                   class="pagination-button">1</a>
+                                <% if (startPage > 2) { %>
+                                    <span class="pagination-button">...</span>
+                                <% } %>
                             <% } %>
-                            <a href="/admin/products?page=<%= pagination.totalPages %>&limit=<%= pagination.limit %>" 
-                            class="pagination-button">
-                                <%= pagination.totalPages %>
-                            </a>
-                        <% } %>
-                        
-                        <!-- Next Button -->
-                        <% if (pagination.hasNextPage) { %>
-                            <a href="/admin/products?page=<%= pagination.currentPage + 1 %>&limit=<%= pagination.limit %>" 
-                            class="pagination-button rounded-r-md">
-                                <span class="sr-only">Next</span>
-                                <i class="fas fa-chevron-right"></i>
-                            </a>
-                        <% } else { %>
-                            <span class="pagination-button rounded-r-md opacity-50 cursor-not-allowed">
-                                <i class="fas fa-chevron-right"></i>
-                            </span>
-                        <% } %>
-                    </nav>
-                <% } %>
-            </div>
+                                
+                            <% for(let i = startPage; i <= endPage; i++) { %>
+                                <a href="/admin/products?page=<%= i %>&limit=<%= pagination.limit %>" 
+                                   class="pagination-button <%= pagination.currentPage === i ? 'active' : '' %>">
+                                    <%= i %>
+                                </a>
+                            <% } %>
+                            
+                            <% if (endPage < pagination.totalPages) { %>
+                                <% if (endPage < pagination.totalPages - 1) { %>
+                                    <span class="pagination-button">...</span>
+                                <% } %>
+                                <a href="/admin/products?page=<%= pagination.totalPages %>&limit=<%= pagination.limit %>" 
+                                   class="pagination-button">
+                                    <%= pagination.totalPages %>
+                                </a>
+                            <% } %>
+                            
+                            <!-- Next Button -->
+                            <% if (pagination.hasNextPage) { %>
+                                <a href="/admin/products?page=<%= pagination.currentPage + 1 %>&limit=<%= pagination.limit %>" 
+                                   class="pagination-button rounded-r-md">
+                                    <span class="sr-only">Next</span>
+                                    <i class="fas fa-chevron-right"></i>
+                                </a>
+                            <% } else { %>
+                                <span class="pagination-button rounded-r-md opacity-50 cursor-not-allowed">
+                                    <i class="fas fa-chevron-right"></i>
+                                </span>
+                            <% } %>
+                        </nav>
+                    <% } %>
+                </div>
             </div>
         </div>
     </main>

@@ -40,7 +40,7 @@
                 </div>
             </div>
 
-            <!-- Metric Cards (Limited to 5 in a single row) -->
+            <!-- Metric Cards -->
             <div class="metric-grid grid-cols-1 sm:grid-cols-3 md:grid-cols-5 gap-6 max-w-full overflow-x-auto">
                 <div class="bg-gray-800 p-6 rounded-xl shadow-md hover:shadow-lg transition-all duration-300 card">
                     <div class="flex items-center gap-4">
@@ -87,34 +87,6 @@
                         </div>
                     </div>
                 </div>
-                <!-- Hidden Cards -->
-                <div class="hidden bg-gray-800 p-6 rounded-xl shadow-md hover:shadow-lg transition-all duration-300 card">
-                    <div class="flex items-center gap-4">
-                        <i class="fas fa-gift text-blue-500 text-2xl"></i>
-                        <div>
-                            <p class="text-gray-400 text-sm">Coupon Deductions</p>
-                            <p class="text-2xl font-bold" id="couponDeductions">₹0</p>
-                        </div>
-                    </div>
-                </div>
-                <div class="hidden bg-gray-800 p-6 rounded-xl shadow-md hover:shadow-lg transition-all duration-300 card">
-                    <div class="flex items-center gap-4">
-                        <i class="fas fa-percentage text-blue-500 text-2xl"></i>
-                        <div>
-                            <p class="text-gray-400 text-sm">Total Discounts</p>
-                            <p class="text-2xl font-bold" id="totalDiscounts">₹0</p>
-                        </div>
-                    </div>
-                </div>
-                <div class="hidden bg-gray-800 p-6 rounded-xl shadow-md hover:shadow-lg transition-all duration-300 card">
-                    <div class="flex items-center gap-4">
-                        <i class="fas fa-chart-line text-blue-500 text-2xl"></i>
-                        <div>
-                            <p class="text-gray-400 text-sm">Net Revenue</p>
-                            <p class="text-2xl font-bold" id="netRevenue">₹0</p>
-                        </div>
-                    </div>
-                </div>
             </div>
 
             <!-- Top Sellers Section -->
@@ -122,7 +94,6 @@
                 <div class="bg-gray-800 p-6 rounded-xl shadow-md">
                     <h3 class="text-lg font-bold mb-4">Top Selling Product</h3>
                     <div id="topProduct" class="flex items-center gap-4">
-                        <img id="topProductImage" src="" alt="Top Product" class="w-16 h-16 rounded-lg object-cover">
                         <div>
                             <p id="topProductName" class="text-gray-100 font-semibold">Loading...</p>
                             <p id="topProductUnits" class="text-gray-400 text-sm">0 units sold</p>
@@ -137,6 +108,27 @@
                             <p id="topCategoryValue" class="text-gray-400 text-sm">0% contribution</p>
                         </div>
                     </div>
+                </div>
+            </div>
+
+            <!-- Recent Orders Section -->
+            <div class="bg-gray-800 p-6 rounded-xl shadow-md">
+                <h3 class="text-lg font-bold mb-4">Recent Orders</h3>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left">
+                        <thead>
+                            <tr class="text-gray-400">
+                                <th class="p-3">Date</th>
+                                <th class="p-3">User</th>
+                                <th class="p-3">Amount</th>
+                                <th class="p-3">Payment Method</th>
+                                <th class="p-3">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="recentOrdersTable">
+                            <!-- Populated via JavaScript -->
+                        </tbody>
+                    </table>
                 </div>
             </div>
 
@@ -164,6 +156,7 @@
 <script>
     const initialSales = <%- initialSales %>;
     const couponStats = JSON.parse('<%- couponStats %>');
+    const recentOrders = <%- recentOrders %>;
 
     document.addEventListener('DOMContentLoaded', function() {
         const today = new Date();
@@ -172,22 +165,17 @@
 
         loadInitialData();
         fetchTopSellers();
+        displayRecentOrders();
         document.getElementById('applyFilter').addEventListener('click', fetchSalesData);
 
-        // Download button functionality
         const downloadBtn = document.getElementById('downloadReport');
         const downloadOptions = document.getElementById('downloadOptions');
         const downloadPDF = document.getElementById('downloadPDF');
         const downloadExcel = document.getElementById('downloadExcel');
 
-        downloadBtn.addEventListener('click', () => {
-            downloadOptions.classList.toggle('hidden');
-        });
-
+        downloadBtn.addEventListener('click', () => downloadOptions.classList.toggle('hidden'));
         downloadPDF.addEventListener('click', () => downloadReport('pdf'));
         downloadExcel.addEventListener('click', () => downloadReport('excel'));
-
-        // Close dropdown when clicking outside
         document.addEventListener('click', (e) => {
             if (!downloadBtn.contains(e.target) && !downloadOptions.contains(e.target)) {
                 downloadOptions.classList.add('hidden');
@@ -197,29 +185,42 @@
 
     function loadInitialData() {
         const summary = initialSales.reduce((acc, curr) => ({
-            totalSales: acc.totalSales + curr.sales,
-            totalOrders: acc.totalOrders + curr.orders,
-            totalItems: acc.totalItems + curr.totalItems,
-            totalCouponsUsed: acc.totalCouponsUsed + curr.totalCouponsUsed,
-            couponDeductions: acc.couponDeductions + curr.couponDeductions
+            totalSales: acc.totalSales + (curr.sales || 0),
+            totalOrders: acc.totalOrders + (curr.orders || 0),
+            totalItems: acc.totalItems + (curr.totalItems || 0),
+            totalCouponsUsed: acc.totalCouponsUsed + (curr.totalCouponsUsed || 0),
+            couponDeductions: acc.couponDeductions + (curr.couponDeductions || 0)
         }), { totalSales: 0, totalOrders: 0, totalItems: 0, totalCouponsUsed: 0, couponDeductions: 0 });
 
         const totalSales = summary.totalSales;
-        const totalOrders = <%= totalOrders %>; // From server
+        const totalOrders = <%= totalOrders %>;
         const avgOrderValue = totalOrders > 0 ? totalSales / totalOrders : 0;
-        const netRevenue = totalSales - summary.couponDeductions;
 
         document.getElementById('totalSales').textContent = `₹${totalSales.toFixed(2)}`;
         document.getElementById('totalOrders').textContent = totalOrders;
         document.getElementById('avgOrderValue').textContent = `₹${avgOrderValue.toFixed(2)}`;
         document.getElementById('totalItems').textContent = summary.totalItems;
         document.getElementById('totalCouponsUsed').textContent = summary.totalCouponsUsed;
-        document.getElementById('couponDeductions').textContent = `₹${summary.couponDeductions.toFixed(2)}`;
-        document.getElementById('totalDiscounts').textContent = `₹${summary.couponDeductions.toFixed(2)}`; // Assuming discounts = coupon deductions
-        document.getElementById('netRevenue').textContent = `₹${netRevenue.toFixed(2)}`;
 
         updateSalesChart(initialSales);
-        renderPaymentMethodChart([]); // Placeholder, updated by fetchSalesData
+        renderPaymentMethodChart([]);
+    }
+
+    function displayRecentOrders() {
+        const tbody = document.getElementById('recentOrdersTable');
+        tbody.innerHTML = '';
+        recentOrders.forEach(order => {
+            const tr = document.createElement('tr');
+            tr.classList.add('text-gray-100');
+            tr.innerHTML = `
+                <td class="p-3">${new Date(order.orderDate).toLocaleDateString()}</td>
+                <td class="p-3">${order.user?.name || 'Unknown'} (${order.user?.email || 'No Email'})</td>
+                <td class="p-3">₹${order.orderAmount.toFixed(2)}</td>
+                <td class="p-3">${order.paymentMethod}</td>
+                <td class="p-3">${order.status}</td>
+            `;
+            tbody.appendChild(tr);
+        });
     }
 
     async function fetchSalesData() {
@@ -238,9 +239,6 @@
                 document.getElementById('avgOrderValue').textContent = `₹${summary.avgOrderValue.toFixed(2)}`;
                 document.getElementById('totalItems').textContent = summary.totalItems;
                 document.getElementById('totalCouponsUsed').textContent = summary.totalCouponsUsed;
-                document.getElementById('couponDeductions').textContent = `₹${summary.couponDeductions.toFixed(2)}`;
-                document.getElementById('totalDiscounts').textContent = `₹${summary.couponDeductions.toFixed(2)}`;
-                document.getElementById('netRevenue').textContent = `₹${(summary.totalSales - summary.couponDeductions).toFixed(2)}`;
 
                 updateSalesChart(salesData);
                 renderPaymentMethodChart(paymentMethodStats);
@@ -258,7 +256,6 @@
             const data = await response.json();
             if (data.success) {
                 const topProduct = data.products[0];
-                document.getElementById('topProductImage').src = topProduct.image || 'https://via.placeholder.com/64';
                 document.getElementById('topProductName').textContent = topProduct.name;
                 document.getElementById('topProductUnits').textContent = `${topProduct.quantity} units sold`;
 
@@ -279,7 +276,7 @@
     function updateSalesChart(data) {
         const ctx = document.getElementById('salesChart').getContext('2d');
         const labels = data.map(item => item.date);
-        const sales = data.map(item => item.sales);
+        const sales = data.map(item => item.sales || 0);
 
         if (salesChart) salesChart.destroy();
         salesChart = new Chart(ctx, {
@@ -289,7 +286,7 @@
                 datasets: [{
                     label: 'Sales',
                     data: sales,
-                    borderColor: '#3b82f6', // Blue
+                    borderColor: '#3b82f6',
                     backgroundColor: 'rgba(59, 130, 246, 0.1)',
                     borderWidth: 2,
                     pointBackgroundColor: '#fff',
@@ -304,11 +301,21 @@
                 maintainAspectRatio: false,
                 plugins: {
                     legend: { labels: { color: '#d1d5db' } },
-                    tooltip: { backgroundColor: 'rgba(0, 0, 0, 0.8)', callbacks: { label: (context) => `₹${context.parsed.y.toFixed(2)}` } }
+                    tooltip: { 
+                        backgroundColor: 'rgba(0, 0, 0, 0.8)', 
+                        callbacks: { label: (context) => `₹${context.parsed.y.toFixed(2)}` } 
+                    }
                 },
                 scales: {
-                    x: { grid: { color: 'rgba(255, 255, 255, 0.05)' }, ticks: { color: '#d1d5db' } },
-                    y: { grid: { color: 'rgba(255, 255, 255, 0.05)' }, ticks: { color: '#d1d5db', callback: (value) => `₹${value}` } }
+                    x: { 
+                        grid: { color: 'rgba(255, 255, 255, 0.05)' }, 
+                        ticks: { color: '#d1d5db', maxRotation: 45, minRotation: 45 }
+                    },
+                    y: { 
+                        grid: { color: 'rgba(255, 255, 255, 0.05)' }, 
+                        ticks: { color: '#d1d5db', callback: (value) => `₹${value.toFixed(0)}` },
+                        beginAtZero: true
+                    }
                 }
             }
         });
@@ -317,17 +324,17 @@
     let paymentChart;
     function renderPaymentMethodChart(paymentMethodStats) {
         const ctx = document.getElementById('paymentMethodChart').getContext('2d');
-        const labels = paymentMethodStats.map(stat => stat._id);
-        const values = paymentMethodStats.map(stat => stat.count);
+        const labels = paymentMethodStats.map(stat => stat._id) || ['Razorpay', 'Cash'];
+        const values = paymentMethodStats.map(stat => stat.count) || [0, 0];
 
         if (paymentChart) paymentChart.destroy();
         paymentChart = new Chart(ctx, {
             type: 'doughnut',
             data: {
-                labels: labels.length ? labels : ['Razorpay', 'Cash'],
+                labels: labels,
                 datasets: [{
-                    data: values.length ? values : [0, 0],
-                    backgroundColor: ['#3b82f6', '#d4af37'], // Blue for Razorpay, Gold for Cash
+                    data: values,
+                    backgroundColor: ['#3b82f6', '#d4af37'],
                     borderColor: '#1f2937',
                     borderWidth: 2
                 }]
@@ -371,18 +378,17 @@
     .hover\:bg-blue-700:hover { background-color: #2563eb; }
     .hover\:bg-gold-700:hover { background-color: #b88b2e; }
 
-    /* Metric Grid Styling (Applies only to metric cards) */
     .metric-grid {
         display: grid;
-        gap: 1.5rem; /* Matches gap-6 */
+        gap: 1.5rem;
         max-width: 100%;
-        overflow-x: auto; /* Allows horizontal scrolling if needed */
+        overflow-x: auto;
     }
 
     .card {
         overflow: hidden;
         min-width: 0;
-        flex-shrink: 0; /* Prevents cards from shrinking too much */
+        flex-shrink: 0;
     }
 
     .card p {
@@ -391,16 +397,24 @@
         white-space: nowrap;
     }
 
-    /* Responsive adjustments for metric cards only */
-    @media (max-width: 768px) { /* md breakpoint */
+    @media (max-width: 768px) {
         .metric-grid {
-            grid-template-columns: repeat(3, minmax(0, 1fr)); /* 3 cards on medium screens */
+            grid-template-columns: repeat(3, minmax(0, 1fr));
         }
     }
 
-    @media (max-width: 640px) { /* sm breakpoint */
+    @media (max-width: 640px) {
         .metric-grid {
-            grid-template-columns: 1fr; /* Stack cards on small screens */
+            grid-template-columns: 1fr;
         }
+    }
+
+    table {
+        border-collapse: collapse;
+        width: 100%;
+    }
+
+    th, td {
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
     }
 </style>
