@@ -29,7 +29,7 @@ const orderSchema = new Schema({
         },
         status: {  
             type: String,
-            enum: ["Ordered", "Cancelled", "Return Requested", "Return Requested", "Return Approved","Return Rejected","Returned"],
+            enum: ["Ordered", "Cancelled", "Return Requested", "Return Approved", "Return Rejected", "Returned"],
             default: "Ordered"
         },
         createdAt: {
@@ -90,9 +90,8 @@ const orderSchema = new Schema({
         default: Date.now
     },
     couponApplied: {
-        type: Schema.Types.ObjectId,
-        ref: 'Coupon',
-        default: null
+        type: Boolean, 
+        default: false 
     },
     offerApplied: {
         type: Number,

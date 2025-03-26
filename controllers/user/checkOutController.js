@@ -158,7 +158,7 @@ exports.initiateCheckout = async (req, res) => {
       paymentMethod,
       couponCode: couponCode || null,
       couponDiscount,
-      couponApplied: couponCode ? true : null, // Set couponApplied based on couponCode
+      couponApplied: !!couponCode, // Boolean value
       status: 'Pending',
       paymentStatus: 'pending'
     };
@@ -246,13 +246,15 @@ exports.createRazorpayOrder = async (req, res) => {
         paymentStatus: 'pending',
         couponCode: couponCode || null,
         couponDiscount: couponDiscount || 0,
-        couponApplied: couponCode ? true : null, // Set couponApplied based on couponCode
+        couponApplied: !!couponCode, // Boolean value
         razorpayDetails: { orderId: razorpayOrder.id }
       });
     } else {
       order.paymentStatus = 'pending';
       order.razorpayDetails.orderId = razorpayOrder.id;
-      if (couponCode) order.couponApplied = true; // Update couponApplied if couponCode exists
+      order.couponCode = couponCode || null;
+      order.couponDiscount = couponDiscount || 0;
+      order.couponApplied = !!couponCode; // Boolean value
       await order.save();
     }
 
@@ -599,9 +601,7 @@ exports.applyCoupon = async (req, res) => {
 async function handleCODOrder(orderData, cart, session, res) {
   orderData.paymentStatus = 'pending';
   orderData.status = 'Processing';
-  if (orderData.couponCode) {
-    orderData.couponApplied = true; // Set couponApplied to true if couponCode exists
-  }
+  orderData.couponApplied = !!orderData.couponCode; // Boolean value
 
   const order = await Order.create([orderData], { session });
   await reduceStock(order[0].products, session);
@@ -624,9 +624,7 @@ async function handleWalletOrder(orderData, cart, userId, session, res) {
 
   orderData.paymentStatus = 'paid';
   orderData.status = 'Processing';
-  if (orderData.couponCode) {
-    orderData.couponApplied = true; // Set couponApplied to true if couponCode exists
-  }
+  orderData.couponApplied = !!orderData.couponCode; // Boolean value
 
   const order = await Order.create([orderData], { session });
 
@@ -649,9 +647,7 @@ async function handleWalletOrder(orderData, cart, userId, session, res) {
 }
 
 async function handleRazorpayOrder(orderData, cart, session, res) {
-  if (orderData.couponCode) {
-    orderData.couponApplied = true; // Set couponApplied to true if couponCode exists
-  }
+  orderData.couponApplied = !!orderData.couponCode; // Boolean value
   const order = await Order.create([orderData], { session });
   await session.commitTransaction();
 
